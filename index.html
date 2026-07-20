@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Task Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#0f1115; color:#e6e6e6; margin:0; padding:14px; }
+  h1 { font-size:19px; margin:0 0 2px 0; }
+  .sub { color:#9aa0a6; font-size:12px; margin-bottom:14px; }
+  .summary { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .stat { background:#1b1e24; border:1px solid #2a2d34; border-radius:10px; padding:8px 12px; flex:1; min-width:90px; text-align:center; }
+  .stat .n { font-size:20px; font-weight:700; }
+  .stat.done .n { color:#69f0ae; }
+  .stat.pending .n { color:#ffab40; }
+  .stat.overdue .n { color:#ff5252; }
+  .stat .l { font-size:10px; color:#9aa0a6; }
+  .progress-wrap { background:#1b1e24; border-radius:8px; height:10px; margin-bottom:16px; overflow:hidden; }
+  .progress-bar { background:linear-gradient(90deg,#69f0ae,#4caf50); height:100%; transition: width .3s; }
+  .filters { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .filter-btn { background:#1b1e24; border:1px solid #2a2d34; color:#9aa0a6; padding:6px 12px; border-radius:16px; font-size:12px; cursor:pointer; }
+  .filter-btn.active { background:#2c3e50; color:#e6e6e6; border-color:#4a6fa5; }
+  .group { margin-bottom:16px; }
+  .group-title { font-size:13px; font-weight:700; color:#9ecbff; margin:0 0 6px 4px; display:flex; justify-content:space-between; }
+  .task { display:flex; align-items:flex-start; gap:10px; background:#1b1e24; border:1px solid #2a2d34; border-radius:8px; padding:10px 12px; margin-bottom:6px; }
+  .task.done { opacity:0.45; }
+  .task input[type=checkbox] { margin-top:2px; width:18px; height:18px; accent-color:#69f0ae; flex-shrink:0; }
+  .task-body { flex:1; }
+  .task-name { font-size:13px; }
+  .task.done .task-name { text-decoration: line-through; }
+  .task-meta { font-size:10px; color:#9aa0a6; margin-top:2px; }
+  .tag { display:inline-block; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-right:5px; }
+  .own { background:#1e3a2e; color:#69f0ae; }
+  .mhj { background:#2a1e3a; color:#ce93d8; }
+  .urgent-tag { background:#3a1f1f; color:#ff8a80; }
+  .due { color:#ffab40; }
+  .add-box { display:flex; gap:6px; margin-top:16px; }
+  .add-box input, .add-box select { background:#1b1e24; border:1px solid #2a2d34; color:#e6e6e6; padding:8px; border-radius:6px; font-size:12px; }
+  .add-box input[type=text] { flex:1; }
+  .add-box button { background:#4caf50; color:#0f1115; border:none; padding:8px 14px; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer; }
+  .empty { color:#6a6f76; font-size:12px; text-align:center; padding:20px; }
+  .loading { text-align:center; padding:40px; color:#9aa0a6; }
+</style>
+</head>
+<body>
+<h1>📋 Live Task Dashboard</h1>
+<div class="sub" id="lastSync">Loading...</div>
+
+<div id="app">
+  <div class="loading">Loading tasks...</div>
+</div>
+
+<div class="add-box">
+  <select id="newCat"><option value="OWN">OWN</option><option value="MHJ">MHJ</option></select>
+  <input type="text" id="newTask" placeholder="Add a new task...">
+  <button onclick="addTask()">Add</button>
+</div>
+
+<script>
+const STORAGE_KEY = 'tasks-v1';
+let tasks = [];
+let filter = 'all'; // all, own, mhj, pending, done
+
+const seedTasks = [
+  {id:'t1', name:'ITR Batch Day 1+2 — Personal ITR + 9 clients', cat:'OWN', due:'Jul 20', done:false, urgent:false},
+  {id:'t2', name:'CMP-08 — Raj Bartan', cat:'MHJ', due:'', done:true, urgent:false},
+  {id:'t3', name:'CMP-08 — Sunshine Stationers', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t4', name:'GSTR-9 FY24-25 — Ujjain Diesals & Electricals', cat:'OWN', due:'Overdue', done:false, urgent:true},
+  {id:'t5', name:'DSC — Rakhi Sharma (video verification)', cat:'MHJ', due:'Jul 20', done:false, urgent:false},
+  {id:'t6', name:'DSC & TAN — Anshum Airen', cat:'OWN', due:'Jul 20', done:false, urgent:false},
+  {id:'t7', name:'PAN Correction — Shahabuddin Shihabi', cat:'MHJ', due:'Jul 20', done:false, urgent:false},
+  {id:'t8', name:'Admin block — GST/TDS billing, PAN correction (MP Rewinders)', cat:'MHJ', due:'Jul 20', done:false, urgent:false},
+  {id:'t9', name:'GST Application — Murtaza Aiyyaji', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t10', name:'Follow-up — Narendra Dangi', cat:'MHJ', due:'Jul 20', done:false, urgent:false},
+  {id:'t11', name:'Follow-up — Amjad & Javed Patel', cat:'MHJ', due:'Jul 20', done:false, urgent:false},
+  {id:'t12', name:'Follow-up — Husain & Tasneem Shihabi', cat:'MHJ', due:'Jul 20', done:false, urgent:false},
+  {id:'t13', name:'Follow-up — Mustafa Vaziri, Burhanuddin & Tasneem Arif', cat:'OWN', due:'Jul 20', done:false, urgent:false},
+  {id:'t14', name:'GSTR-1 (June) — Famous Glass', cat:'OWN', due:'Overdue', done:false, urgent:true},
+  {id:'t15', name:'GSTR-3B — Arch53 Furnitures', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t16', name:'GSTR-3B — Burhani Sanitary & Hardware', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t17', name:'GSTR-3B — Farid Collection', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t18', name:'GSTR-3B — Lucky Bag Collection', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t19', name:'GSTR-3B — M/S Globe Power Tools', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t20', name:'GSTR-3B — Ujjain Diesals & Electricals', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t21', name:'GSTR-3B — Qusak Enterprises', cat:'OWN', due:'Jul 20', done:false, urgent:true},
+  {id:'t22', name:'ITR Batch Day 3 — 5 clients (Qusai Nazer Munim, Husaini Arif, Shabbir Abdulhusain Lunavadawala, Murtaza Milwala, Zainuddin Mhowwala)', cat:'OWN', due:'Jul 21', done:false, urgent:false},
+  {id:'t23', name:'ITR Batch Day 4 — 4 clients (Abbas Ali Pardawala, Alefiya Arif, Ali Asgar Barnagarwala, Ali Asgher)', cat:'OWN', due:'Jul 22', done:false, urgent:false},
+  {id:'t24', name:'ITR Batch Day 5 — 4 clients (Burhanuddin Bhandari, Burhanuddin Raotiwala, Fatema Millwala, Umme Aiman)', cat:'OWN', due:'Jul 23', done:false, urgent:false},
+  {id:'t25', name:'ITR Batch Day 6 — 4 clients (Fakruddin Batteriwala, Fatema Chakkiwala, Husain Kanchwala, Husain Betma Wala)', cat:'OWN', due:'Jul 24', done:false, urgent:false},
+  {id:'t26', name:'ITR Batch Day 7 — 4 clients (Huzefa Gulamabbas Dahodwala, Khadija Rangwala, Khuzema Bhawrasawala, Mariyam)', cat:'OWN', due:'Jul 25', done:false, urgent:false},
+  {id:'t27', name:'ITR Batch Day 8 — 4 clients (Mohsin Ali Rangwala, Moiz Bag Wala, Murtuja Bharuchwala, Murtuza)', cat:'OWN', due:'Jul 26', done:false, urgent:false},
+  {id:'t28', name:'ITR Batch Day 9 — 4 clients (Mustafa Mansoor, Pramod Khandkar, Qaizar Husain Raja Millwala, Raghuveer Singh Tanwar)', cat:'OWN', due:'Jul 27', done:false, urgent:false},
+  {id:'t29', name:'ITR Batch Day 10 — 4 clients (Randheer Singh Tanwar, Rashida Arif, Rashmi Singh Tanwar, Sadique Ali Kanchwala)', cat:'OWN', due:'Jul 28', done:false, urgent:false},
+  {id:'t30', name:'ITR Batch Day 11 — 4 clients (Saifuddin Dalal, Saifuddin Saife Sanwerwala, Sakina, Shabbir Husen)', cat:'OWN', due:'Jul 29', done:false, urgent:false},
+  {id:'t31', name:'ITR Batch Day 12 (FINAL) — 5 clients (Shamsuddin Selani, Shujauddin Malik, Taher Ali, Tayyab Mansoor, Tasneem Arif)', cat:'OWN', due:'Jul 30', done:false, urgent:true},
+  {id:'t32', name:'ITR Filing — Narendra Dangi', cat:'MHJ', due:'Jul 31', done:false, urgent:false},
+  {id:'t33', name:'ITR Filing — Amjad & Javed Patel', cat:'MHJ', due:'Jul 31', done:false, urgent:false},
+  {id:'t34', name:'ITR Filing — Husain & Tasneem Shihabi', cat:'MHJ', due:'Jul 31', done:false, urgent:false},
+  {id:'t35', name:'Sanawad Jamat Wajebat Entry', cat:'OWN', due:'Jul 21', done:false, urgent:false},
+  {id:'t36', name:'Calculate Challan — HSC (GSTR-3B)', cat:'MHJ', due:'Jul 21', done:false, urgent:false},
+  {id:'d1', name:'GSTR-3B — Adarsh Oxygen & Adarsh Tekno', cat:'MHJ', due:'Jul 20', done:true, urgent:false},
+  {id:'d2', name:'GSTR-1A & GSTR-3B — Mohammad Bhai Pardawala', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d3', name:'Gumasta — SK Sports Hub', cat:'MHJ', due:'', done:true, urgent:false},
+  {id:'d4', name:'CMP-08 — Sanwaliya', cat:'MHJ', due:'', done:true, urgent:false},
+  {id:'d5', name:'CMP-08 — Famous Shoos', cat:'MHJ', due:'', done:true, urgent:false},
+  {id:'d6', name:'CMP-08 — B.N Collection', cat:'MHJ', due:'', done:true, urgent:false},
+  {id:'d7', name:'GSTR-3B — Khachrodwala Light', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d8', name:'GSTR-3B — Badshah Trading Corporation', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d9', name:'GSTR-1 & GSTR-3B — SMB Infotech', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d10', name:'ITR — Mohammad Barwani', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d11', name:'ITR — Jumana Barwani', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d12', name:'ITR — Arihant Jain', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d13', name:'ITR — Iqbal Husain', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d14', name:'ITR — Mustafa Badshah', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d15', name:'GSTR-3B — Goodluck Uniform', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d16', name:'GSTR-3B — H.A. Gulamali', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d17', name:'GSTR-3B — Yuri Tools Impex (MP) LLP', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d18', name:'ITR — Burhanuddin Arif', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d19', name:'GSTR-3B — Gujarat Kitchens', cat:'OWN', due:'', done:true, urgent:false},
+  {id:'d20', name:'GSTR-3B — National Traders', cat:'OWN', due:'', done:true, urgent:false},
+];
+
+async function loadTasks() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    tasks = JSON.parse(result.value);
+  } catch (e) {
+    tasks = seedTasks;
+    await saveTasks();
+  }
+  render();
+}
+
+async function saveTasks() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(tasks));
+    document.getElementById('lastSync').textContent = 'Synced ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    document.getElementById('lastSync').textContent = 'Sync failed — changes kept locally this session';
+  }
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (t) t.done = !t.done;
+  saveTasks();
+  render();
+}
+
+function addTask() {
+  const input = document.getElementById('newTask');
+  const cat = document.getElementById('newCat').value;
+  const name = input.value.trim();
+  if (!name) return;
+  tasks.push({id:'u'+Date.now(), name, cat, due:'', done:false, urgent:false});
+  input.value = '';
+  saveTasks();
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  render();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const done = tasks.filter(t => t.done).length;
+  const pending = tasks.filter(t => !t.done).length;
+  const overdue = tasks.filter(t => !t.done && t.due === 'Overdue').length;
+  const total = tasks.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  let filtered = tasks;
+  if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN' && !t.done);
+  else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ' && !t.done);
+  else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
+  else if (filter === 'done') filtered = tasks.filter(t => t.done);
+
+  let html = `
+    <div class="summary">
+      <div class="stat done"><div class="n">${done}</div><div class="l">Completed</div></div>
+      <div class="stat pending"><div class="n">${pending}</div><div class="l">Pending</div></div>
+      <div class="stat overdue"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+    <div class="filters">
+      <button class="filter-btn ${filter==='all'?'active':''}" onclick="setFilter('all')">All</button>
+      <button class="filter-btn ${filter==='pending'?'active':''}" onclick="setFilter('pending')">Pending</button>
+      <button class="filter-btn ${filter==='own'?'active':''}" onclick="setFilter('own')">OWN</button>
+      <button class="filter-btn ${filter==='mhj'?'active':''}" onclick="setFilter('mhj')">MHJ</button>
+      <button class="filter-btn ${filter==='done'?'active':''}" onclick="setFilter('done')">Done</button>
+    </div>
+  `;
+
+  if (filtered.length === 0) {
+    html += '<div class="empty">No tasks here 🎉</div>';
+  } else {
+    filtered.forEach(t => {
+      html += `
+        <div class="task ${t.done?'done':''}">
+          <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">
+          <div class="task-body">
+            <div class="task-name">${t.name}</div>
+            <div class="task-meta">
+              <span class="tag ${t.cat==='OWN'?'own':'mhj'}">${t.cat}</span>
+              ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
+              ${t.due ? '<span class="due">' + t.due + '</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  app.innerHTML = html;
+}
+
+loadTasks();
+</script>
+</body>
+</html>
