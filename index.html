@@ -123,22 +123,26 @@ const seedTasks = [
 ];
 
 async function loadTasks() {
+  let saved = [];
   try {
-    const result = await window.storage.get(STORAGE_KEY);
-    tasks = JSON.parse(result.value);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
   } catch (e) {
-    tasks = seedTasks;
-    await saveTasks();
+    saved = [];
   }
+  const savedIds = new Set(saved.map(t => t.id));
+  const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
+  tasks = saved.concat(newFromSeed);
+  if (newFromSeed.length > 0 || saved.length === 0) saveTasks();
   render();
 }
 
 async function saveTasks() {
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(tasks));
-    document.getElementById('lastSync').textContent = 'Synced ' + new Date().toLocaleTimeString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    document.getElementById('lastSync').textContent = 'Saved ' + new Date().toLocaleTimeString();
   } catch (e) {
-    document.getElementById('lastSync').textContent = 'Sync failed — changes kept locally this session';
+    document.getElementById('lastSync').textContent = 'Save failed — changes kept only for this page load';
   }
 }
 
