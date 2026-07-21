@@ -194,6 +194,12 @@ function render() {
   else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
   else if (filter === 'done') filtered = tasks.filter(t => t.done);
 
+  filtered = [...filtered].sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (!a.done && !b.done && a.urgent !== b.urgent) return a.urgent ? -1 : 1;
+    return 0;
+  });
+
   let html = `
     <div class="summary">
       <div class="stat done"><div class="n">${done}</div><div class="l">Completed</div></div>
