@@ -46,6 +46,7 @@
 <body>
 <h1>📋 Live Task Dashboard</h1>
 <div class="sub" id="lastSync">Loading...</div>
+<button id="resetBtn" onclick="resetData()" style="background:#3a1f1f; color:#ff8a80; border:1px solid #5a2f2f; padding:6px 12px; border-radius:16px; font-size:11px; cursor:pointer; margin-bottom:14px;">↻ Reset Data (if stuck on old tasks)</button>
 
 <div id="app">
   <div class="loading">Loading tasks...</div>
@@ -166,6 +167,12 @@ function addTask() {
   input.value = '';
   saveTasks();
   render();
+}
+
+function resetData() {
+  if (!confirm('This will clear saved progress on THIS device and reload the latest task list. Continue?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 }
 
 function setFilter(f) {
