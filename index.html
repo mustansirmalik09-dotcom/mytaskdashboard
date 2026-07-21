@@ -177,7 +177,7 @@ function addTask() {
 function resetData() {
   if (!confirm('This will clear saved progress on THIS device and reload the latest task list. Continue?')) return;
   localStorage.removeItem(STORAGE_KEY);
-  location.reload();
+  window.location.href = window.location.pathname + '?t=' + Date.now();
 }
 
 function setFilter(f) {
