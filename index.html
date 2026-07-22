@@ -136,6 +136,11 @@
 <h1>Your <span class="accent">quiet</span> task ledger</h1>
 <div class="sub" id="lastSync">Loading...</div>
 <button id="resetBtn" onclick="resetData()">↻ Reset data (if stuck on old tasks)</button>
+<div style="margin-bottom:16px;">
+  <input type="text" id="webhookInput" placeholder="Paste your Apps Script Web App URL here (one-time setup)" style="width:100%; max-width:420px; background:#fff; border:1px solid var(--mist); color:var(--ink); padding:8px 10px; border-radius:8px; font-size:11.5px; font-family:'Karla',sans-serif;">
+  <button onclick="saveWebhook()" style="background:var(--harbor); color:#fff; border:none; padding:8px 14px; border-radius:8px; font-size:11.5px; cursor:pointer; font-family:'Karla',sans-serif;">Save</button>
+  <span id="webhookStatus" style="font-size:11px; color:var(--ink-soft); margin-left:6px;"></span>
+</div>
 
 <div id="app">
   <div class="loading">Loading tasks...</div>
@@ -154,8 +159,57 @@
 
 <script>
 const STORAGE_KEY = 'tasks-v2';
+const WEBHOOK_KEY = 'webhookUrl';
 let tasks = [];
 let filter = 'all'; // all, own, mhj, pending, done
+
+function getWebhook() {
+  return localStorage.getItem(WEBHOOK_KEY) || '';
+}
+
+function saveWebhook() {
+  const input = document.getElementById('webhookInput');
+  const url = input.value.trim();
+  if (!url) return;
+  localStorage.setItem(WEBHOOK_KEY, url);
+  document.getElementById('webhookStatus').textContent = 'Saved ✓';
+  pullFromCalendar();
+}
+
+async function pushToCalendar(name, tag) {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ name, tag })
+    });
+  } catch (e) { /* fire and forget */ }
+}
+
+async function pullFromCalendar() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    const events = await res.json();
+    const existingIds = new Set(tasks.map(t => t.id));
+    let added = 0;
+    events.forEach(ev => {
+      if (existingIds.has(ev.id)) return;
+      const tag = ev.tag;
+      const type = tag === 'PERSONAL' ? 'personal' : 'professional';
+      const cat = tag === 'PERSONAL' ? null : tag;
+      tasks.push({ id: ev.id, name: ev.title, type, cat, due: '', done: ev.done, urgent: false });
+      added++;
+    });
+    if (added > 0) { saveTasks(); render(); }
+    document.getElementById('webhookStatus').textContent = 'Synced ✓';
+  } catch (e) {
+    document.getElementById('webhookStatus').textContent = 'Sync check failed';
+  }
+}
 
 const seedTasks = [
   {id:'p1', name:'Personal ITR — Mustansir Malik', type:'personal', cat:null, due:'Jul 20', done:false, urgent:true},
@@ -281,6 +335,7 @@ function addTask() {
   input.value = '';
   saveTasks();
   render();
+  pushToCalendar(name, catVal);
 }
 
 function resetData() {
@@ -382,7 +437,13 @@ function render() {
   app.innerHTML = html;
 }
 
-loadTasks();
+loadTasks().then(() => {
+  const saved = getWebhook();
+  if (saved) {
+    document.getElementById('webhookInput').value = saved;
+    pullFromCalendar();
+  }
+});
 </script>
 </body>
 </html>
