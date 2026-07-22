@@ -80,6 +80,13 @@
   .filter-btn:hover { background: var(--mist); }
   .filter-btn.active { background: var(--ink); color: var(--paper); }
 
+  .cat-section { margin-bottom: 22px; }
+  .cat-heading {
+    font-family: 'Fraunces', serif; font-size: 14px; font-weight: 500; margin: 0 0 10px 2px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cat-heading .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .cat-heading .count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); font-weight: 400; }
   .task-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px;
   }
@@ -338,25 +345,38 @@ function render() {
   if (filtered.length === 0) {
     html += '<div class="empty">No tasks here 🎉</div>';
   } else {
-    html += '<div class="task-grid">';
-    filtered.forEach(t => {
-      const tagClass = t.type === 'personal' ? 'personal' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : 'shk'));
-      const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
-      html += `
-        <div class="task ${t.done?'done':''}">
-          <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">
-          <div class="task-body">
-            <div class="task-name">${t.name}</div>
-            <div class="task-meta">
-              <span class="tag ${tagClass}">${tagLabel}</span>
-              ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
-              ${t.due ? '<span class="due">' + t.due + '</span>' : ''}
+    const groupDefs = [
+      { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
+      { key: 'OWN', label: 'Professional — OWN', color: 'var(--moss)', match: t => t.cat === 'OWN' },
+      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--harbor)', match: t => t.cat === 'MHJ' },
+      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--plum)', match: t => t.cat === 'SHK' },
+    ];
+
+    groupDefs.forEach(g => {
+      const groupTasks = filtered.filter(g.match);
+      if (groupTasks.length === 0) return;
+      html += `<div class="cat-section">
+        <div class="cat-heading"><span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${groupTasks.length}</span></div>
+        <div class="task-grid">`;
+      groupTasks.forEach(t => {
+        const tagClass = t.type === 'personal' ? 'personal' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : 'shk'));
+        const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
+        html += `
+          <div class="task ${t.done?'done':''}">
+            <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">
+            <div class="task-body">
+              <div class="task-name">${t.name}</div>
+              <div class="task-meta">
+                <span class="tag ${tagClass}">${tagLabel}</span>
+                ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
+                ${t.due ? '<span class="due">' + t.due + '</span>' : ''}
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
+      });
+      html += `</div></div>`;
     });
-    html += '</div>';
   }
 
   app.innerHTML = html;
