@@ -346,10 +346,10 @@ function render() {
     html += '<div class="empty">No tasks here 🎉</div>';
   } else {
     const groupDefs = [
-      { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
       { key: 'OWN', label: 'Professional — OWN', color: 'var(--moss)', match: t => t.cat === 'OWN' },
       { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--harbor)', match: t => t.cat === 'MHJ' },
       { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--plum)', match: t => t.cat === 'SHK' },
+      { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
     ];
 
     groupDefs.forEach(g => {
