@@ -136,11 +136,6 @@
 <h1>Your <span class="accent">quiet</span> task ledger</h1>
 <div class="sub" id="lastSync">Loading...</div>
 <button id="resetBtn" onclick="resetData()">↻ Reset data (if stuck on old tasks)</button>
-<div style="margin-bottom:16px;">
-  <input type="text" id="webhookInput" placeholder="Paste your Apps Script Web App URL here (one-time setup)" style="width:100%; max-width:420px; background:#fff; border:1px solid var(--mist); color:var(--ink); padding:8px 10px; border-radius:8px; font-size:11.5px; font-family:'Karla',sans-serif;">
-  <button onclick="saveWebhook()" style="background:var(--harbor); color:#fff; border:none; padding:8px 14px; border-radius:8px; font-size:11.5px; cursor:pointer; font-family:'Karla',sans-serif;">Save</button>
-  <span id="webhookStatus" style="font-size:11px; color:var(--ink-soft); margin-left:6px;"></span>
-</div>
 
 <div id="app">
   <div class="loading">Loading tasks...</div>
@@ -160,30 +155,36 @@
 <script>
 const STORAGE_KEY = 'tasks-v2';
 const WEBHOOK_KEY = 'webhookUrl';
+const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 let tasks = [];
 let filter = 'all'; // all, own, mhj, pending, done
 
 function getWebhook() {
-  return localStorage.getItem(WEBHOOK_KEY) || '';
-}
-
-function saveWebhook() {
-  const input = document.getElementById('webhookInput');
-  const url = input.value.trim();
-  if (!url) return;
-  localStorage.setItem(WEBHOOK_KEY, url);
-  document.getElementById('webhookStatus').textContent = 'Saved ✓';
-  pullFromCalendar();
+  return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
 }
 
 async function pushToCalendar(name, tag) {
   const url = getWebhook();
-  if (!url) return;
+  if (!url) return null;
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'add', name, tag })
+    });
+    const data = await res.json();
+    return data.id || null;
+  } catch (e) { return null; }
+}
+
+async function deleteFromCalendar(taskId) {
+  const url = getWebhook();
+  if (!url || !taskId.startsWith('cal_')) return;
   try {
     await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ name, tag })
+      body: JSON.stringify({ action: 'delete', id: taskId })
     });
   } catch (e) { /* fire and forget */ }
 }
@@ -205,9 +206,9 @@ async function pullFromCalendar() {
       added++;
     });
     if (added > 0) { saveTasks(); render(); }
-    document.getElementById('webhookStatus').textContent = 'Synced ✓';
+    document.getElementById('lastSync').textContent = 'Synced with Calendar ✓ ' + new Date().toLocaleTimeString();
   } catch (e) {
-    document.getElementById('webhookStatus').textContent = 'Sync check failed';
+    document.getElementById('lastSync').textContent = 'Calendar sync check failed';
   }
 }
 
@@ -331,11 +332,26 @@ function addTask() {
   if (!name) return;
   const type = catVal === 'PERSONAL' ? 'personal' : 'professional';
   const cat = catVal === 'PERSONAL' ? null : catVal;
-  tasks.push({id:'u'+Date.now(), name, type, cat, due:'', done:false, urgent:false});
+  const localId = 'u'+Date.now();
+  const task = {id:localId, name, type, cat, due:'', done:false, urgent:false};
+  tasks.push(task);
   input.value = '';
   saveTasks();
   render();
-  pushToCalendar(name, catVal);
+  pushToCalendar(name, catVal).then(calId => {
+    if (calId) {
+      task.id = calId; // replace temp id with real calendar id for future delete/toggle
+      saveTasks();
+    }
+  });
+}
+
+function deleteTask(id) {
+  if (!confirm('Remove this task? This will also remove it from your Calendar.')) return;
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
+  render();
+  deleteFromCalendar(id);
 }
 
 function resetData() {
@@ -425,6 +441,7 @@ function render() {
                 <span class="tag ${tagClass}">${tagLabel}</span>
                 ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
                 ${t.due ? '<span class="due">' + t.due + '</span>' : ''}
+                <span onclick="deleteTask('${t.id}')" style="cursor:pointer; color:var(--ink-soft); font-size:13px; margin-left:auto;" title="Remove task">✕</span>
               </div>
             </div>
           </div>
@@ -438,11 +455,7 @@ function render() {
 }
 
 loadTasks().then(() => {
-  const saved = getWebhook();
-  if (saved) {
-    document.getElementById('webhookInput').value = saved;
-    pullFromCalendar();
-  }
+  pullFromCalendar();
 });
 </script>
 </body>
