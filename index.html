@@ -195,8 +195,10 @@ async function pullFromCalendar() {
   try {
     const res = await fetch(url);
     const events = await res.json();
+    const calIds = new Set(events.map(ev => ev.id));
     const existingIds = new Set(tasks.map(t => t.id));
     let added = 0;
+
     events.forEach(ev => {
       if (existingIds.has(ev.id)) return;
       const tag = ev.tag;
@@ -205,7 +207,14 @@ async function pullFromCalendar() {
       tasks.push({ id: ev.id, name: ev.title, type, cat, due: '', done: ev.done, urgent: false });
       added++;
     });
-    if (added > 0) { saveTasks(); render(); }
+
+    // Remove tasks whose calendar event was deleted directly on Calendar
+    // (only affects tasks that originated from / are linked to a real calendar event)
+    const beforeCount = tasks.length;
+    tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
+    const removed = beforeCount - tasks.length;
+
+    if (added > 0 || removed > 0) { saveTasks(); render(); }
     document.getElementById('lastSync').textContent = 'Synced with Calendar ✓ ' + new Date().toLocaleTimeString();
   } catch (e) {
     document.getElementById('lastSync').textContent = 'Calendar sync check failed';
