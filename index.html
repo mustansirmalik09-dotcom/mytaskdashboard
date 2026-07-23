@@ -321,6 +321,18 @@ function toggleTask(id) {
   if (t) t.done = !t.done;
   saveTasks();
   render();
+  if (t && t.id.startsWith('cal_')) {
+    toggleOnCalendar(t.id, t.done);
+  }
+}
+
+async function toggleOnCalendar(taskId, done) {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const params = new URLSearchParams({ action: 'toggle', id: taskId, done: done ? 'true' : 'false' });
+    await fetch(url + '?' + params.toString());
+  } catch (e) { /* fire and forget */ }
 }
 
 function addTask() {
