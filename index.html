@@ -167,11 +167,8 @@ async function pushToCalendar(name, tag) {
   const url = getWebhook();
   if (!url) return null;
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'add', name, tag })
-    });
+    const params = new URLSearchParams({ action: 'add', name, tag });
+    const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     return data.id || null;
   } catch (e) { return null; }
@@ -181,11 +178,8 @@ async function deleteFromCalendar(taskId) {
   const url = getWebhook();
   if (!url || !taskId.startsWith('cal_')) return;
   try {
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', id: taskId })
-    });
+    const params = new URLSearchParams({ action: 'delete', id: taskId });
+    await fetch(url + '?' + params.toString());
   } catch (e) { /* fire and forget */ }
 }
 
