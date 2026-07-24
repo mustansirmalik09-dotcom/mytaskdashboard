@@ -277,6 +277,10 @@ function addTask() {
     if (calId) {
       task.id = calId; // replace temp id with real calendar id for future delete/toggle
       saveTasks();
+      if (task.done) {
+        // task was marked done while the calendar event was still being created — sync it now
+        toggleOnCalendar(task.id, task.done);
+      }
     }
   });
 }
