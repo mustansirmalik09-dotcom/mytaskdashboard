@@ -148,7 +148,7 @@
     <option value="MHJ">Professional — MHJ</option>
     <option value="SHK">Professional — SHK Husain Arif</option>
   </select>
-  <input type="text" id="newTask" placeholder="Add a new task...">
+  <input type="text" id="newTask" placeholder="Add a new task..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
   <button onclick="addTask()">Add</button>
 </div>
 
