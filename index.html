@@ -112,6 +112,7 @@
   .own { background: var(--moss-soft); color: var(--moss); }
   .mhj { background: var(--harbor-soft); color: var(--harbor); }
   .shk { background: var(--plum-soft); color: var(--plum); }
+  .fees { background: #fce8e6; color: #c5221f; }
   .personal { background: var(--honey-soft); color: var(--honey); }
   .urgent-tag { background: var(--clay-soft); color: var(--clay); }
   .due { color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
@@ -142,14 +143,20 @@
 </div>
 
 <div class="add-box">
-  <select id="newCat">
+  <select id="newCat" onchange="toggleFeeFields()">
     <option value="PERSONAL">PERSONAL</option>
     <option value="OWN">Professional — OWN</option>
     <option value="MHJ">Professional — MHJ</option>
     <option value="SHK">Professional — SHK Husain Arif</option>
+    <option value="FEES">Fees (Payable/Received)</option>
   </select>
-  <input type="text" id="newTask" placeholder="Add a new task..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+  <input type="text" id="newTask" placeholder="Add a new task / client name..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
   <button onclick="addTask()">Add</button>
+</div>
+<div class="add-box" id="feeFields" style="display:none;">
+  <input type="number" id="feePayable" placeholder="₹ Payable" style="width:100px;">
+  <input type="number" id="feeReceived" placeholder="₹ Received" style="width:100px;">
+  <input type="text" id="feeLinked" placeholder="Linked task/client (optional)">
 </div>
 
 <script>
@@ -196,9 +203,15 @@ async function pullFromCalendar() {
     events.forEach(ev => {
       if (existingIds.has(ev.id)) return;
       const tag = ev.tag;
-      const type = tag === 'PERSONAL' ? 'personal' : 'professional';
-      const cat = tag === 'PERSONAL' ? null : tag;
-      tasks.push({ id: ev.id, name: ev.title, type, cat, due: '', done: ev.done, urgent: false });
+      const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional');
+      const cat = (tag === 'PERSONAL') ? null : tag;
+      const task = { id: ev.id, name: ev.title, type, cat, due: '', done: ev.done, urgent: false };
+      if (tag === 'FEES') {
+        task.payable = ev.payable || 0;
+        task.received = ev.received || 0;
+        task.linked = ev.linked || '';
+      }
+      tasks.push(task);
       added++;
     });
 
@@ -260,11 +273,36 @@ async function toggleOnCalendar(taskId, done) {
   } catch (e) { /* fire and forget */ }
 }
 
+function toggleFeeFields() {
+  const isFee = document.getElementById('newCat').value === 'FEES';
+  document.getElementById('feeFields').style.display = isFee ? 'flex' : 'none';
+}
+
 function addTask() {
   const input = document.getElementById('newTask');
   const catVal = document.getElementById('newCat').value;
   const name = input.value.trim();
   if (!name) return;
+
+  if (catVal === 'FEES') {
+    const payable = parseFloat(document.getElementById('feePayable').value) || 0;
+    const received = parseFloat(document.getElementById('feeReceived').value) || 0;
+    const linked = document.getElementById('feeLinked').value.trim();
+    const localId = 'u'+Date.now();
+    const task = { id: localId, name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked };
+    tasks.push(task);
+    input.value = '';
+    document.getElementById('feePayable').value = '';
+    document.getElementById('feeReceived').value = '';
+    document.getElementById('feeLinked').value = '';
+    saveTasks();
+    render();
+    pushFeeToCalendar(name, payable, received, linked).then(calId => {
+      if (calId) { task.id = calId; saveTasks(); }
+    });
+    return;
+  }
+
   const type = catVal === 'PERSONAL' ? 'personal' : 'professional';
   const cat = catVal === 'PERSONAL' ? null : catVal;
   const localId = 'u'+Date.now();
@@ -283,6 +321,42 @@ function addTask() {
       }
     }
   });
+}
+
+async function pushFeeToCalendar(name, payable, received, linked) {
+  const url = getWebhook();
+  if (!url) return null;
+  try {
+    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked });
+    const res = await fetch(url + '?' + params.toString());
+    const data = await res.json();
+    return data.id || null;
+  } catch (e) { return null; }
+}
+
+function recordPayment(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const amountStr = prompt('Total amount received so far for ' + t.name + ' (currently ₹' + t.received + ' of ₹' + t.payable + '):', t.received);
+  if (amountStr === null) return;
+  const amount = parseFloat(amountStr);
+  if (isNaN(amount)) return;
+  t.received = amount;
+  t.done = amount >= t.payable && t.payable > 0;
+  saveTasks();
+  render();
+  if (t.id.startsWith('cal_')) {
+    updateFeeOnCalendar(t.id, amount);
+  }
+}
+
+async function updateFeeOnCalendar(taskId, received) {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const params = new URLSearchParams({ action: 'updatefee', id: taskId, received });
+    await fetch(url + '?' + params.toString());
+  } catch (e) { /* fire and forget */ }
 }
 
 function deleteTask(id) {
@@ -318,6 +392,7 @@ function render() {
   else if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN');
   else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ');
   else if (filter === 'shk') filtered = tasks.filter(t => t.cat === 'SHK');
+  else if (filter === 'fees') filtered = tasks.filter(t => t.cat === 'FEES');
   else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
   else if (filter === 'done') filtered = tasks.filter(t => t.done);
 
@@ -349,6 +424,7 @@ function render() {
       <button class="filter-btn ${filter==='own'?'active':''}" onclick="setFilter('own')">OWN</button>
       <button class="filter-btn ${filter==='mhj'?'active':''}" onclick="setFilter('mhj')">MHJ</button>
       <button class="filter-btn ${filter==='shk'?'active':''}" onclick="setFilter('shk')">SHK Husain Arif</button>
+      <button class="filter-btn ${filter==='fees'?'active':''}" onclick="setFilter('fees')">Fees</button>
     </div>
   `;
 
@@ -360,6 +436,7 @@ function render() {
       { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--plum)', match: t => t.cat === 'SHK' },
       { key: 'OWN', label: 'Professional — OWN', color: 'var(--moss)', match: t => t.cat === 'OWN' },
       { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
+      { key: 'FEES', label: 'Fees', color: 'var(--clay)', match: t => t.type === 'fee' },
     ];
 
     groupDefs.forEach(g => {
@@ -369,17 +446,21 @@ function render() {
         <div class="cat-heading"><span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${groupTasks.length}</span></div>
         <div class="task-grid">`;
       groupTasks.forEach(t => {
-        const tagClass = t.type === 'personal' ? 'personal' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : 'shk'));
+        const tagClass = t.type === 'personal' ? 'personal' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'fees')));
         const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
+        const isFee = t.type === 'fee';
+        const balance = isFee ? (t.payable - t.received) : 0;
         html += `
           <div class="task ${t.done?'done':''}">
-            <input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">
+            ${isFee ? '' : `<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">`}
             <div class="task-body">
               <div class="task-name">${t.name}</div>
+              ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft);">₹${t.received} of ₹${t.payable} received${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully paid'}${t.linked ? ' · linked: ' + t.linked : ''}</div>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
                 ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
                 ${t.due ? '<span class="due">' + t.due + '</span>' : ''}
+                ${isFee ? `<span onclick="recordPayment('${t.id}')" style="cursor:pointer; color:var(--harbor); font-size:11px; text-decoration:underline;">Record payment</span>` : ''}
                 <span onclick="deleteTask('${t.id}')" style="cursor:pointer; color:var(--ink-soft); font-size:13px; margin-left:auto;" title="Remove task">✕</span>
               </div>
             </div>
