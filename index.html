@@ -209,6 +209,7 @@ async function pullFromCalendar() {
       if (tag === 'FEES') {
         task.payable = ev.payable || 0;
         task.received = ev.received || 0;
+        task.discount = ev.discount || 0;
         task.linked = ev.linked || '';
       }
       tasks.push(task);
@@ -342,19 +343,33 @@ function recordPayment(id) {
   const amount = parseFloat(amountStr);
   if (isNaN(amount)) return;
   t.received = amount;
-  t.done = amount >= t.payable && t.payable > 0;
+
+  let discount = t.discount || 0;
+  const balance = t.payable - amount - discount;
+  if (balance > 0) {
+    const discountStr = prompt('₹' + balance + ' still remaining for ' + t.name + '. Enter an amount to write off as discount (or leave blank/0 to keep the balance pending):', '0');
+    if (discountStr !== null) {
+      const newDiscount = parseFloat(discountStr);
+      if (!isNaN(newDiscount) && newDiscount > 0) {
+        discount = (t.discount || 0) + newDiscount;
+        t.discount = discount;
+      }
+    }
+  }
+
+  t.done = (amount + discount) >= t.payable && t.payable > 0;
   saveTasks();
   render();
   if (t.id.startsWith('cal_')) {
-    updateFeeOnCalendar(t.id, amount);
+    updateFeeOnCalendar(t.id, amount, discount);
   }
 }
 
-async function updateFeeOnCalendar(taskId, received) {
+async function updateFeeOnCalendar(taskId, received, discount) {
   const url = getWebhook();
   if (!url) return;
   try {
-    const params = new URLSearchParams({ action: 'updatefee', id: taskId, received });
+    const params = new URLSearchParams({ action: 'updatefee', id: taskId, received, discount: discount || 0 });
     await fetch(url + '?' + params.toString());
   } catch (e) { /* fire and forget */ }
 }
@@ -386,6 +401,12 @@ function render() {
   const total = tasks.length;
   const pct = total ? Math.round((done/total)*100) : 0;
 
+  const feeTasks = tasks.filter(t => t.type === 'fee');
+  const totalPayable = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
+  const totalReceived = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
+  const totalDiscount = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
+  const totalOutstanding = totalPayable - totalReceived - totalDiscount;
+
   let filtered = tasks;
   if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal');
   else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional');
@@ -413,6 +434,13 @@ function render() {
         <div class="stat-item overdue"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
       </div>
     </div>
+    ${feeTasks.length > 0 ? `
+    <div style="display:flex; gap:16px; margin-bottom:18px; padding:10px 14px; background:var(--paper-deep); border-radius:10px; flex-wrap:wrap; font-size:12px;">
+      <div><span style="color:var(--ink-soft);">Total Receivable:</span> <strong>₹${totalPayable}</strong></div>
+      <div><span style="color:var(--ink-soft);">Total Received:</span> <strong style="color:var(--moss);">₹${totalReceived}</strong></div>
+      ${totalDiscount > 0 ? `<div><span style="color:var(--ink-soft);">Discounts:</span> <strong>₹${totalDiscount}</strong></div>` : ''}
+      <div><span style="color:var(--ink-soft);">Outstanding:</span> <strong style="color:var(--clay);">₹${totalOutstanding}</strong></div>
+    </div>` : ''}
     <div class="filters">
       <button class="filter-btn ${filter==='all'?'active':''}" onclick="setFilter('all')">All</button>
       <button class="filter-btn ${filter==='personal'?'active':''}" onclick="setFilter('personal')">Personal</button>
@@ -449,13 +477,13 @@ function render() {
         const tagClass = t.type === 'personal' ? 'personal' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'fees')));
         const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
         const isFee = t.type === 'fee';
-        const balance = isFee ? (t.payable - t.received) : 0;
+        const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
         html += `
           <div class="task ${t.done?'done':''}">
             ${isFee ? '' : `<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">`}
             <div class="task-body">
               <div class="task-name">${t.name}</div>
-              ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft);">₹${t.received} of ₹${t.payable} received${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully paid'}${t.linked ? ' · linked: ' + t.linked : ''}</div>` : ''}
+              ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft);">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${t.linked ? ' · linked: ' + t.linked : ''}</div>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
                 ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
