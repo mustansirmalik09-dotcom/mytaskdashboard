@@ -138,6 +138,17 @@
 <div class="sub" id="lastSync">Loading...</div>
 <button id="resetBtn" onclick="resetData()">↻ Reset data (if stuck on old tasks)</button>
 
+<div id="modalOverlay" style="display:none; position:fixed; inset:0; background:rgba(51,64,58,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:var(--paper); border-radius:14px; padding:20px; width:90%; max-width:340px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div id="modalTitle" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:14px;"></div>
+    <div id="modalFields"></div>
+    <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;">
+      <button onclick="closeModal()" style="background:var(--paper-deep); color:var(--ink); border:none; padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer;">Skip</button>
+      <button id="modalConfirmBtn" style="background:var(--moss); color:#fff; border:none; padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer; font-weight:600;">Save</button>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <div class="loading">Loading tasks...</div>
 </div>
@@ -255,6 +266,27 @@ async function saveTasks() {
   }
 }
 
+function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalFields').innerHTML = fieldsHtml;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  const btn = document.getElementById('modalConfirmBtn');
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.textContent = confirmLabel || 'Save';
+  newBtn.style.background = confirmLabel === 'Delete' ? 'var(--clay)' : 'var(--moss)';
+  newBtn.onclick = () => { onConfirm(); closeModal(); };
+  document.querySelector('#modalOverlay button[onclick="closeModal()"]').textContent = skipLabel || 'Skip';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function inputStyle() {
+  return "width:100%; box-sizing:border-box; background:#fff; border:1px solid var(--mist); color:var(--ink); padding:9px 10px; border-radius:8px; font-size:13px; margin-bottom:10px;";
+}
+
 function toggleTask(id) {
   const t = tasks.find(x => x.id === id);
   if (t) t.done = !t.done;
@@ -266,14 +298,17 @@ function toggleTask(id) {
 
   // When marking a professional (non-fee, non-personal) task complete, ask about fees
   if (t && t.done && t.type === 'professional') {
-    const amountStr = prompt('Task completed! Any fee for "' + t.name + '"? Enter payable amount (or Cancel to skip):', '');
-    if (amountStr !== null && amountStr.trim() !== '') {
-      const payable = parseFloat(amountStr);
+    showModal('Fee for "' + t.name + '"?', `
+      <label style="font-size:11px; color:var(--ink-soft);">Payable amount (leave blank to skip)</label>
+      <input type="number" id="modalPayable" style="${inputStyle()}" placeholder="₹ Payable">
+      <label style="font-size:11px; color:var(--ink-soft);">Received now</label>
+      <input type="number" id="modalReceived" style="${inputStyle()}" placeholder="₹ Received" value="0">
+    `, () => {
+      const payable = parseFloat(document.getElementById('modalPayable').value);
+      const received = parseFloat(document.getElementById('modalReceived').value) || 0;
       if (!isNaN(payable) && payable > 0) {
-        const receivedStr = prompt('Amount received now (0 if none yet):', '0');
-        const received = receivedStr !== null ? (parseFloat(receivedStr) || 0) : 0;
         const localId = 'u'+Date.now();
-        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked: t.name };
+        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name };
         tasks.push(feeTask);
         saveTasks();
         render();
@@ -281,7 +316,7 @@ function toggleTask(id) {
           if (calId) { feeTask.id = calId; saveTasks(); }
         });
       }
-    }
+    });
   }
 }
 
@@ -358,31 +393,25 @@ async function pushFeeToCalendar(name, payable, received, linked) {
 function recordPayment(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  const amountStr = prompt('Total amount received so far for ' + t.name + ' (currently ₹' + t.received + ' of ₹' + t.payable + '):', t.received);
-  if (amountStr === null) return;
-  const amount = parseFloat(amountStr);
-  if (isNaN(amount)) return;
-  t.received = amount;
-
-  let discount = t.discount || 0;
-  const balance = t.payable - amount - discount;
-  if (balance > 0) {
-    const discountStr = prompt('₹' + balance + ' still remaining for ' + t.name + '. Enter an amount to write off as discount (or leave blank/0 to keep the balance pending):', '0');
-    if (discountStr !== null) {
-      const newDiscount = parseFloat(discountStr);
-      if (!isNaN(newDiscount) && newDiscount > 0) {
-        discount = (t.discount || 0) + newDiscount;
-        t.discount = discount;
-      }
+  showModal('Record payment — ' + t.name, `
+    <div style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">Currently ₹${t.received} of ₹${t.payable} received</div>
+    <label style="font-size:11px; color:var(--ink-soft);">Total amount received so far</label>
+    <input type="number" id="modalReceivedAmt" style="${inputStyle()}" value="${t.received}">
+    <label style="font-size:11px; color:var(--ink-soft);">Discount to write off (optional)</label>
+    <input type="number" id="modalDiscountAmt" style="${inputStyle()}" placeholder="₹ Discount" value="${t.discount || 0}">
+  `, () => {
+    const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
+    const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+    if (isNaN(amount)) return;
+    t.received = amount;
+    t.discount = discount;
+    t.done = (amount + discount) >= t.payable && t.payable > 0;
+    saveTasks();
+    render();
+    if (t.id.startsWith('cal_')) {
+      updateFeeOnCalendar(t.id, amount, discount);
     }
-  }
-
-  t.done = (amount + discount) >= t.payable && t.payable > 0;
-  saveTasks();
-  render();
-  if (t.id.startsWith('cal_')) {
-    updateFeeOnCalendar(t.id, amount, discount);
-  }
+  });
 }
 
 async function updateFeeOnCalendar(taskId, received, discount) {
@@ -395,17 +424,24 @@ async function updateFeeOnCalendar(taskId, received, discount) {
 }
 
 function deleteTask(id) {
-  if (!confirm('Remove this task? This will also remove it from your Calendar.')) return;
-  tasks = tasks.filter(t => t.id !== id);
-  saveTasks();
-  render();
-  deleteFromCalendar(id);
+  const t = tasks.find(x => x.id === id);
+  showModal('Remove "' + (t ? t.name : 'this task') + '"?', `
+    <div style="font-size:12.5px; color:var(--ink-soft);">This will also remove it from your Calendar.</div>
+  `, () => {
+    tasks = tasks.filter(x => x.id !== id);
+    saveTasks();
+    render();
+    deleteFromCalendar(id);
+  }, 'Delete', 'Cancel');
 }
 
 function resetData() {
-  if (!confirm('This will clear saved progress on THIS device and reload the latest task list. Continue?')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  window.location.href = window.location.pathname + '?t=' + Date.now();
+  showModal('Reset dashboard data?', `
+    <div style="font-size:12.5px; color:var(--ink-soft);">This clears saved progress on THIS device and reloads the latest task list fresh from Calendar.</div>
+  `, () => {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = window.location.pathname + '?t=' + Date.now();
+  }, 'Reset', 'Cancel');
 }
 
 function setFilter(f) {
