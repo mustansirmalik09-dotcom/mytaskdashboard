@@ -263,6 +263,26 @@ function toggleTask(id) {
   if (t && t.id.startsWith('cal_')) {
     toggleOnCalendar(t.id, t.done);
   }
+
+  // When marking a professional (non-fee, non-personal) task complete, ask about fees
+  if (t && t.done && t.type === 'professional') {
+    const amountStr = prompt('Task completed! Any fee for "' + t.name + '"? Enter payable amount (or Cancel to skip):', '');
+    if (amountStr !== null && amountStr.trim() !== '') {
+      const payable = parseFloat(amountStr);
+      if (!isNaN(payable) && payable > 0) {
+        const receivedStr = prompt('Amount received now (0 if none yet):', '0');
+        const received = receivedStr !== null ? (parseFloat(receivedStr) || 0) : 0;
+        const localId = 'u'+Date.now();
+        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked: t.name };
+        tasks.push(feeTask);
+        saveTasks();
+        render();
+        pushFeeToCalendar(t.name, payable, received, t.name).then(calId => {
+          if (calId) { feeTask.id = calId; saveTasks(); }
+        });
+      }
+    }
+  }
 }
 
 async function toggleOnCalendar(taskId, done) {
