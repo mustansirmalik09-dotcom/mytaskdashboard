@@ -168,6 +168,7 @@
   <input type="number" id="feePayable" placeholder="₹ Payable" style="width:100px;">
   <input type="number" id="feeReceived" placeholder="₹ Received" style="width:100px;">
   <input type="text" id="feeLinked" placeholder="Linked task/client (optional)">
+  <input type="tel" id="feePhone" placeholder="Client phone (optional, for WhatsApp)">
 </div>
 
 <script>
@@ -222,6 +223,7 @@ async function pullFromCalendar() {
         task.received = ev.received || 0;
         task.discount = ev.discount || 0;
         task.linked = ev.linked || '';
+        task.phone = ev.phone || '';
       }
       tasks.push(task);
       added++;
@@ -303,16 +305,19 @@ function toggleTask(id) {
       <input type="number" id="modalPayable" style="${inputStyle()}" placeholder="₹ Payable">
       <label style="font-size:11px; color:var(--ink-soft);">Received now</label>
       <input type="number" id="modalReceived" style="${inputStyle()}" placeholder="₹ Received" value="0">
+      <label style="font-size:11px; color:var(--ink-soft);">Client phone (optional, for WhatsApp reminder)</label>
+      <input type="tel" id="modalPhone" style="${inputStyle()}" placeholder="e.g. 9876543210">
     `, () => {
       const payable = parseFloat(document.getElementById('modalPayable').value);
       const received = parseFloat(document.getElementById('modalReceived').value) || 0;
+      const phone = document.getElementById('modalPhone').value.trim();
       if (!isNaN(payable) && payable > 0) {
         const localId = 'u'+Date.now();
-        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name };
+        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name, phone };
         tasks.push(feeTask);
         saveTasks();
         render();
-        pushFeeToCalendar(t.name, payable, received, t.name).then(calId => {
+        pushFeeToCalendar(t.name, payable, received, t.name, phone).then(calId => {
           if (calId) { feeTask.id = calId; saveTasks(); }
         });
       }
@@ -327,6 +332,14 @@ async function toggleOnCalendar(taskId, done) {
     const params = new URLSearchParams({ action: 'toggle', id: taskId, done: done ? 'true' : 'false' });
     await fetch(url + '?' + params.toString());
   } catch (e) { /* fire and forget */ }
+}
+
+function buildWhatsAppLink(task, balance) {
+  let phone = (task.phone || '').replace(/[^0-9]/g, '');
+  if (phone.length === 10) phone = '91' + phone;
+  const clientName = task.linked || task.name;
+  const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience. Thank you.\n- Mustansir Malik`;
+  return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
 }
 
 function toggleFeeFields() {
@@ -344,16 +357,18 @@ function addTask() {
     const payable = parseFloat(document.getElementById('feePayable').value) || 0;
     const received = parseFloat(document.getElementById('feeReceived').value) || 0;
     const linked = document.getElementById('feeLinked').value.trim();
+    const phone = document.getElementById('feePhone').value.trim();
     const localId = 'u'+Date.now();
-    const task = { id: localId, name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked };
+    const task = { id: localId, name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked, phone };
     tasks.push(task);
     input.value = '';
     document.getElementById('feePayable').value = '';
     document.getElementById('feeReceived').value = '';
     document.getElementById('feeLinked').value = '';
+    document.getElementById('feePhone').value = '';
     saveTasks();
     render();
-    pushFeeToCalendar(name, payable, received, linked).then(calId => {
+    pushFeeToCalendar(name, payable, received, linked, phone).then(calId => {
       if (calId) { task.id = calId; saveTasks(); }
     });
     return;
@@ -379,11 +394,11 @@ function addTask() {
   });
 }
 
-async function pushFeeToCalendar(name, payable, received, linked) {
+async function pushFeeToCalendar(name, payable, received, linked, phone) {
   const url = getWebhook();
   if (!url) return null;
   try {
-    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked });
+    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '' });
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     return data.id || null;
@@ -540,6 +555,7 @@ function render() {
             <div class="task-body">
               <div class="task-name">${t.name}</div>
               ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft);">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${t.linked ? ' · linked: ' + t.linked : ''}</div>` : ''}
+              ${isFee && balance > 0 && t.phone ? `<a href="${buildWhatsAppLink(t, balance)}" target="_blank" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:600;">📱 Send WhatsApp reminder</a>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
                 ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
