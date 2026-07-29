@@ -338,8 +338,8 @@ function buildWhatsAppLink(task, balance) {
   let phone = (task.phone || '').replace(/[^0-9]/g, '');
   if (phone.length === 10) phone = '91' + phone;
   const clientName = task.linked || task.name;
-  const qrUrl = 'https://mustansirrmalikworkdashboard.netlify.app/payment-qr.png';
-  const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience.\n\nPay via UPI: s8124203048@slc\nOr scan/view QR here: ${qrUrl}\n\nThank you.\n- Mustansir Malik`;
+  const qrUrl = 'https://mustansirrmalikworkdashboard.netlify.app/pay.html';
+  const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience.\n\nPay via UPI: s8124203048@slc\nScan QR: ${qrUrl}\n\nThank you.\n- Mustansir Malik`;
   return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
 }
 
