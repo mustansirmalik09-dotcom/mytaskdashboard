@@ -18,11 +18,24 @@
   h1 { font-size: 18px; color: #33403A; margin-bottom: 4px; }
   .upi { font-size: 13px; color: #6B7570; margin-bottom: 20px; }
   img { max-width: 320px; width: 100%; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  #payBtn { display: inline-block; margin-top: 20px; background: #25D366; color: #fff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-size: 16px; font-weight: bold; }
+  .hint { font-size: 12px; color: #999; margin-top: 14px; }
 </style>
 </head>
 <body>
   <h1>Pay Mustansir Malik</h1>
   <div class="upi">UPI ID: s8124203048@slc</div>
   <img src="payment-qr-small.png" alt="Payment QR Code">
+  <div><a id="payBtn" href="#">Pay Now</a></div>
+  <div class="hint">Tap "Pay Now" to open your UPI app directly, or scan the QR above.</div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const amount = params.get('amount') || '';
+    const client = params.get('client') || '';
+    let upiLink = 'upi://pay?pa=s8124203048@slc&pn=' + encodeURIComponent('Mustansir Malik') + '&cu=INR';
+    if (amount) upiLink += '&am=' + encodeURIComponent(amount);
+    if (client) upiLink += '&tn=' + encodeURIComponent('Fee for ' + client);
+    document.getElementById('payBtn').href = upiLink;
+  </script>
 </body>
 </html>
