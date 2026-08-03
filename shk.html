@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task List — SHK Husain Arif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2F0E7; --paper-deep: #E9E5D8; --ink: #33403A; --ink-soft: #6B7570;
+    --mist: #DDD8C8; --harbor: #5E7C99; --harbor-soft: #E1E7ED; --clay: #C3876F; --clay-soft: #F3E5DE;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Karla', -apple-system, sans-serif; background: var(--paper); color: var(--ink); margin: 0; padding: 20px 16px 40px; line-height: 1.5; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 4px 0; }
+  .sub { color: var(--ink-soft); font-size: 12.5px; margin-bottom: 20px; }
+  .stat-row { display: flex; gap: 18px; margin-bottom: 20px; }
+  .stat-item .n { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; }
+  .stat-item .l { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  .add-box { display: flex; gap: 8px; margin-bottom: 24px; }
+  .add-box input { flex: 1; background: #fff; border: 1px solid var(--mist); color: var(--ink); padding: 10px 12px; border-radius: 8px; font-size: 14px; font-family: 'Karla', sans-serif; }
+  .add-box button { background: var(--harbor); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .task { display: flex; align-items: flex-start; gap: 10px; background: #fff; border: 1px solid var(--mist); border-radius: 12px; padding: 12px 13px; }
+  .task.done { opacity: 0.5; background: var(--paper-deep); }
+  .task input[type=checkbox] { margin-top: 2px; width: 17px; height: 17px; accent-color: var(--harbor); flex-shrink: 0; cursor: pointer; }
+  .task-name { font-size: 13px; }
+  .task.done .task-name { text-decoration: line-through; color: var(--ink-soft); }
+  .empty { color: var(--ink-soft); font-size: 13px; text-align: center; padding: 30px; font-family: 'Fraunces', serif; font-style: italic; }
+  .loading { text-align: center; padding: 40px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<h1>Task List — SHK Husain Arif</h1>
+<div class="sub" id="syncStatus">Loading...</div>
+<div id="statsRow"></div>
+
+<div class="add-box">
+  <input type="text" id="newTask" placeholder="Add a new task..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+  <button onclick="addTask()">Add</button>
+</div>
+
+<div id="app"><div class="loading">Loading tasks...</div></div>
+
+<script>
+const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+const VIEW = 'shk';
+let tasks = [];
+
+async function loadTasks() {
+  try {
+    const res = await fetch(WEBHOOK + '?view=' + VIEW);
+    const events = await res.json();
+    tasks = events.map(ev => ({ id: ev.id, name: ev.title, done: ev.done }));
+    document.getElementById('syncStatus').textContent = 'Synced ✓ ' + new Date().toLocaleTimeString();
+    render();
+  } catch (e) {
+    document.getElementById('syncStatus').textContent = 'Sync failed — please refresh';
+  }
+}
+
+function render() {
+  const done = tasks.filter(t => t.done).length;
+  const pending = tasks.filter(t => !t.done).length;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-row">
+      <div class="stat-item"><div class="n">${pending}</div><div class="l">Pending</div></div>
+      <div class="stat-item"><div class="n">${done}</div><div class="l">Done</div></div>
+    </div>
+  `;
+
+  const sorted = [...tasks].sort((a, b) => (a.done === b.done) ? 0 : (a.done ? 1 : -1));
+  let html = '';
+  if (sorted.length === 0) {
+    html = '<div class="empty">No tasks yet</div>';
+  } else {
+    html = '<div class="task-grid">';
+    sorted.forEach(t => {
+      html += `
+        <div class="task ${t.done ? 'done' : ''}">
+          <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+          <div class="task-name">${t.name}</div>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+  document.getElementById('app').innerHTML = html;
+}
+
+async function addTask() {
+  const input = document.getElementById('newTask');
+  const name = input.value.trim();
+  if (!name) return;
+  input.value = '';
+  try {
+    const params = new URLSearchParams({ action: 'add', name, view: VIEW });
+    await fetch(WEBHOOK + '?' + params.toString());
+  } catch (e) { /* fire and forget */ }
+  setTimeout(loadTasks, 1500);
+}
+
+async function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (t) t.done = !t.done;
+  render();
+  try {
+    const params = new URLSearchParams({ action: 'toggle', id, done: t.done ? 'true' : 'false', view: VIEW });
+    await fetch(WEBHOOK + '?' + params.toString());
+  } catch (e) { /* fire and forget */ }
+}
+
+loadTasks();
+setInterval(loadTasks, 30000); // refresh every 30s so both sides stay in sync
+</script>
+
+</body>
+</html>
