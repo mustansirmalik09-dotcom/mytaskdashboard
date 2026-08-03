@@ -138,6 +138,14 @@
 <div class="sub" id="lastSync">Loading...</div>
 <button id="resetBtn" onclick="resetData()">↻ Reset data (if stuck on old tasks)</button>
 
+<div id="authGate" style="position:fixed; inset:0; background:#F2F0E7; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
+  <div style="font-family:'Fraunces',serif; font-size:22px; margin-bottom:6px; color:#33403A;">Your <span style="font-style:italic; color:#6E8F73;">quiet</span> task ledger</div>
+  <div style="font-size:12.5px; color:#6B7570; margin-bottom:20px;">This dashboard is password protected</div>
+  <input type="password" id="authInput" placeholder="Enter password" style="width:100%; max-width:280px; background:#fff; border:1px solid #DDD8C8; color:#33403A; padding:11px 14px; border-radius:8px; font-size:14px; margin-bottom:10px; text-align:center;" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
+  <button onclick="checkAuth()" style="background:#6E8F73; color:#fff; border:none; padding:10px 28px; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">Unlock</button>
+  <div id="authError" style="color:#C3876F; font-size:12px; margin-top:12px; display:none;">Incorrect password — try again.</div>
+</div>
+
 <div id="modalOverlay" style="display:none; position:fixed; inset:0; background:rgba(51,64,58,0.5); z-index:1000; align-items:center; justify-content:center;">
   <div style="background:var(--paper); border-radius:14px; padding:20px; width:90%; max-width:340px; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div id="modalTitle" style="font-family:'Fraunces',serif; font-size:16px; margin-bottom:14px;"></div>
@@ -575,9 +583,33 @@ function render() {
   app.innerHTML = html;
 }
 
-loadTasks().then(() => {
-  pullFromCalendar();
-});
+const DASHBOARD_PASSWORD = 'Mustansir@2026';
+const AUTH_KEY = 'dashboard-auth-ok';
+
+function checkAuth() {
+  const input = document.getElementById('authInput');
+  if (input.value === DASHBOARD_PASSWORD) {
+    localStorage.setItem(AUTH_KEY, 'yes');
+    document.getElementById('authGate').style.display = 'none';
+    startDashboard();
+  } else {
+    document.getElementById('authError').style.display = 'block';
+    input.value = '';
+  }
+}
+
+function startDashboard() {
+  loadTasks().then(() => {
+    pullFromCalendar();
+  });
+}
+
+if (localStorage.getItem(AUTH_KEY) === 'yes') {
+  document.getElementById('authGate').style.display = 'none';
+  startDashboard();
+} else {
+  document.getElementById('authInput').focus();
+}
 </script>
 </body>
 </html>
