@@ -113,6 +113,7 @@
   .mhj { background: var(--harbor-soft); color: var(--harbor); }
   .shk { background: var(--plum-soft); color: var(--plum); }
   .fees { background: #fce8e6; color: #c5221f; }
+  .generic-cat { background: #ece4f0; color: #8C7196; }
   .personal { background: var(--honey-soft); color: var(--honey); }
   .urgent-tag { background: var(--clay-soft); color: var(--clay); }
   .due { color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
@@ -162,12 +163,13 @@
 </div>
 
 <div class="add-box">
-  <select id="newCat" onchange="toggleFeeFields()">
+  <select id="newCat" onchange="onCategoryChange()">
     <option value="PERSONAL">PERSONAL</option>
     <option value="OWN">Professional — OWN</option>
     <option value="MHJ">Professional — MHJ</option>
     <option value="SHK">Professional — SHK Husain Arif</option>
     <option value="FEES">Fees (Payable/Received)</option>
+    <option value="__NEW__">+ Add new category...</option>
   </select>
   <input type="text" id="newTask" placeholder="Add a new task / client name..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
   <button onclick="addTask()">Add</button>
@@ -356,6 +358,35 @@ function toggleFeeFields() {
   document.getElementById('feeFields').style.display = isFee ? 'flex' : 'none';
 }
 
+function onCategoryChange() {
+  const select = document.getElementById('newCat');
+  if (select.value === '__NEW__') {
+    showModal('Add a new category', `
+      <label style="font-size:11px; color:var(--ink-soft);">Category name (e.g. a new employer or client group)</label>
+      <input type="text" id="modalNewCatName" style="${inputStyle()}" placeholder="e.g. ABC Company">
+    `, () => {
+      const raw = document.getElementById('modalNewCatName').value.trim();
+      if (!raw) { select.value = 'PERSONAL'; return; }
+      const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      if (!tag) { select.value = 'PERSONAL'; return; }
+      // avoid duplicating an existing option
+      let exists = false;
+      for (const opt of select.options) { if (opt.value === tag) { exists = true; break; } }
+      if (!exists) {
+        const newOption = document.createElement('option');
+        newOption.value = tag;
+        newOption.textContent = 'Professional — ' + raw;
+        select.insertBefore(newOption, select.querySelector('option[value="__NEW__"]'));
+      }
+      select.value = tag;
+      toggleFeeFields();
+    }, 'Create', 'Cancel');
+    select.value = 'PERSONAL'; // revert selection until they confirm in the modal
+  } else {
+    toggleFeeFields();
+  }
+}
+
 function addTask() {
   const input = document.getElementById('newTask');
   const catVal = document.getElementById('newCat').value;
@@ -487,6 +518,9 @@ function render() {
   const totalDiscount = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
   const totalOutstanding = totalPayable - totalReceived - totalDiscount;
 
+  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES']);
+  const extraCats = [...new Set(tasks.filter(t => t.type === 'professional' && !knownCats.has(t.cat)).map(t => t.cat))];
+
   let filtered = tasks;
   if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal');
   else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional');
@@ -496,6 +530,7 @@ function render() {
   else if (filter === 'fees') filtered = tasks.filter(t => t.cat === 'FEES');
   else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
   else if (filter === 'done') filtered = tasks.filter(t => t.done);
+  else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
 
   filtered = [...filtered].sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -533,6 +568,7 @@ function render() {
       <button class="filter-btn ${filter==='mhj'?'active':''}" onclick="setFilter('mhj')">MHJ</button>
       <button class="filter-btn ${filter==='shk'?'active':''}" onclick="setFilter('shk')">SHK Husain Arif</button>
       <button class="filter-btn ${filter==='fees'?'active':''}" onclick="setFilter('fees')">Fees</button>
+      ${extraCats.map(cat => `<button class="filter-btn ${filter===cat?'active':''}" onclick="setFilter('${cat}')">${cat.replace(/_/g, ' ')}</button>`).join('')}
     </div>
   `;
 
@@ -546,6 +582,12 @@ function render() {
       { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
       { key: 'FEES', label: 'Fees', color: 'var(--clay)', match: t => t.type === 'fee' },
     ];
+    // Any category beyond the fixed set above (e.g. a newly created employer/client group)
+    // automatically gets its own section here, so nothing ever becomes invisible.
+    const extraColors = ['#8C7196', '#5E7C99', '#6E8F73', '#B98A3E', '#C3876F'];
+    extraCats.forEach((cat, i) => {
+      groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: extraColors[i % extraColors.length], match: t => t.cat === cat });
+    });
 
     groupDefs.forEach(g => {
       const groupTasks = filtered.filter(g.match);
@@ -554,7 +596,7 @@ function render() {
         <div class="cat-heading"><span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${groupTasks.length}</span></div>
         <div class="task-grid">`;
       groupTasks.forEach(t => {
-        const tagClass = t.type === 'personal' ? 'personal' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'fees')));
+        const tagClass = t.type === 'personal' ? 'personal' : (t.type === 'fee' ? 'fees' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'generic-cat'))));
         const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
         const isFee = t.type === 'fee';
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
