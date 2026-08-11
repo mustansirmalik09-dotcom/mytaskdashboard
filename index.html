@@ -373,11 +373,17 @@ async function sendWhatsAppReminder(taskId, balance) {
   // preference toward the standard WhatsApp package and doesn't always fall back to Business cleanly
   // even when only Business is installed.
   const waUrl = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(message);
+  // Explicitly target WhatsApp Business's exact app package, bypassing Android's generic link
+  // resolution (which seems to have a stale preference toward regular WhatsApp on this device)
+  const waBusinessIntent = 'intent://send?phone=' + phone + '&text=' + encodeURIComponent(message) +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
 
   if (newWin) {
     newWin.document.write(`
       <body style="font-family:sans-serif; padding:30px; text-align:center; color:#333;">
-        <p><a href="${waUrl}" style="display:inline-block; background:#25D366; color:#fff; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">Open in WhatsApp</a></p>
+        <p><a href="${waBusinessIntent}" style="display:inline-block; background:#25D366; color:#fff; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">Open in WhatsApp Business</a></p>
+        <p style="font-size:12px; color:#aaa; margin:8px 0;">— or —</p>
+        <p><a href="${waUrl}" style="display:inline-block; background:#5E7C99; color:#fff; padding:10px 22px; border-radius:8px; text-decoration:none; font-size:14px;">Open in WhatsApp (regular)</a></p>
         <p style="font-size:13px; color:#888; margin-top:20px;">If that doesn't open your WhatsApp app (regular or Business), copy the message below and paste it manually:</p>
         <textarea readonly style="width:90%; max-width:400px; height:140px; font-size:13px; padding:10px; border-radius:8px; border:1px solid #ccc;">${message}</textarea><br>
         <button onclick="navigator.clipboard.writeText(document.querySelector('textarea').value); this.textContent='Copied!';" style="margin-top:10px; background:#5E7C99; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Copy message</button>
