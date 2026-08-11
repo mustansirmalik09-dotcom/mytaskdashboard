@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirecting to payment...</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background: #F2F0E7; margin: 0; padding: 60px 20px; text-align: center; color: #6B7570; }
+</style>
+</head>
+<body>
+  <p>Redirecting to secure payment page...</p>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const target = params.get('u');
+    if (target) {
+      window.location.href = decodeURIComponent(target);
+    } else {
+      document.body.innerHTML = '<p>Invalid payment link.</p>';
+    }
+  </script>
+</body>
+</html>

@@ -363,7 +363,7 @@ async function sendWhatsAppReminder(taskId, balance) {
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     if (data.status === 'ok' && data.url) {
-      payUrl = data.url;
+      payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?u=' + encodeURIComponent(data.url);
       amountNote = ''; // real link already has the exact amount, no need to ask them to type it
     }
   } catch (e) { /* fall back to bare link below */ }
