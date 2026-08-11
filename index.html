@@ -344,13 +344,34 @@ async function toggleOnCalendar(taskId, done) {
   } catch (e) { /* fire and forget */ }
 }
 
-function buildWhatsAppLink(task, balance) {
-  let phone = (task.phone || '').replace(/[^0-9]/g, '');
+async function sendWhatsAppReminder(taskId, balance) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  let phone = (t.phone || '').replace(/[^0-9]/g, '');
   if (phone.length === 10) phone = '91' + phone;
-  const clientName = task.linked || task.name;
-  const razorpayUrl = 'https://razorpay.me/@mustansirmalik';
-  const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience.\n\nPay online here (please enter ₹${balance} on the page): ${razorpayUrl}\n\nThank you.\n- Mustansir Malik`;
-  return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+  const clientName = t.linked || t.name;
+
+  // Open the window immediately (synchronously, within the click) so browsers don't block it as a popup
+  const newWin = window.open('', '_blank');
+  if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Preparing payment link...</body>');
+
+  let payUrl = 'https://razorpay.me/@mustansirmalik'; // fallback if link generation fails
+  let amountNote = ` (please enter ₹${balance} on the page)`;
+  try {
+    const url = getWebhook();
+    const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName });
+    const res = await fetch(url + '?' + params.toString());
+    const data = await res.json();
+    if (data.status === 'ok' && data.url) {
+      payUrl = data.url;
+      amountNote = ''; // real link already has the exact amount, no need to ask them to type it
+    }
+  } catch (e) { /* fall back to bare link below */ }
+
+  const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience.\n\nPay online here${amountNote}: ${payUrl}\n\nThank you.\n- Mustansir Malik`;
+  const waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+  if (newWin) newWin.location.href = waUrl;
+  else window.open(waUrl, '_blank');
 }
 
 function toggleFeeFields() {
@@ -606,7 +627,7 @@ function render() {
             <div class="task-body">
               <div class="task-name">${t.name}</div>
               ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft);">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${t.linked ? ' · linked: ' + t.linked : ''}</div>` : ''}
-              ${isFee && balance > 0 && t.phone ? `<a href="${buildWhatsAppLink(t, balance)}" target="_blank" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:600;">📱 Send WhatsApp reminder</a>` : ''}
+              ${isFee && balance > 0 && t.phone ? `<span onclick="sendWhatsAppReminder('${t.id}', ${balance})" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:600; cursor:pointer;">📱 Send WhatsApp reminder</span>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
                 ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
