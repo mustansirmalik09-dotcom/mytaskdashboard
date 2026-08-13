@@ -618,17 +618,19 @@ function render() {
   } else {
     const groupDefs = [
       { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--harbor)', match: t => t.cat === 'MHJ' },
-      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--plum)', match: t => t.cat === 'SHK' },
-      { key: 'OWN', label: 'Professional — OWN', color: 'var(--moss)', match: t => t.cat === 'OWN' },
-      { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
-      { key: 'FEES', label: 'Fees', color: 'var(--clay)', match: t => t.type === 'fee' },
     ];
-    // Any category beyond the fixed set above (e.g. a newly created employer/client group)
-    // automatically gets its own section here, so nothing ever becomes invisible.
+    // Any category beyond the fixed set (e.g. a newly created employer/client group)
+    // gets its own section here, right after MHJ, so nothing ever becomes invisible.
     const extraColors = ['#8C7196', '#5E7C99', '#6E8F73', '#B98A3E', '#C3876F'];
     extraCats.forEach((cat, i) => {
       groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: extraColors[i % extraColors.length], match: t => t.cat === cat });
     });
+    groupDefs.push(
+      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--plum)', match: t => t.cat === 'SHK' },
+      { key: 'OWN', label: 'Professional — OWN', color: 'var(--moss)', match: t => t.cat === 'OWN' },
+      { key: 'personal', label: 'Personal', color: 'var(--honey)', match: t => t.type === 'personal' },
+      { key: 'FEES', label: 'Fees', color: 'var(--clay)', match: t => t.type === 'fee' }
+    );
 
     groupDefs.forEach(g => {
       const groupTasks = filtered.filter(g.match);
