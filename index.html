@@ -398,7 +398,7 @@ async function sendWhatsAppReminder(taskId, balance) {
   const newWin = window.open('', '_blank');
   if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Preparing payment link...</body>');
 
-  let payUrl = 'https://razorpay.me/@mustansirmalik'; // fallback if link generation fails
+  let payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?u=' + encodeURIComponent('https://razorpay.me/@mustansirmalik'); // fallback if link generation fails - still masked
   let amountNote = ` (please enter ₹${balance} on the page)`;
   try {
     const url = getWebhook();
