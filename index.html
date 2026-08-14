@@ -188,6 +188,7 @@
     <option value="__NEW__">+ Add new category...</option>
   </select>
   <input type="text" id="newTask" placeholder="Add a new task / client name..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+  <input type="date" id="newDueDate" style="width:130px;" title="Due date (optional)">
   <button onclick="addTask()">Add</button>
 </div>
 <div class="add-box" id="feeFields" style="display:none;">
@@ -212,11 +213,13 @@ function getWebhook() {
   return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
 }
 
-async function pushToCalendar(name, tag) {
+async function pushToCalendar(name, tag, dueDate) {
   const url = getWebhook();
   if (!url) return null;
   try {
-    const params = new URLSearchParams({ action: 'add', name, tag });
+    const paramsObj = { action: 'add', name, tag };
+    if (dueDate) paramsObj.dueDate = dueDate;
+    const params = new URLSearchParams(paramsObj);
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     return data.id || null;
@@ -247,7 +250,7 @@ async function pullFromCalendar() {
       const tag = ev.tag;
       const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional');
       const cat = (tag === 'PERSONAL') ? null : tag;
-      const task = { id: ev.id, name: ev.title, type, cat, due: '', done: ev.done, urgent: false };
+      const task = { id: ev.id, name: ev.title, type, cat, due: '', dueDate: ev.dueDate || null, done: ev.done, urgent: false };
       if (tag === 'FEES') {
         task.payable = ev.payable || 0;
         task.received = ev.received || 0;
@@ -498,12 +501,15 @@ function addTask() {
   const type = catVal === 'PERSONAL' ? 'personal' : 'professional';
   const cat = catVal === 'PERSONAL' ? null : catVal;
   const localId = 'u'+Date.now();
-  const task = {id:localId, name, type, cat, due:'', done:false, urgent:false};
+  const dueDateInput = document.getElementById('newDueDate');
+  const dueDateVal = dueDateInput.value;
+  const task = {id:localId, name, type, cat, due:'', dueDate: dueDateVal ? new Date(dueDateVal + 'T09:00:00').toISOString() : null, done:false, urgent:false};
   tasks.push(task);
   input.value = '';
+  dueDateInput.value = '';
   saveTasks();
   render();
-  pushToCalendar(name, catVal).then(calId => {
+  pushToCalendar(name, catVal, dueDateVal).then(calId => {
     if (calId) {
       task.id = calId; // replace temp id with real calendar id for future delete/toggle
       saveTasks();
@@ -524,6 +530,27 @@ async function pushFeeToCalendar(name, payable, received, linked, phone) {
     const data = await res.json();
     return data.id || null;
   } catch (e) { return null; }
+}
+
+function setDueDate(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const currentVal = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
+  showModal('Due date — ' + t.name, `
+    <label style="font-size:11px; color:var(--ink-soft);">Pick a due date</label>
+    <input type="date" id="modalDueDate" style="${inputStyle()}" value="${currentVal}">
+  `, async () => {
+    const val = document.getElementById('modalDueDate').value;
+    if (!val) return;
+    t.dueDate = new Date(val + 'T09:00:00').toISOString();
+    saveTasks();
+    render();
+    if (t.id.startsWith('cal_')) {
+      const url = getWebhook();
+      const params = new URLSearchParams({ action: 'setduedate', id: t.id, dueDate: val });
+      try { await fetch(url + '?' + params.toString()); } catch (e) { /* fire and forget */ }
+    }
+  });
 }
 
 function recordPayment(id) {
@@ -590,7 +617,9 @@ function render() {
   const app = document.getElementById('app');
   const done = tasks.filter(t => t.done).length;
   const pending = tasks.filter(t => !t.done).length;
-  const overdue = tasks.filter(t => !t.done && t.due === 'Overdue').length;
+  const nowTs = Date.now();
+  const isOverdue = t => !t.done && t.dueDate && new Date(t.dueDate).getTime() < nowTs;
+  const overdue = tasks.filter(isOverdue).length;
   const total = tasks.length;
   const pct = total ? Math.round((done/total)*100) : 0;
 
@@ -681,8 +710,10 @@ function render() {
         const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
         const isFee = t.type === 'fee';
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
+        const taskOverdue = isOverdue(t);
+        const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
         html += `
-          <div class="task ${t.done?'done':''}" style="--catcolor:${g.color};${!t.done ? `border-left:4px solid ${g.color.startsWith('var')?g.color:g.color};` : ''}">
+          <div class="task ${t.done?'done':''}" style="--catcolor:${g.color};${!t.done ? `border-left:4px solid ${taskOverdue ? 'var(--coral)' : (g.color.startsWith('var')?g.color:g.color)};` : ''}">
             ${isFee ? '' : `<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">`}
             <div class="task-body">
               <div class="task-name">${t.name}</div>
@@ -690,8 +721,9 @@ function render() {
               ${isFee && balance > 0 && t.phone ? `<span onclick="sendWhatsAppReminder('${t.id}', ${balance})" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">📱 Send WhatsApp reminder</span>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
-                ${t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : ''}
-                ${t.due ? '<span class="due">' + t.due + '</span>' : ''}
+                ${taskOverdue ? '<span class="tag urgent-tag">OVERDUE</span>' : (t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : '')}
+                ${dueDateLabel && !t.done ? `<span class="due" style="${taskOverdue ? 'color:var(--coral);' : ''}">Due ${dueDateLabel}</span>` : ''}
+                ${!t.done ? `<span onclick="setDueDate('${t.id}')" style="cursor:pointer; color:var(--violet); font-size:11px; font-weight:700; text-decoration:underline;">${t.dueDate ? 'Change' : 'Set'} due date</span>` : ''}
                 ${isFee ? `<span onclick="recordPayment('${t.id}')" style="cursor:pointer; color:var(--sky); font-size:11px; font-weight:700; text-decoration:underline;">Record payment</span>` : ''}
                 <span onclick="deleteTask('${t.id}')" style="cursor:pointer; color:var(--ink-soft); font-size:14px; margin-left:auto;" title="Remove task">✕</span>
               </div>
