@@ -5,35 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Task List — SHK Husain Arif</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #EDE6D6; --paper-deep: #E2D7BF; --ink: #232A3B; --ink-soft: #706A58;
-    --mist: #D9CCA9; --harbor: #3C5470; --harbor-soft: #DCE3EC; --clay: #A8342A; --clay-soft: #F0DAD5;
+    --bg: #FAFAF7; --card: #FFFFFF; --line: #ECEAE3; --ink: #22252B; --ink-soft: #8A8A85;
+    --coral: #FF4E6A; --teal: #00BFA6; --yellow: #FFB800; --violet: #7C5CFC; --sky: #1F9EFF; --pink: #FF3D9A;
   }
   * { box-sizing: border-box; }
-  body { font-family: 'Karla', -apple-system, sans-serif; background: var(--paper); color: var(--ink); margin: 0; padding: 20px 16px 40px; line-height: 1.5; }
-  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 4px 0; }
-  .sub { color: var(--ink-soft); font-size: 12.5px; margin-bottom: 20px; }
-  .stat-row { display: flex; gap: 18px; margin-bottom: 20px; }
-  .stat-item .n { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; }
-  .stat-item .l { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+  body { font-family: 'Karla', -apple-system, sans-serif; background: var(--bg); color: var(--ink); margin: 0; padding: 22px 16px 44px; line-height: 1.5; }
+  h1 { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 26px; margin: 0 0 4px 0; }
+  .sub { color: var(--ink-soft); font-size: 12.5px; margin-bottom: 20px; font-weight: 600; }
+  .hero-stats { display: flex; gap: 10px; margin-bottom: 20px; }
+  .hero-card { flex: 1; border-radius: 16px; padding: 14px 16px; color: #fff; }
+  .hero-card.pending-c { background: linear-gradient(135deg, var(--yellow), #ff9d00); }
+  .hero-card.done-c { background: linear-gradient(135deg, var(--teal), #00d9a3); }
+  .hero-card .n { font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; }
+  .hero-card .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; opacity: 0.9; margin-top: 3px; }
   .add-box { display: flex; gap: 8px; margin-bottom: 24px; }
-  .add-box input { flex: 1; background: #fff; border: 1px solid var(--mist); color: var(--ink); padding: 10px 12px; border-radius: 4px; font-size: 14px; font-family: 'Karla', sans-serif; }
-  .add-box button { background: var(--harbor); color: #fff; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .add-box input { flex: 1; background: #fff; border: 1.5px solid var(--line); color: var(--ink); padding: 11px 14px; border-radius: 12px; font-size: 14px; font-family: 'Karla', sans-serif; font-weight: 600; }
+  .add-box input:focus { outline: none; border-color: var(--violet); }
+  .add-box button { background: linear-gradient(135deg, var(--violet), var(--coral)); color: #fff; border: none; padding: 11px 22px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: 'Karla', sans-serif; }
   .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
-  .task { display: flex; align-items: flex-start; gap: 10px; background: #fff; border: 1px solid var(--mist); border-radius: 3px; padding: 12px 13px; }
-  .task.done { opacity: 0.5; background: var(--paper-deep); }
-  .task input[type=checkbox] { margin-top: 2px; width: 17px; height: 17px; accent-color: var(--harbor); flex-shrink: 0; cursor: pointer; }
-  .task-name { font-size: 13px; }
-  .task.done .task-name { text-decoration: line-through; color: var(--ink-soft); }
-  .empty { color: var(--ink-soft); font-size: 13px; text-align: center; padding: 30px; font-family: 'Fraunces', serif; font-style: italic; }
-  .loading { text-align: center; padding: 40px; color: var(--ink-soft); }
+  .task { display: flex; align-items: flex-start; gap: 10px; background: #fff; border: 1.5px solid var(--line); border-left: 4px solid var(--sky); border-radius: 14px; padding: 12px 13px; transition: transform 0.15s ease; }
+  .task:hover { transform: translateY(-2px); }
+  .task.done { opacity: 0.55; border-left-color: var(--line); }
+  .task input[type=checkbox] { margin-top: 2px; width: 19px; height: 19px; accent-color: var(--teal); flex-shrink: 0; cursor: pointer; }
+  .task-name { font-size: 13px; font-weight: 600; }
+  .task.done .task-name { text-decoration: line-through; color: var(--ink-soft); font-weight: 400; }
+  .empty { color: var(--ink-soft); font-size: 14px; text-align: center; padding: 34px; font-family: 'Baloo 2', sans-serif; font-weight: 600; }
+  .loading { text-align: center; padding: 40px; color: var(--ink-soft); font-weight: 700; }
 </style>
 </head>
 <body>
 
-<h1>Task List — SHK Husain Arif</h1>
+<h1 id="pageTitle">Task List</h1>
 <div class="sub" id="syncStatus">Loading...</div>
 <div id="statsRow"></div>
 
@@ -47,6 +52,9 @@
 <script>
 const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 const VIEW = 'shk';
+document.title = 'Task List — SHK Husain Arif';
+document.getElementById('pageTitle').textContent = 'SHK Husain Arif Tasks';
+
 let tasks = [];
 
 async function loadTasks() {
@@ -66,9 +74,9 @@ function render() {
   const pending = tasks.filter(t => !t.done).length;
 
   document.getElementById('statsRow').innerHTML = `
-    <div class="stat-row">
-      <div class="stat-item"><div class="n">${pending}</div><div class="l">Pending</div></div>
-      <div class="stat-item"><div class="n">${done}</div><div class="l">Done</div></div>
+    <div class="hero-stats">
+      <div class="hero-card pending-c"><div class="n">${pending}</div><div class="l">Pending</div></div>
+      <div class="hero-card done-c"><div class="n">${done}</div><div class="l">Done</div></div>
     </div>
   `;
 

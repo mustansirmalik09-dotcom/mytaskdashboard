@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Task List — Personal</title>
+<title>Task List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -51,9 +51,13 @@
 
 <script>
 const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
-const VIEW = 'personal';
-document.title = 'Task List — Personal';
-document.getElementById('pageTitle').textContent = 'Personal Tasks';
+// Category comes from the URL - e.g. view.html?cat=HATIM_BHAI_ADV - so every new
+// category automatically gets a working link with no new file needed.
+const params0 = new URLSearchParams(window.location.search);
+const VIEW = (params0.get('cat') || 'PERSONAL').toUpperCase();
+const DISPLAY_NAME = VIEW.replace(/_/g, ' ');
+document.title = 'Task List — ' + DISPLAY_NAME;
+document.getElementById('pageTitle').textContent = DISPLAY_NAME + ' Tasks';
 
 let tasks = [];
 
