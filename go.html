@@ -11,13 +11,29 @@
 <body>
   <p>Redirecting to secure payment page...</p>
   <script>
+    const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
     const params = new URLSearchParams(window.location.search);
-    const target = params.get('u');
-    if (target) {
-      window.location.href = decodeURIComponent(target);
-    } else {
-      document.body.innerHTML = '<p>Invalid payment link.</p>';
+    const code = params.get('c');
+    const legacyTarget = params.get('u');
+
+    async function go() {
+      if (code) {
+        try {
+          const res = await fetch(WEBHOOK + '?action=resolvelink&c=' + encodeURIComponent(code));
+          const data = await res.json();
+          if (data.status === 'ok' && data.url) {
+            window.location.href = data.url;
+            return;
+          }
+        } catch (e) { /* fall through to error below */ }
+        document.body.innerHTML = '<p>This payment link has expired. Please ask for a fresh one.</p>';
+      } else if (legacyTarget) {
+        window.location.href = decodeURIComponent(legacyTarget);
+      } else {
+        document.body.innerHTML = '<p>Invalid payment link.</p>';
+      }
     }
+    go();
   </script>
 </body>
 </html>
