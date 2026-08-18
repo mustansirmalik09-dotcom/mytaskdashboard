@@ -27,6 +27,7 @@
     --pink-soft: #FFE0F1;
   }
   * { box-sizing: border-box; }
+  html, body { overflow-x: hidden; max-width: 100vw; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   body {
     font-family: 'Karla', -apple-system, sans-serif;
@@ -108,7 +109,7 @@
     margin-top: 2px; width: 19px; height: 19px; accent-color: var(--teal); flex-shrink: 0; cursor: pointer;
   }
   .task-body { flex: 1; min-width: 0; }
-  .task-name { font-size: 13px; line-height: 1.35; font-weight: 600; }
+  .task-name { font-size: 13px; line-height: 1.35; font-weight: 600; overflow-wrap: break-word; word-break: break-word; }
   .task.done .task-name { text-decoration: line-through; color: var(--ink-soft); font-weight: 400; }
   .task-meta { font-size: 10px; margin-top: 7px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
   .tag {
@@ -124,11 +125,13 @@
   .urgent-tag { background: var(--coral); color: #fff; }
   .due { color: var(--ink-soft); font-family: 'Karla', sans-serif; font-size: 10px; font-weight: 700; }
 
-  .add-box { display: flex; gap: 8px; margin-top: 4px; }
+  .add-box { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .add-box input, .add-box select {
     background: #fff; border: 1.5px solid var(--line); color: var(--ink);
     padding: 10px 12px; border-radius: 12px; font-size: 12.5px; font-family: 'Karla', sans-serif; font-weight: 600;
+    max-width: 100%;
   }
+  #newCat { flex: 1; min-width: 140px; }
   .add-box input:focus, .add-box select:focus { outline: none; border-color: var(--violet); }
   .add-box input[type=text] { flex: 1; }
   .add-box button {
@@ -188,14 +191,14 @@
     <option value="__NEW__">+ Add new category...</option>
   </select>
   <input type="text" id="newTask" placeholder="Add a new task / client name..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
-  <input type="date" id="newDueDate" style="width:130px;" title="Due date (optional)">
+  <input type="date" id="newDueDate" style="flex:1; min-width:130px;" title="Due date (optional)">
   <button onclick="addTask()">Add</button>
 </div>
 <div class="add-box" id="feeFields" style="display:none;">
-  <input type="number" id="feePayable" placeholder="₹ Payable" style="width:100px;">
-  <input type="number" id="feeReceived" placeholder="₹ Received" style="width:100px;">
-  <input type="text" id="feeLinked" placeholder="Linked task/client (optional)">
-  <input type="tel" id="feePhone" placeholder="Client phone (optional, for WhatsApp)">
+  <input type="number" id="feePayable" placeholder="₹ Payable" style="flex:1; min-width:100px;">
+  <input type="number" id="feeReceived" placeholder="₹ Received" style="flex:1; min-width:100px;">
+  <input type="text" id="feeLinked" placeholder="Linked task/client (optional)" style="flex:2; min-width:150px;">
+  <input type="tel" id="feePhone" placeholder="Client phone (optional, for WhatsApp)" style="flex:2; min-width:150px;">
 </div>
 
 <div id="app" style="margin-top:20px;">
