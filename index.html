@@ -405,8 +405,8 @@ async function sendWhatsAppReminder(taskId, balance) {
     const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName });
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
-    if (data.status === 'ok' && data.code) {
-      payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?c=' + data.code;
+    if (data.status === 'ok' && data.shortUrl) {
+      payUrl = data.shortUrl;
       amountNote = ''; // real link already has the exact amount, no need to ask them to type it
     }
   } catch (e) { /* fall back to bare link below */ }
