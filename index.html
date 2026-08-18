@@ -398,18 +398,30 @@ async function sendWhatsAppReminder(taskId, balance) {
   const newWin = window.open('', '_blank');
   if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Preparing payment link...</body>');
 
-  let payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?u=' + encodeURIComponent('https://razorpay.me/@mustansirmalik'); // fallback if link generation fails - still masked
-  let amountNote = ` (please enter ₹${balance} on the page)`;
+  let payUrl = null;
+  let amountNote = '';
+  const url = getWebhook();
   try {
-    const url = getWebhook();
     const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName });
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     if (data.status === 'ok' && data.shortUrl) {
-      payUrl = data.shortUrl;
-      amountNote = ''; // real link already has the exact amount, no need to ask them to type it
+      payUrl = data.shortUrl; // real link already has the exact amount, no need to ask them to type it
     }
-  } catch (e) { /* fall back to bare link below */ }
+  } catch (e) { /* try the fallback path below */ }
+
+  if (!payUrl) {
+    amountNote = ` (please enter ₹${balance} on the page)`;
+    try {
+      const res2 = await fetch(url + '?action=fallbacklink');
+      const data2 = await res2.json();
+      if (data2.status === 'ok' && data2.shortUrl) payUrl = data2.shortUrl;
+    } catch (e) { /* absolute last resort below */ }
+  }
+
+  if (!payUrl) {
+    payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?u=' + encodeURIComponent('https://razorpay.me/@mustansirmalik'); // still masked, just not shortened
+  }
 
   const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience.\n\nPay online here${amountNote}: ${payUrl}\n\nThank you.\n- Mustansir Malik`;
   // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
