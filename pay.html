@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pay Mustansir Malik — Scan QR to Pay</title>
-<meta property="og:title" content="Pay Mustansir Malik">
+<title>Pay Mustansirr Malik — Scan QR to Pay</title>
+<meta property="og:title" content="Pay Mustansirr Malik">
 <meta property="og:description" content="Scan this QR code to pay via UPI — s8124203048@slc">
 <meta property="og:image" content="https://mustansirrmalikworkdashboard.netlify.app/payment-qr-small.png">
 <meta property="og:image:width" content="450">
@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-  <h1>Pay Mustansir Malik</h1>
+  <h1>Pay Mustansirr Malik</h1>
   <div class="upi">UPI ID: s8124203048@slc</div>
   <img src="payment-qr-small.png" alt="Payment QR Code">
   <div><a id="payBtn" href="#">Pay Now</a></div>
@@ -32,7 +32,7 @@
     const params = new URLSearchParams(window.location.search);
     const amount = params.get('amount') || '';
     const client = params.get('client') || '';
-    let upiLink = 'upi://pay?pa=s8124203048@slc&pn=' + encodeURIComponent('Mustansir Malik') + '&cu=INR';
+    let upiLink = 'upi://pay?pa=s8124203048@slc&pn=' + encodeURIComponent('Mustansirr Malik') + '&cu=INR';
     if (amount) upiLink += '&am=' + encodeURIComponent(amount);
     if (client) upiLink += '&tn=' + encodeURIComponent('Fee for ' + client);
     document.getElementById('payBtn').href = upiLink;
