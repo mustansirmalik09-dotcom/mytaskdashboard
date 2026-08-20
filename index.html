@@ -426,7 +426,7 @@ async function sendWhatsAppReminder(taskId, balance) {
     payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?u=' + encodeURIComponent('https://razorpay.me/@mustansirmalik'); // still masked, just not shortened
   }
 
-  const message = `Dear Sir/Madam, your fee of ₹${balance} for "${clientName}" is pending. Kindly clear it at your earliest convenience.\n\nPay online here${amountNote}: ${payUrl}\n\nThank you.\n- Mustansir Malik`;
+  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustansir Malik*\n_Tax & Accounts Consultant, Indore_`;
   // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
   // preference toward the standard WhatsApp package and doesn't always fall back to Business cleanly
   // even when only Business is installed.
