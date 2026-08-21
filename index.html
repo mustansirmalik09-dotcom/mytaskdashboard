@@ -399,19 +399,27 @@ async function sendWhatsAppReminder(taskId, balance) {
 
   // Open the window immediately (synchronously, within the click) so browsers don't block it as a popup
   const newWin = window.open('', '_blank');
-  if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Preparing payment link...</body>');
+  if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Generating your exact payment amount — this can take a few seconds...</body>');
 
   let payUrl = null;
   let amountNote = '';
+  let diagnosticNote = '';
   const url = getWebhook();
   try {
     const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName });
-    const res = await fetch(url + '?' + params.toString());
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // generous 25s - this call chains two external APIs
+    const res = await fetch(url + '?' + params.toString(), { signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await res.json();
     if (data.status === 'ok' && data.shortUrl) {
       payUrl = data.shortUrl; // real link already has the exact amount, no need to ask them to type it
+    } else {
+      diagnosticNote = 'Server said: ' + (data.message || JSON.stringify(data));
     }
-  } catch (e) { /* try the fallback path below */ }
+  } catch (e) {
+    diagnosticNote = e.name === 'AbortError' ? 'Request took too long (over 25s) and timed out.' : ('Connection error: ' + e.message);
+  }
 
   if (!payUrl) {
     amountNote = ` (please enter ₹${balance} on the page)`;
@@ -439,6 +447,7 @@ async function sendWhatsAppReminder(taskId, balance) {
   if (newWin) {
     newWin.document.write(`
       <body style="font-family:sans-serif; padding:30px; text-align:center; color:#333;">
+        ${diagnosticNote ? `<div style="background:#FFF3E0; border:1px solid #FFB800; border-radius:10px; padding:12px; margin-bottom:18px; font-size:12.5px; color:#7A5A00; text-align:left;"><strong>⚠️ Fixed amount not applied this time.</strong><br>${diagnosticNote}<br><br>The link below still works, but the client will need to type ₹${balance} themselves.</div>` : ''}
         <p><a href="${waBusinessIntent}" style="display:inline-block; background:#25D366; color:#fff; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">Open in WhatsApp Business</a></p>
         <p style="font-size:12px; color:#aaa; margin:8px 0;">— or —</p>
         <p><a href="${waUrl}" style="display:inline-block; background:#3C5470; color:#fff; padding:10px 22px; border-radius:8px; text-decoration:none; font-size:14px;">Open in WhatsApp (regular)</a></p>
