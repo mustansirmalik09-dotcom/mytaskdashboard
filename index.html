@@ -647,7 +647,8 @@ function render() {
   const total = tasks.length;
   const pct = total ? Math.round((done/total)*100) : 0;
 
-  const feeTasks = tasks.filter(t => t.type === 'fee');
+  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance'));
+  const creditBalances = tasks.filter(t => t.type === 'fee' && t.name.includes('Advance Credit Balance'));
   const totalPayable = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
   const totalReceived = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
   const totalDiscount = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
@@ -681,6 +682,12 @@ function render() {
   });
 
   let summaryHtml = `
+    ${creditBalances.length > 0 ? `
+    <div style="background:linear-gradient(135deg, var(--teal), #00d9a3); border-radius:16px; padding:14px 18px; margin-bottom:16px; color:#fff;">
+      <div style="font-weight:800; font-size:13px; margin-bottom:6px;">💳 Advance Credit Available</div>
+      ${creditBalances.map(c => `<div style="font-size:13px; margin-bottom:2px;">${c.name.replace('Advance Credit Balance', '').replace(/[—\-–]\s*$/, '').trim() || c.name} — <strong>₹${c.payable}</strong> remaining</div>`).join('')}
+      <div style="font-size:11px; opacity:0.85; margin-top:6px;">Check before charging again — this may already cover upcoming work.</div>
+    </div>` : ''}
     <div class="hero-stats">
       <div class="hero-card pct"><div class="n">${pct}%</div><div class="l">Complete</div></div>
       <div class="hero-card done-c"><div class="n">${done}</div><div class="l">Done</div></div>
@@ -727,7 +734,7 @@ function render() {
       { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--violet)', match: t => t.cat === 'SHK' },
       { key: 'OWN', label: 'Professional — OWN', color: 'var(--teal)', match: t => t.cat === 'OWN' },
       { key: 'personal', label: 'Personal', color: 'var(--pink)', match: t => t.type === 'personal' },
-      { key: 'FEES', label: 'Fees', color: 'var(--coral)', match: t => t.type === 'fee' }
+      { key: 'FEES', label: 'Fees', color: 'var(--coral)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
     );
 
     groupDefs.forEach(g => {
