@@ -253,7 +253,7 @@ async function pullFromCalendar() {
       const tag = ev.tag;
       const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional');
       const cat = (tag === 'PERSONAL') ? null : tag;
-      const task = { id: ev.id, name: ev.title, type, cat, due: '', dueDate: ev.dueDate || null, done: ev.done, urgent: false };
+      const task = { id: ev.id, name: ev.title, type, cat, due: '', dueDate: ev.dueDate || null, done: ev.done, urgent: false, remark: ev.remark || '' };
       if (tag === 'FEES') {
         task.payable = ev.payable || 0;
         task.received = ev.received || 0;
@@ -556,6 +556,29 @@ async function pushFeeToCalendar(name, payable, received, linked, phone) {
   } catch (e) { return null; }
 }
 
+const REMARK_PRESETS = ['Waiting for documents', 'Waiting for client confirmation', 'In progress', 'Waiting for government portal', 'On hold', 'Awaiting payment'];
+
+function setRemark(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const presetsHtml = REMARK_PRESETS.map(p => `<button type="button" onclick="document.getElementById('modalRemarkText').value='${p}'" style="background:var(--paper-deep, #f0eee6); border:1px solid var(--line, #ECEAE3); color:var(--ink); padding:5px 10px; border-radius:20px; font-size:11px; cursor:pointer; margin:2px;">${p}</button>`).join('');
+  showModal('Remark — ' + t.name, `
+    <div style="margin-bottom:8px;">${presetsHtml}</div>
+    <label style="font-size:11px; color:var(--ink-soft);">Or type your own</label>
+    <input type="text" id="modalRemarkText" style="${inputStyle()}" placeholder="Why is this pending?" value="${(t.remark || '').replace(/"/g, '&quot;')}">
+  `, async () => {
+    const val = document.getElementById('modalRemarkText').value.trim();
+    t.remark = val;
+    saveTasks();
+    render();
+    if (t.id.startsWith('cal_')) {
+      const url = getWebhook();
+      const params = new URLSearchParams({ action: 'setremark', id: t.id, remark: val });
+      try { await fetch(url + '?' + params.toString()); } catch (e) { /* fire and forget */ }
+    }
+  }, 'Save', 'Cancel');
+}
+
 function setDueDate(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
@@ -757,11 +780,13 @@ function render() {
               <div class="task-name">${t.name}</div>
               ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft); font-weight:600;">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${t.linked ? ' · linked: ' + t.linked : ''}</div>` : ''}
               ${isFee && balance > 0 && t.phone ? `<span onclick="sendWhatsAppReminder('${t.id}', ${balance})" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">📱 Send WhatsApp reminder</span>` : ''}
+              ${t.remark && !t.done ? `<div style="display:inline-block; margin-top:4px; font-size:10.5px; font-weight:700; background:var(--yellow-soft, #FFF3D6); color:#a56800; padding:3px 8px; border-radius:8px;">💬 ${t.remark}</div>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
                 ${taskOverdue ? '<span class="tag urgent-tag">OVERDUE</span>' : (t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : '')}
                 ${dueDateLabel && !t.done ? `<span class="due" style="${taskOverdue ? 'color:var(--coral);' : ''}">Due ${dueDateLabel}</span>` : ''}
                 ${!t.done ? `<span onclick="setDueDate('${t.id}')" style="cursor:pointer; color:var(--violet); font-size:11px; font-weight:700; text-decoration:underline;">${t.dueDate ? 'Change' : 'Set'} due date</span>` : ''}
+                ${!t.done ? `<span onclick="setRemark('${t.id}')" style="cursor:pointer; color:#a56800; font-size:11px; font-weight:700; text-decoration:underline;">${t.remark ? 'Edit' : 'Add'} remark</span>` : ''}
                 ${isFee ? `<span onclick="recordPayment('${t.id}')" style="cursor:pointer; color:var(--sky); font-size:11px; font-weight:700; text-decoration:underline;">Record payment</span>` : ''}
                 <span onclick="deleteTask('${t.id}')" style="cursor:pointer; color:var(--ink-soft); font-size:14px; margin-left:auto;" title="Remove task">✕</span>
               </div>
