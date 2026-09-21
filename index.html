@@ -770,7 +770,7 @@ function render() {
       html += `<div class="cat-section">
         <div class="cat-heading"><span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${groupTasks.length}</span></div>
         <div class="task-grid">`;
-      groupTasks.forEach(t => {
+      groupTasks.forEach((t, idx) => {
         const tagClass = t.type === 'personal' ? 'personal' : (t.type === 'fee' ? 'fees' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'generic-cat'))));
         const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
         const isFee = t.type === 'fee';
@@ -779,6 +779,7 @@ function render() {
         const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
         html += `
           <div class="task ${t.done?'done':''}" style="--catcolor:${g.color};${!t.done ? `border-left:4px solid ${taskOverdue ? 'var(--coral)' : (g.color.startsWith('var')?g.color:g.color)};` : ''}">
+            <span style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; color:var(--ink-soft); flex-shrink:0; min-width:20px;">${idx + 1}.</span>
             ${isFee ? '' : `<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">`}
             <div class="task-body">
               <div class="task-name">${t.name}</div>
