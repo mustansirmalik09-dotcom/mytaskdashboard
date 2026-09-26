@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice — Mustansirr Malik</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --card: #FFFFFF;
+    --line: #ECEAE3;
+    --ink: #22252B;
+    --ink-soft: #8A8A85;
+    --coral: #FF4E6A;
+    --coral-soft: #FFE4E9;
+    --teal: #00BFA6;
+    --teal-soft: #DAF7F1;
+    --yellow: #FFB800;
+    --yellow-soft: #FFF3D6;
+    --violet: #7C5CFC;
+    --violet-soft: #EBE5FF;
+    --sky: #1F9EFF;
+    --sky-soft: #DFF0FF;
+    --pink: #FF3D9A;
+    --pink-soft: #FFE0F1;
+  }
+  * { box-sizing: border-box; }
+  html, body { overflow-x: hidden; max-width: 100vw; }
+  body {
+    font-family: 'Karla', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding: 26px 14px 60px;
+    line-height: 1.5;
+  }
+  .sheet {
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--card);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(34,37,43,0.10);
+    position: relative;
+  }
+  .band {
+    background: linear-gradient(120deg, var(--coral), var(--violet));
+    padding: 30px 26px 30px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .band::after {
+    content: '';
+    position: absolute; right: -40px; top: -50px;
+    width: 170px; height: 170px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .band::before {
+    content: '';
+    position: absolute; right: 50px; bottom: -70px;
+    width: 130px; height: 130px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .brand-row { display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:1; gap: 10px; }
+  .brand { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; line-height:1.15; }
+  .brand-tag { font-size:11.5px; opacity:0.92; font-weight:600; margin-top:3px; }
+  .brand-addr { font-size:10.5px; opacity:0.78; margin-top:9px; max-width: 190px; line-height:1.4; }
+  .inv-word { font-family:'Baloo 2',sans-serif; font-weight:800; font-size:22px; letter-spacing:0.05em; opacity:0.95; text-align:right; white-space:nowrap; }
+  .inv-meta { text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11px; opacity:0.92; margin-top:8px; line-height:1.6; white-space:nowrap; }
+
+  .status-row { display:flex; justify-content:center; margin-top:-18px; position:relative; z-index:2; }
+  .status-badge {
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:0.09em;
+    padding:7px 22px; border-radius:20px; box-shadow: 0 6px 16px rgba(0,0,0,0.16);
+  }
+  .status-badge.pending { background: var(--coral); color:#fff; }
+  .status-badge.paid { background: var(--teal); color:#fff; }
+
+  .body-area { padding: 30px 26px 8px; }
+  .row-2 { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom: 24px; }
+  .block-label { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin-bottom:4px; }
+  .block-value { font-family:'Baloo 2',sans-serif; font-size:16px; font-weight:700; word-break: break-word; }
+
+  table.items { width:100%; border-collapse: collapse; margin-bottom: 20px; }
+  table.items th {
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em;
+    color: var(--ink-soft); font-weight:800; padding: 0 0 8px; border-bottom: 2px solid var(--line);
+  }
+  table.items th.amt, table.items td.amt { text-align:right; }
+  table.items td { padding: 12px 0; border-bottom: 1px solid var(--line); font-size:13.5px; }
+  table.items td.amt { font-family:'IBM Plex Mono',monospace; font-weight:600; white-space:nowrap; }
+  table.items tr.deduct td { color: var(--ink-soft); }
+  table.items tr.total td {
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:16px; color: var(--ink);
+    border-bottom: none; padding-top: 16px;
+  }
+  table.items tr.total td.amt { color: var(--coral); font-size:20px; }
+  table.items tr.total.settled td.amt { color: var(--teal); }
+
+  .pay-btn {
+    display:block; text-align:center; text-decoration:none;
+    background: linear-gradient(100deg, var(--teal), var(--sky));
+    color:#fff; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:16px;
+    padding:15px; border-radius:14px; margin: 4px 0 26px;
+    box-shadow: 0 8px 20px rgba(0,191,166,0.28);
+  }
+
+  .footer-note { border-top: 1.5px dashed var(--line); padding: 18px 0 26px; font-size:12px; color:var(--ink-soft); }
+  .sign { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink); margin-top:12px; }
+  .sign small { display:block; font-family:'Karla',sans-serif; font-weight:600; color: var(--ink-soft); font-size:11px; margin-top:2px; }
+
+  .actions { max-width:560px; margin: 18px auto 0; display:flex; gap:10px; justify-content:center; }
+  .actions button {
+    font-family:'Karla',sans-serif; font-weight:700; font-size:13px; cursor:pointer;
+    border-radius:12px; padding:11px 22px; border:1.5px solid var(--ink); background:var(--ink); color:#fff;
+  }
+
+  @media (max-width: 400px) {
+    .brand { font-size:19px; }
+    .inv-word { font-size:18px; }
+  }
+
+  @media print {
+    body { background:#fff; padding:0; }
+    .sheet { box-shadow:none; border-radius:0; max-width:100%; }
+    .actions { display:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="band">
+      <div class="brand-row">
+        <div>
+          <div class="brand">Mustansirr Malik</div>
+          <div class="brand-tag">Tax &amp; Accounts Consultant, Indore</div>
+          <div class="brand-addr">175, Ali Township, Bijalpur, Indore 452012</div>
+        </div>
+        <div>
+          <div class="inv-word">INVOICE</div>
+          <div class="inv-meta" id="invMeta"></div>
+        </div>
+      </div>
+    </div>
+    <div class="status-row"><span class="status-badge pending" id="statusBadge">PENDING</span></div>
+    <div class="body-area">
+      <div class="row-2">
+        <div>
+          <div class="block-label">Billed To</div>
+          <div class="block-value" id="clientName">—</div>
+        </div>
+        <div>
+          <div class="block-label">For</div>
+          <div class="block-value" id="descLine" style="font-size:13.5px;">—</div>
+        </div>
+      </div>
+
+      <table class="items">
+        <thead><tr><th>Description</th><th class="amt">Amount</th></tr></thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+
+      <a href="#" id="payBtn" class="pay-btn" style="display:none;">Pay Now →</a>
+
+      <div class="footer-note">
+        Thank you for your continued trust — please reach out if you have any questions about this invoice.
+        <div class="sign">Mustansirr Malik<small>Tax &amp; Accounts Consultant · Indore</small></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button onclick="window.print()">Save / Print as PDF</button>
+  </div>
+
+<script>
+  function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+
+  const p = new URLSearchParams(window.location.search);
+  const inv = p.get('inv') || '—';
+  const date = p.get('date') || '';
+  const client = p.get('client') || 'Client';
+  const desc = p.get('desc') || client;
+  const payable = num(p.get('payable'));
+  const received = num(p.get('received'));
+  const discount = num(p.get('discount'));
+  const balance = p.has('balance') ? num(p.get('balance')) : (payable - received - discount);
+  const pay = p.get('pay') || '';
+
+  document.title = 'Invoice ' + inv + ' — Mustansirr Malik';
+  document.getElementById('invMeta').innerHTML = inv + (date ? '<br>' + date : '');
+  document.getElementById('clientName').textContent = client;
+  document.getElementById('descLine').textContent = desc;
+
+  let rows = '<tr><td>Professional Fees — ' + desc + '</td><td class="amt">' + fmt(payable) + '</td></tr>';
+  if (received > 0) rows += '<tr class="deduct"><td>Less: Amount Received</td><td class="amt">− ' + fmt(received) + '</td></tr>';
+  if (discount > 0) rows += '<tr class="deduct"><td>Less: Discount</td><td class="amt">− ' + fmt(discount) + '</td></tr>';
+  const settled = balance <= 0;
+  rows += '<tr class="total ' + (settled ? 'settled' : '') + '"><td>' + (settled ? 'Balance Settled' : 'Balance Due') + '</td><td class="amt">' + fmt(Math.max(balance, 0)) + '</td></tr>';
+  document.getElementById('itemsBody').innerHTML = rows;
+
+  if (settled) {
+    const badge = document.getElementById('statusBadge');
+    badge.textContent = 'PAID';
+    badge.classList.remove('pending');
+    badge.classList.add('paid');
+  }
+
+  if (pay && !settled) {
+    const payBtn = document.getElementById('payBtn');
+    payBtn.href = pay;
+    payBtn.style.display = 'block';
+  }
+</script>
+</body>
+</html>
