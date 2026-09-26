@@ -660,14 +660,15 @@ async function sendWhatsAppReminder(taskId, balance) {
       <body style="font-family:sans-serif; padding:30px; text-align:center; color:#333;">
         ${diagnosticNote ? `<div style="background:#FFF3E0; border:1px solid #FFB800; border-radius:10px; padding:12px; margin-bottom:18px; font-size:12.5px; color:#7A5A00; text-align:left;"><strong>⚠️ Fixed amount not applied this time.</strong><br>${diagnosticNote}<br><br>The link below still works, but the client will need to type ₹${balance} themselves.</div>` : ''}
         ${invoiceUrl ? `<p style="margin-bottom:14px;"><a href="${invoiceUrl}" target="_blank" style="display:inline-block; background:#fff; color:#7C5CFC; border:1.5px solid #7C5CFC; padding:9px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:bold;">📄 View Invoice ${invoiceNumber}</a></p>` : `<p style="font-size:11.5px; color:#c00; margin-bottom:14px;">Invoice could not be generated this time — reminder still sent below without it.</p>`}
-        ${canShareFile ? `
-        <p><button id="shareInvoiceBtn" style="background:#25D366; color:#fff; border:none; padding:16px 30px; border-radius:10px; font-size:16.5px; font-weight:bold; cursor:pointer;">📎 Share Reminder + Invoice to WhatsApp</button></p>
-        <p style="font-size:11.5px; color:#999; margin:4px 0 16px;">Opens your phone's share sheet with the invoice image attached and the message pre-filled — pick WhatsApp there.</p>
-        <p style="font-size:12px; color:#aaa; margin:8px 0;">— or send without the image —</p>
-        ` : ''}
-        <p><a href="${waBusinessIntent}" style="display:inline-block; background:${canShareFile ? '#fff' : '#25D366'}; color:${canShareFile ? '#25D366' : '#fff'}; border:${canShareFile ? '1.5px solid #25D366' : 'none'}; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">Open in WhatsApp Business</a></p>
+        <p><a href="${waBusinessIntent}" style="display:inline-block; background:#25D366; color:#fff; padding:16px 30px; border-radius:10px; text-decoration:none; font-size:16.5px; font-weight:bold;">Open in WhatsApp Business</a></p>
+        <p style="font-size:11.5px; color:#999; margin:4px 0 16px;">Goes straight to this client's chat, with the invoice as a tappable link.</p>
         <p style="font-size:12px; color:#aaa; margin:8px 0;">— or —</p>
         <p><a href="${waUrl}" style="display:inline-block; background:#3C5470; color:#fff; padding:10px 22px; border-radius:8px; text-decoration:none; font-size:14px;">Open in WhatsApp (regular)</a></p>
+        ${canShareFile ? `
+        <p style="font-size:12px; color:#aaa; margin:16px 0 8px;">— or attach the invoice as an actual image instead —</p>
+        <p><button id="shareInvoiceBtn" style="background:#fff; color:#25D366; border:1.5px solid #25D366; padding:9px 20px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">📎 Share Reminder + Invoice (pick contact yourself)</button></p>
+        <p style="font-size:11px; color:#999; margin:4px 0 0;">Opens your phone's share sheet with the invoice image attached — you'll choose the contact there instead of it opening automatically.</p>
+        ` : ''}
         <p style="font-size:13px; color:#888; margin-top:20px;">If that doesn't open your WhatsApp app (regular or Business), copy the message below and paste it manually:</p>
         <textarea readonly style="width:90%; max-width:400px; height:140px; font-size:13px; padding:10px; border-radius:8px; border:1px solid #ccc;">${message}</textarea><br>
         <button onclick="navigator.clipboard.writeText(document.querySelector('textarea').value); this.textContent='Copied!';" style="margin-top:10px; background:#3C5470; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Copy message</button>
