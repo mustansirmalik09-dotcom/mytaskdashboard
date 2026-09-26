@@ -612,11 +612,15 @@ async function sendWhatsAppReminder(taskId, balance) {
   }
 
   // Auto-generate (or reuse, if this fee was already invoiced before) an invoice to send alongside the reminder.
+  // The server splits the raw title into a client name ("Billed To") and a work description
+  // ("For") itself - see splitClientWork() in Apps Script - so it sends both back split.
   let invoiceUrl = null;
   let invoiceNumber = null;
+  let invoiceClient = clientName;
+  let invoiceWork = clientName;
   try {
     const invParams = new URLSearchParams({
-      action: 'getinvoice', id: taskId, client: clientName, desc: clientName,
+      action: 'getinvoice', id: taskId, client: clientName,
       payable: t.payable, received: t.received, discount: t.discount || 0, balance, pay: payUrl
     });
     const invController = new AbortController();
@@ -627,6 +631,8 @@ async function sendWhatsAppReminder(taskId, balance) {
     if (invData.status === 'ok' && invData.invoiceUrl) {
       invoiceUrl = invData.invoiceUrl;
       invoiceNumber = invData.invoiceNumber;
+      if (invData.client) invoiceClient = invData.client;
+      if (invData.work) invoiceWork = invData.work;
       if (t.invoice !== invoiceNumber) { t.invoice = invoiceNumber; saveTasks(); render(); }
     }
   } catch (e) { /* invoice is a nice-to-have on top of the reminder — never block sending it */ }
@@ -637,7 +643,7 @@ async function sendWhatsAppReminder(taskId, balance) {
   if (invoiceNumber) {
     const invBlob = await generateInvoiceImage({
       invoiceNumber, date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      client: clientName, desc: clientName, payable: t.payable, received: t.received, discount: t.discount || 0, balance
+      client: invoiceClient, desc: invoiceWork, payable: t.payable, received: t.received, discount: t.discount || 0, balance
     });
     if (invBlob) invoiceFile = new File([invBlob], `Invoice-${invoiceNumber}.png`, { type: 'image/png' });
   }
