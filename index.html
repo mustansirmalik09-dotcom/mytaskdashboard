@@ -395,6 +395,178 @@ async function toggleOnCalendar(taskId, done) {
   } catch (e) { /* fire and forget */ }
 }
 
+// Draws the invoice as a real PNG image (client-side, via canvas) so it can be shared as an
+// actual attachment through the phone's native Share sheet — a plain link can never be
+// auto-attached to a WhatsApp message, only text can. Returns a Blob, or null on failure.
+async function generateInvoiceImage(data) {
+  try {
+    const W = 900;
+    // Height depends on how many optional line items actually appear (received/discount) -
+    // computed up front so the image is sized to its real content, not padded with blank space.
+    let bodyY = 466; // first "Professional Fees" row baseline
+    bodyY += 80; // its divider + gap
+    if (data.received > 0) bodyY += 80;
+    if (data.discount > 0) bodyY += 80;
+    const balanceDueY = bodyY + 10;
+    const footerTop = balanceDueY + 80;
+    const H = Math.round(footerTop + 160);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Make sure the webfonts are actually loaded before drawing text with them, so canvas
+    // doesn't silently fall back to the default sans-serif for the whole image.
+    try {
+      await Promise.all([
+        document.fonts.load('800 40px "Baloo 2"'),
+        document.fonts.load('700 28px "Baloo 2"'),
+        document.fonts.load('700 22px "Baloo 2"'),
+        document.fonts.load('600 20px "Karla"'),
+        document.fonts.load('700 20px "Karla"'),
+        document.fonts.load('600 24px "IBM Plex Mono"')
+      ]);
+    } catch (e) { /* draw with fallback fonts below if webfonts aren't ready in time */ }
+
+    const BALOO = "'Baloo 2', sans-serif", KARLA = "'Karla', sans-serif", MONO = "'IBM Plex Mono', monospace";
+    const INK = '#22252B', INK_SOFT = '#8A8A85', LINE = '#ECEAE3';
+    const CORAL = '#FF4E6A', TEAL = '#00BFA6', VIOLET = '#7C5CFC';
+    const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+
+    function roundRect(x, y, w, h, r) {
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    function hLine(yy) {
+      ctx.strokeStyle = LINE; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(46, yy); ctx.lineTo(W - 46, yy); ctx.stroke();
+    }
+    function wrapText(text, x, startY, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '', yy = startY;
+      for (let n = 0; n < words.length; n++) {
+        const test = line + words[n] + ' ';
+        if (ctx.measureText(test).width > maxWidth && line) { ctx.fillText(line, x, yy); line = words[n] + ' '; yy += lineHeight; }
+        else line = test;
+      }
+      ctx.fillText(line, x, yy);
+      return yy;
+    }
+
+    // Background
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Header band
+    const grad = ctx.createLinearGradient(0, 0, W, 220);
+    grad.addColorStop(0, CORAL);
+    grad.addColorStop(1, VIOLET);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 230);
+
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    ctx.font = `800 40px ${BALOO}`;
+    ctx.fillText('Mustansirr Malik', 46, 78);
+    ctx.font = `700 20px ${KARLA}`;
+    ctx.globalAlpha = 0.92;
+    ctx.fillText('Tax & Accounts Consultant, Indore', 46, 108);
+    ctx.globalAlpha = 0.8;
+    ctx.font = `600 17px ${KARLA}`;
+    ctx.fillText('175, Ali Township, Bijalpur,', 46, 140);
+    ctx.fillText('Indore 452012', 46, 162);
+    ctx.globalAlpha = 1;
+
+    ctx.textAlign = 'right';
+    ctx.font = `800 38px ${BALOO}`;
+    ctx.fillText('INVOICE', W - 46, 78);
+    ctx.font = `600 20px ${MONO}`;
+    ctx.globalAlpha = 0.92;
+    ctx.fillText(data.invoiceNumber, W - 46, 112);
+    ctx.fillText(data.date, W - 46, 138);
+    ctx.globalAlpha = 1;
+
+    // Status badge
+    const settled = data.balance <= 0;
+    const badgeText = settled ? 'PAID' : 'PENDING';
+    ctx.font = `700 22px ${BALOO}`;
+    const badgeW = ctx.measureText(badgeText).width + 70, badgeH = 46;
+    const badgeX = W / 2 - badgeW / 2, badgeY = 230 - badgeH / 2;
+    ctx.fillStyle = settled ? TEAL : CORAL;
+    roundRect(badgeX, badgeY, badgeW, badgeH, 23);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText(badgeText, W / 2, badgeY + 30);
+
+    // Billed To / For
+    let y = 320;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
+    ctx.fillText('BILLED TO', 46, y);
+    ctx.fillStyle = INK; ctx.font = `700 26px ${BALOO}`;
+    ctx.fillText(data.client, 46, y + 34);
+
+    ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
+    ctx.fillText('FOR', W / 2 + 20, y);
+    ctx.fillStyle = INK; ctx.font = `700 20px ${BALOO}`;
+    wrapText(data.desc, W / 2 + 20, y + 30, W / 2 - 66, 26);
+
+    // Table
+    y += 100;
+    hLine(y);
+    ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
+    ctx.textAlign = 'left'; ctx.fillText('DESCRIPTION', 46, y - 14);
+    ctx.textAlign = 'right'; ctx.fillText('AMOUNT', W - 46, y - 14);
+
+    y += 46;
+    ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = `600 22px ${KARLA}`;
+    ctx.fillText('Professional Fees — ' + data.desc, 46, y);
+    ctx.textAlign = 'right'; ctx.font = `600 22px ${MONO}`;
+    ctx.fillText(fmt(data.payable), W - 46, y);
+    y += 20; hLine(y + 20); y += 60;
+
+    if (data.received > 0) {
+      ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 20px ${KARLA}`;
+      ctx.fillText('Less: Amount Received', 46, y);
+      ctx.textAlign = 'right'; ctx.font = `600 20px ${MONO}`;
+      ctx.fillText('− ' + fmt(data.received), W - 46, y);
+      y += 20; hLine(y + 20); y += 60;
+    }
+    if (data.discount > 0) {
+      ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 20px ${KARLA}`;
+      ctx.fillText('Less: Discount', 46, y);
+      ctx.textAlign = 'right'; ctx.font = `600 20px ${MONO}`;
+      ctx.fillText('− ' + fmt(data.discount), W - 46, y);
+      y += 20; hLine(y + 20); y += 60;
+    }
+
+    y += 10;
+    ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = `800 28px ${BALOO}`;
+    ctx.fillText(settled ? 'Balance Settled' : 'Balance Due', 46, y);
+    ctx.textAlign = 'right'; ctx.fillStyle = settled ? TEAL : CORAL; ctx.font = `800 34px ${MONO}`;
+    ctx.fillText(fmt(Math.max(data.balance, 0)), W - 46, y);
+
+    // Footer
+    y = footerTop;
+    ctx.strokeStyle = LINE; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+    ctx.beginPath(); ctx.moveTo(46, y); ctx.lineTo(W - 46, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 18px ${KARLA}`;
+    wrapText('Thank you for your continued trust — please reach out if you have any questions about this invoice.', 46, y + 34, W - 92, 26);
+    ctx.fillStyle = INK; ctx.font = `700 24px ${BALOO}`;
+    ctx.fillText('Mustansirr Malik', 46, y + 98);
+    ctx.fillStyle = INK_SOFT; ctx.font = `600 17px ${KARLA}`;
+    ctx.fillText('Tax & Accounts Consultant · Indore', 46, y + 124);
+
+    return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png', 0.95));
+  } catch (e) {
+    return null; // the image is a bonus on top of the link-based reminder — never throw from here
+  }
+}
+
 async function sendWhatsAppReminder(taskId, balance) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
@@ -459,6 +631,19 @@ async function sendWhatsAppReminder(taskId, balance) {
     }
   } catch (e) { /* invoice is a nice-to-have on top of the reminder — never block sending it */ }
 
+  // Draw the invoice as a real image so it can be shared as an actual WhatsApp attachment
+  // (a click-to-chat link can only ever pre-fill text, never a file — this is the only way).
+  let invoiceFile = null;
+  if (invoiceNumber) {
+    const invBlob = await generateInvoiceImage({
+      invoiceNumber, date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      client: clientName, desc: clientName, payable: t.payable, received: t.received, discount: t.discount || 0, balance
+    });
+    if (invBlob) invoiceFile = new File([invBlob], `Invoice-${invoiceNumber}.png`, { type: 'image/png' });
+  }
+  let canShareFile = false;
+  try { canShareFile = !!(invoiceFile && navigator.canShare && navigator.canShare({ files: [invoiceFile] })); } catch (e) { canShareFile = false; }
+
   const invoiceLine = invoiceUrl ? `\n\n📄 *Invoice ${invoiceNumber}:*\n${invoiceUrl}` : '';
   const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustansirr Malik*\n_Tax & Accounts Consultant, Indore_`;
   // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
@@ -475,7 +660,12 @@ async function sendWhatsAppReminder(taskId, balance) {
       <body style="font-family:sans-serif; padding:30px; text-align:center; color:#333;">
         ${diagnosticNote ? `<div style="background:#FFF3E0; border:1px solid #FFB800; border-radius:10px; padding:12px; margin-bottom:18px; font-size:12.5px; color:#7A5A00; text-align:left;"><strong>⚠️ Fixed amount not applied this time.</strong><br>${diagnosticNote}<br><br>The link below still works, but the client will need to type ₹${balance} themselves.</div>` : ''}
         ${invoiceUrl ? `<p style="margin-bottom:14px;"><a href="${invoiceUrl}" target="_blank" style="display:inline-block; background:#fff; color:#7C5CFC; border:1.5px solid #7C5CFC; padding:9px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:bold;">📄 View Invoice ${invoiceNumber}</a></p>` : `<p style="font-size:11.5px; color:#c00; margin-bottom:14px;">Invoice could not be generated this time — reminder still sent below without it.</p>`}
-        <p><a href="${waBusinessIntent}" style="display:inline-block; background:#25D366; color:#fff; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">Open in WhatsApp Business</a></p>
+        ${canShareFile ? `
+        <p><button id="shareInvoiceBtn" style="background:#25D366; color:#fff; border:none; padding:16px 30px; border-radius:10px; font-size:16.5px; font-weight:bold; cursor:pointer;">📎 Share Reminder + Invoice to WhatsApp</button></p>
+        <p style="font-size:11.5px; color:#999; margin:4px 0 16px;">Opens your phone's share sheet with the invoice image attached and the message pre-filled — pick WhatsApp there.</p>
+        <p style="font-size:12px; color:#aaa; margin:8px 0;">— or send without the image —</p>
+        ` : ''}
+        <p><a href="${waBusinessIntent}" style="display:inline-block; background:${canShareFile ? '#fff' : '#25D366'}; color:${canShareFile ? '#25D366' : '#fff'}; border:${canShareFile ? '1.5px solid #25D366' : 'none'}; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">Open in WhatsApp Business</a></p>
         <p style="font-size:12px; color:#aaa; margin:8px 0;">— or —</p>
         <p><a href="${waUrl}" style="display:inline-block; background:#3C5470; color:#fff; padding:10px 22px; border-radius:8px; text-decoration:none; font-size:14px;">Open in WhatsApp (regular)</a></p>
         <p style="font-size:13px; color:#888; margin-top:20px;">If that doesn't open your WhatsApp app (regular or Business), copy the message below and paste it manually:</p>
@@ -484,6 +674,14 @@ async function sendWhatsAppReminder(taskId, balance) {
         <p style="font-size:12px; color:#888; margin-top:10px;">Client's number: ${phone}</p>
       </body>
     `);
+    if (canShareFile) {
+      const shareBtn = newWin.document.getElementById('shareInvoiceBtn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+          newWin.navigator.share({ files: [invoiceFile], text: message }).catch(() => { /* user cancelled the share sheet - the fallback buttons below still work */ });
+        });
+      }
+    }
   }
   if (!newWin) window.open(waUrl, '_blank');
 }
