@@ -657,8 +657,15 @@ async function sendWhatsAppReminder(taskId, balance) {
   let canShareFile = false;
   try { canShareFile = !!(invoiceFile && navigator.canShare && navigator.canShare({ files: [invoiceFile] })); } catch (e) { canShareFile = false; }
 
-  const invoiceLine = invoiceUrl ? `\n\n📄 *Invoice ${invoiceNumber}:*\n${invoiceUrl}` : '';
-  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustansirr Malik*\n_Tax & Accounts Consultant, Indore_`;
+  // Short by design: a real WhatsApp screenshot showed this pre-filled text getting cut off
+  // after ~260 characters when opened via a tapped link (tighter than WhatsApp's own documented
+  // limits — something in the link-to-app handoff itself is the real ceiling), which leaves no
+  // room for the old greeting/signature or a second link. invoice.html has its own "Pay Now"
+  // button wired to payUrl already, so one link covers both the invoice and the payment step.
+  const invoiceLine = invoiceUrl
+    ? `\n\nView invoice & pay${amountNote}:\n${invoiceUrl}`
+    : `\n\nPayment link${amountNote}:\n${payUrl}`;
+  const message = `🧾 *Fee Reminder*\n\n"${clientName}" — ₹${balance} pending.${invoiceLine}`;
   // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
   // preference toward the standard WhatsApp package and doesn't always fall back to Business cleanly
   // even when only Business is installed.

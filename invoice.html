@@ -187,7 +187,7 @@
   const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 
   const p = new URLSearchParams(window.location.search);
-  const id = p.get('id') || '';
+  const inv = p.get('inv') || '';
   const pay = p.get('pay') || '';
 
   function showLoading() {
@@ -256,11 +256,11 @@
   function loadInvoice() {
     showLoading();
 
-    if (!id) { showError(); return; }
+    if (!inv) { showError(); return; }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
-    const params = new URLSearchParams({ action: 'invoicedata', id });
+    const params = new URLSearchParams({ action: 'invoicedata', inv });
 
     fetch(WEBHOOK_URL + '?' + params.toString(), { signal: controller.signal })
       .then(res => res.json())
