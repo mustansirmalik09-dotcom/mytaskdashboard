@@ -620,6 +620,7 @@ async function sendWhatsAppReminder(taskId, balance) {
   let invoiceNumber = null;
   let invoiceClient = clientName;
   let invoiceWork = clientName;
+  let invoiceDate = null;
   try {
     const invParams = new URLSearchParams({
       action: 'getinvoice', id: taskId, client: clientName,
@@ -635,16 +636,20 @@ async function sendWhatsAppReminder(taskId, balance) {
       invoiceNumber = invData.invoiceNumber;
       if (invData.client) invoiceClient = invData.client;
       if (invData.work) invoiceWork = invData.work;
+      if (invData.date) invoiceDate = invData.date;
       if (t.invoice !== invoiceNumber) { t.invoice = invoiceNumber; saveTasks(); render(); }
     }
   } catch (e) { /* invoice is a nice-to-have on top of the reminder — never block sending it */ }
 
   // Draw the invoice as a real image so it can be shared as an actual WhatsApp attachment
   // (a click-to-chat link can only ever pre-fill text, never a file — this is the only way).
+  // Uses the server's persisted invoice date (same one shown on the hosted invoice page)
+  // rather than today's date, so re-sending a reminder for an old invoice doesn't show two
+  // different dates for the same invoice number across the image and the web page.
   let invoiceFile = null;
   if (invoiceNumber) {
     const invBlob = await generateInvoiceImage({
-      invoiceNumber, date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      invoiceNumber, date: invoiceDate || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
       client: invoiceClient, desc: invoiceWork, payable: t.payable, received: t.received, discount: t.discount || 0, balance
     });
     if (invBlob) invoiceFile = new File([invBlob], `Invoice-${invoiceNumber}.png`, { type: 'image/png' });

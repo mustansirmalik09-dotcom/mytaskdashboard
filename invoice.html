@@ -146,6 +146,10 @@
       </div>
     </div>
     <div class="status-row"><span class="status-badge pending" id="statusBadge">PENDING</span></div>
+    <div class="error-banner" id="errorBanner" style="display:none; margin: 16px 26px 0; padding: 14px 16px; background: var(--coral-soft); border-radius: 12px; text-align:center;">
+      <div style="color: var(--coral); font-weight:700; font-size:13.5px; margin-bottom:10px;">Couldn't load this invoice. Please check your connection.</div>
+      <button id="retryBtn" style="font-family:'Karla',sans-serif; font-weight:700; font-size:13px; cursor:pointer; border-radius:10px; padding:8px 20px; border:1.5px solid var(--coral); background:#fff; color:var(--coral);">Retry</button>
+    </div>
     <div class="body-area">
       <div class="row-2">
         <div>
@@ -180,41 +184,102 @@
   function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
   function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
 
+  const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+
   const p = new URLSearchParams(window.location.search);
-  const inv = p.get('inv') || '—';
-  const date = p.get('date') || '';
-  const client = p.get('client') || 'Client';
-  const desc = p.get('desc') || client;
-  const payable = num(p.get('payable'));
-  const received = num(p.get('received'));
-  const discount = num(p.get('discount'));
-  const balance = p.has('balance') ? num(p.get('balance')) : (payable - received - discount);
+  const id = p.get('id') || '';
   const pay = p.get('pay') || '';
 
-  document.title = 'Invoice ' + inv + ' — Mustansirr Malik';
-  document.getElementById('invMeta').innerHTML = inv + (date ? '<br>' + date : '');
-  document.getElementById('clientName').textContent = client;
-  document.getElementById('descLine').textContent = desc;
+  function showLoading() {
+    document.getElementById('errorBanner').style.display = 'none';
+    document.getElementById('invMeta').textContent = 'Loading…';
+    document.getElementById('clientName').textContent = 'Loading…';
+    document.getElementById('descLine').textContent = 'Loading…';
+    document.getElementById('itemsBody').innerHTML =
+      '<tr><td colspan="2" style="text-align:center; color:var(--ink-soft);">Loading…</td></tr>';
+    document.getElementById('payBtn').style.display = 'none';
+  }
 
-  let rows = '<tr><td>Professional Fees — ' + desc + '</td><td class="amt">' + fmt(payable) + '</td></tr>';
-  if (received > 0) rows += '<tr class="deduct"><td>Less: Amount Received</td><td class="amt">− ' + fmt(received) + '</td></tr>';
-  if (discount > 0) rows += '<tr class="deduct"><td>Less: Discount</td><td class="amt">− ' + fmt(discount) + '</td></tr>';
-  const settled = balance <= 0;
-  rows += '<tr class="total ' + (settled ? 'settled' : '') + '"><td>' + (settled ? 'Balance Settled' : 'Balance Due') + '</td><td class="amt">' + fmt(Math.max(balance, 0)) + '</td></tr>';
-  document.getElementById('itemsBody').innerHTML = rows;
+  function showError() {
+    document.getElementById('errorBanner').style.display = 'block';
+    document.getElementById('invMeta').textContent = '—';
+    document.getElementById('clientName').textContent = '—';
+    document.getElementById('descLine').textContent = '—';
+    document.getElementById('itemsBody').innerHTML =
+      '<tr><td colspan="2" style="text-align:center; color:var(--ink-soft);">—</td></tr>';
+  }
 
-  if (settled) {
+  function render(d) {
+    document.getElementById('errorBanner').style.display = 'none';
+
+    const inv = d.inv || '—';
+    const date = d.date || '';
+    const client = d.client || 'Client';
+    const desc = d.desc || client;
+    const payable = num(d.payable);
+    const received = num(d.received);
+    const discount = num(d.discount);
+    const balance = (d.balance || d.balance === 0) ? num(d.balance) : (payable - received - discount);
+
+    document.title = 'Invoice ' + inv + ' — Mustansirr Malik';
+    document.getElementById('invMeta').innerHTML = inv + (date ? '<br>' + date : '');
+    document.getElementById('clientName').textContent = client;
+    document.getElementById('descLine').textContent = desc;
+
+    let rows = '<tr><td>Professional Fees — ' + desc + '</td><td class="amt">' + fmt(payable) + '</td></tr>';
+    if (received > 0) rows += '<tr class="deduct"><td>Less: Amount Received</td><td class="amt">− ' + fmt(received) + '</td></tr>';
+    if (discount > 0) rows += '<tr class="deduct"><td>Less: Discount</td><td class="amt">− ' + fmt(discount) + '</td></tr>';
+    const settled = balance <= 0;
+    rows += '<tr class="total ' + (settled ? 'settled' : '') + '"><td>' + (settled ? 'Balance Settled' : 'Balance Due') + '</td><td class="amt">' + fmt(Math.max(balance, 0)) + '</td></tr>';
+    document.getElementById('itemsBody').innerHTML = rows;
+
     const badge = document.getElementById('statusBadge');
-    badge.textContent = 'PAID';
-    badge.classList.remove('pending');
-    badge.classList.add('paid');
+    if (settled) {
+      badge.textContent = 'PAID';
+      badge.classList.remove('pending');
+      badge.classList.add('paid');
+    } else {
+      badge.textContent = 'PENDING';
+      badge.classList.remove('paid');
+      badge.classList.add('pending');
+    }
+
+    const payBtn = document.getElementById('payBtn');
+    if (pay && !settled) {
+      payBtn.href = pay;
+      payBtn.style.display = 'block';
+    } else {
+      payBtn.style.display = 'none';
+    }
   }
 
-  if (pay && !settled) {
-    const payBtn = document.getElementById('payBtn');
-    payBtn.href = pay;
-    payBtn.style.display = 'block';
+  function loadInvoice() {
+    showLoading();
+
+    if (!id) { showError(); return; }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const params = new URLSearchParams({ action: 'invoicedata', id });
+
+    fetch(WEBHOOK_URL + '?' + params.toString(), { signal: controller.signal })
+      .then(res => res.json())
+      .then(data => {
+        clearTimeout(timeoutId);
+        if (data && data.status === 'ok') {
+          render(data);
+        } else {
+          showError();
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeoutId);
+        showError();
+      });
   }
+
+  document.getElementById('retryBtn').addEventListener('click', loadInvoice);
+  loadInvoice();
 </script>
 </body>
 </html>
