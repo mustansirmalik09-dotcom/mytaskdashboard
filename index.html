@@ -608,7 +608,9 @@ async function sendWhatsAppReminder(taskId, balance) {
   }
 
   if (!payUrl) {
-    payUrl = 'https://mustansirrmalikworkdashboard.netlify.app/go.html?u=' + encodeURIComponent('https://razorpay.me/@mustansirmalik'); // still masked, just not shortened
+    // Straight to Razorpay's own page, no go.html hop - that page showed a visible
+    // "Redirecting..." step before forwarding, an extra page/domain flash on every click.
+    payUrl = 'https://razorpay.me/@mustansirmalik';
   }
 
   // Auto-generate (or reuse, if this fee was already invoiced before) an invoice to send alongside the reminder.
