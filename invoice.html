@@ -186,9 +186,15 @@
 
   const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 
+  // This page's own link carries only the invoice number - no payment link. invoicedata (below)
+  // generates one fresh, from the fee's current balance, at the moment the page actually loads -
+  // see the note on buildInvoiceLink() in the Apps Script for why a passed-in link doesn't work
+  // here (WhatsApp's link auto-detection breaks when a full https:// URL is embedded inside
+  // another URL's query string, encoded or not) and why fetching one fresh is strictly better
+  // anyway (it reflects the real balance even if a partial payment came in after the reminder
+  // was sent).
   const p = new URLSearchParams(window.location.search);
   const inv = p.get('inv') || '';
-  const pay = p.get('pay') || '';
 
   function showLoading() {
     document.getElementById('errorBanner').style.display = 'none';
@@ -245,8 +251,8 @@
     }
 
     const payBtn = document.getElementById('payBtn');
-    if (pay && !settled) {
-      payBtn.href = pay;
+    if (d.pay && !settled) {
+      payBtn.href = d.pay;
       payBtn.style.display = 'block';
     } else {
       payBtn.style.display = 'none';
