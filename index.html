@@ -247,9 +247,19 @@ async function pullFromCalendar() {
     const calIds = new Set(events.map(ev => ev.id));
     const existingIds = new Set(tasks.map(t => t.id));
     let added = 0;
+    let refreshed = 0;
 
     events.forEach(ev => {
-      if (existingIds.has(ev.id)) return;
+      if (existingIds.has(ev.id)) {
+        // Already on this device. The one thing the server can change behind this page's back
+        // is an invoice number (the 9am digest issues one for any pending fee that has a phone
+        // number), so keep just that in step - a payment receipt links to it.
+        if (ev.tag === 'FEES' && ev.invoice) {
+          const local = tasks.find(x => x.id === ev.id);
+          if (local && local.invoice !== ev.invoice) { local.invoice = ev.invoice; refreshed++; }
+        }
+        return;
+      }
       const tag = ev.tag;
       const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional');
       const cat = (tag === 'PERSONAL') ? null : tag;
@@ -272,7 +282,7 @@ async function pullFromCalendar() {
     tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
     const removed = beforeCount - tasks.length;
 
-    if (added > 0 || removed > 0) { saveTasks(); render(); }
+    if (added > 0 || removed > 0 || refreshed > 0) { saveTasks(); render(); }
     document.getElementById('lastSync').textContent = 'Synced with Calendar ✓ ' + new Date().toLocaleTimeString();
   } catch (e) {
     document.getElementById('lastSync').textContent = 'Calendar sync check failed';
@@ -855,10 +865,16 @@ function recordPayment(id) {
     <input type="number" id="modalReceivedAmt" style="${inputStyle()}" value="${t.received}">
     <label style="font-size:11px; color:var(--ink-soft);">Discount to write off (optional)</label>
     <input type="number" id="modalDiscountAmt" style="${inputStyle()}" placeholder="₹ Discount" value="${t.discount || 0}">
+    <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#1a9c52; cursor:pointer; margin-top:2px;">
+      <input type="checkbox" id="modalSendReceipt" checked style="width:16px; height:16px; margin:0; flex-shrink:0;">
+      Offer a WhatsApp receipt after saving
+    </label>
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+    const wantReceipt = document.getElementById('modalSendReceipt').checked; // read now - the receipt box below reuses this modal
     if (isNaN(amount)) return;
+    const prevReceived = Number(t.received) || 0;
     t.received = amount;
     t.discount = discount;
     t.done = (amount + discount) >= t.payable && t.payable > 0;
@@ -867,7 +883,87 @@ function recordPayment(id) {
     if (t.id.startsWith('cal_')) {
       updateFeeOnCalendar(t.id, amount, discount);
     }
+    // Money actually came in (not just a correction or a discount change) - offer the receipt.
+    // showModal() calls closeModal() right after this callback returns, which would instantly
+    // hide a modal opened from in here, so the receipt prompt opens on the next tick instead.
+    const paidNow = Math.round((amount - prevReceived) * 100) / 100;
+    if (wantReceipt && paidNow > 0 && !t.name.includes('Advance Credit Balance')) {
+      setTimeout(() => offerReceipt(t.id, paidNow), 0);
+    }
   });
+}
+
+// ---- One-tap WhatsApp payment receipt ----
+// A normal WhatsApp number can't send messages by itself - a click-to-chat link can only pre-fill
+// one - so the final tap on Send is always yours. Everything before it is ready: the message is
+// written, the client's chat is open, and the invoice link is in it.
+const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
+
+function moneyText(n) {
+  return String(Math.round((Number(n) || 0) * 100) / 100);
+}
+
+function escapeForHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// paidNow = the payment just recorded. Left out when re-sending a receipt later, in which
+// case the message states the total received so far instead.
+function buildReceiptMessage(t, paidNow) {
+  const label = t.linked || t.name;
+  const payable = Number(t.payable) || 0;
+  const received = Number(t.received) || 0;
+  const discount = Number(t.discount) || 0;
+  const balance = Math.max(Math.round((payable - received - discount) * 100) / 100, 0);
+  const amount = paidNow > 0 ? paidNow : received;
+  const invoiceNumber = String(t.invoice || '').split('|')[0].trim();
+
+  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${moneyText(amount)}`;
+  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
+  if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${moneyText(balance)}` : `\n✅ *Status:* Fully settled`;
+  // Only the invoice NUMBER goes in the link, same as the fee reminder - invoice.html looks the
+  // rest up itself, and shows PAID / the updated balance as of the moment the client opens it.
+  if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
+  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustansirr Malik*\n_Tax & Accounts Consultant, Indore_`;
+  // Same safety net as the fee reminder: a literal "&" anywhere in a pre-filled WhatsApp text can
+  // cut off everything after it, and the signature above (or a client's name) can contain one.
+  return msg.replace(/&/g, 'and');
+}
+
+// Separate function so the actual hand-off to the phone's WhatsApp app is one replaceable line.
+function launchWhatsApp(url) {
+  window.location.href = url;
+}
+
+function offerReceipt(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  let phone = (t.phone || '').replace(/[^0-9]/g, '');
+  if (phone.length === 10) phone = '91' + phone;
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const encoded = encodeURIComponent(message);
+  // No saved number: leave "phone" out and WhatsApp itself asks which contact to send to.
+  const phonePart = phone ? 'phone=' + phone + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
+  // Same exact-package targeting as the fee reminder's "Open in WhatsApp Business" button.
+  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
+  // intent:// links only exist on Android; anywhere else the main button opens the normal link.
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const intro = (paidNow ? '✓ Payment saved. ' : '') + (phone
+    ? 'This opens ' + escapeForHtml(t.linked || t.name) + '\'s chat with the receipt ready — you just press Send.'
+    : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
+
+  showModal('Send payment receipt?', `
+    <div style="font-size:12px; color:var(--ink-soft); margin-bottom:8px;">${intro}</div>
+    <div style="white-space:pre-wrap; word-break:break-word; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:12px; line-height:1.45; max-height:290px; overflow:auto; color:var(--ink);">${escapeForHtml(message)}</div>
+    ${isAndroid ? `<div style="margin-top:10px; font-size:12px;">
+      <a href="${escapeForHtml(waUrl)}" target="_blank" rel="noopener" onclick="closeModal()" style="color:#25D366; font-weight:700;">Open in regular WhatsApp instead</a>
+    </div>` : ''}
+  `, () => {
+    if (isAndroid) launchWhatsApp(waBusinessIntent);
+    else window.open(waUrl, '_blank');
+  }, isAndroid ? 'WhatsApp Business' : 'Open WhatsApp', 'Skip');
 }
 
 async function updateFeeOnCalendar(taskId, received, discount) {
@@ -1027,6 +1123,7 @@ function render() {
               <div class="task-name">${t.name}</div>
               ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft); font-weight:600;">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${t.linked ? ' · linked: ' + t.linked : ''}${t.invoice ? ' · 📄 ' + t.invoice : ''}</div>` : ''}
               ${isFee && balance > 0 && t.phone ? `<span onclick="sendWhatsAppReminder('${t.id}', ${balance})" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">📱 Send WhatsApp reminder</span>` : ''}
+              ${isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<span onclick="offerReceipt('${t.id}')" style="display:inline-block; margin-top:5px; ${balance > 0 && t.phone ? 'margin-left:12px;' : ''} font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">🧾 Send receipt</span>` : ''}
               ${t.remark && !t.done ? `<div style="display:inline-block; margin-top:4px; font-size:10.5px; font-weight:700; background:var(--yellow-soft, #FFF3D6); color:#a56800; padding:3px 8px; border-radius:8px;">💬 ${t.remark}</div>` : ''}
               <div class="task-meta">
                 <span class="tag ${tagClass}">${tagLabel}</span>
