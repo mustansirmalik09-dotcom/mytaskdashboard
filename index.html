@@ -869,6 +869,7 @@ function recordPayment(id) {
       <input type="checkbox" id="modalSendReceipt" checked style="width:16px; height:16px; margin:0; flex-shrink:0;">
       Offer a WhatsApp receipt after saving
     </label>
+    <div id="modalReceiptHint" style="font-size:11px; color:var(--ink-soft); margin:3px 0 0 24px; line-height:1.4;"></div>
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
@@ -883,14 +884,34 @@ function recordPayment(id) {
     if (t.id.startsWith('cal_')) {
       updateFeeOnCalendar(t.id, amount, discount);
     }
-    // Money actually came in (not just a correction or a discount change) - offer the receipt.
+    // Ticked and something has been received - offer the receipt. A new payment gets a receipt for
+    // that payment; saving with no new money (same total again, a correction, a discount) gets one
+    // for the total received so far, so a ticked box never just does nothing.
     // showModal() calls closeModal() right after this callback returns, which would instantly
     // hide a modal opened from in here, so the receipt prompt opens on the next tick instead.
     const paidNow = Math.round((amount - prevReceived) * 100) / 100;
-    if (wantReceipt && paidNow > 0 && !t.name.includes('Advance Credit Balance')) {
-      setTimeout(() => offerReceipt(t.id, paidNow), 0);
+    if (wantReceipt && amount > 0 && !t.name.includes('Advance Credit Balance')) {
+      setTimeout(() => offerReceipt(t.id, paidNow > 0 ? paidNow : 0, true), 0);
     }
   });
+
+  // Small live line under the tick-box saying exactly what will be offered, so it is clear
+  // before pressing Save (and clear why when no new payment has been typed in).
+  const amtEl = document.getElementById('modalReceivedAmt');
+  const boxEl = document.getElementById('modalSendReceipt');
+  const hintEl = document.getElementById('modalReceiptHint');
+  const updateReceiptHint = () => {
+    if (!boxEl.checked) { hintEl.textContent = 'No receipt will be offered.'; return; }
+    const entered = parseFloat(amtEl.value);
+    if (isNaN(entered) || entered <= 0) { hintEl.textContent = 'Nothing received yet, so there is no receipt to send.'; return; }
+    const newPayment = Math.round((entered - (Number(t.received) || 0)) * 100) / 100;
+    hintEl.textContent = newPayment > 0
+      ? 'Receipt will be for the new payment of ₹' + moneyText(newPayment) + '.'
+      : 'No new payment entered. Receipt will show the total received so far (₹' + moneyText(entered) + ').';
+  };
+  amtEl.addEventListener('input', updateReceiptHint);
+  boxEl.addEventListener('change', updateReceiptHint);
+  updateReceiptHint();
 }
 
 // ---- One-tap WhatsApp payment receipt ----
@@ -935,7 +956,9 @@ function launchWhatsApp(url) {
   window.location.href = url;
 }
 
-function offerReceipt(taskId, paidNow) {
+// afterSave = opened straight after Record payment (so the first line can say what was saved);
+// the card's "Send receipt" link leaves it out.
+function offerReceipt(taskId, paidNow, afterSave) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
   let phone = (t.phone || '').replace(/[^0-9]/g, '');
@@ -950,7 +973,10 @@ function offerReceipt(taskId, paidNow) {
     '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
   // intent:// links only exist on Android; anywhere else the main button opens the normal link.
   const isAndroid = /Android/i.test(navigator.userAgent);
-  const intro = (paidNow ? '✓ Payment saved. ' : '') + (phone
+  const saved = !afterSave ? ''
+    : paidNow > 0 ? '✓ Payment saved. '
+    : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
+  const intro = saved + (phone
     ? 'This opens ' + escapeForHtml(t.linked || t.name) + '\'s chat with the receipt ready — you just press Send.'
     : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
 
