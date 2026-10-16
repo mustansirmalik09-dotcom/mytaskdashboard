@@ -155,13 +155,13 @@
 </head>
 <body>
 <div class="sub" style="margin-bottom:2px; font-family:'Karla',sans-serif; text-transform:uppercase; letter-spacing:0.08em; font-size:11px; color:var(--violet);">Indore · Tax &amp; Accounts</div>
-<h1>Mustansirr's <span class="accent">Task Board</span></h1>
+<h1>Mustannsirr's <span class="accent">Task Board</span></h1>
 <div class="sub" id="lastSync">Loading...</div>
 <button id="resetBtn" onclick="resetData()">↻ Reset data (if stuck on old tasks)</button>
 
 <div id="authGate" style="position:fixed; inset:0; background:#FAFAF7; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
   <div style="font-family:'Karla',sans-serif; font-size:11px; letter-spacing:0.08em; color:#7C5CFC; text-transform:uppercase; margin-bottom:8px; font-weight:700;">Indore · Tax &amp; Accounts</div>
-  <div style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:26px; margin-bottom:8px; color:#22252B;">Mustansirr's <span style="background:linear-gradient(100deg,#FF4E6A,#7C5CFC); -webkit-background-clip:text; background-clip:text; color:transparent;">Task Board</span></div>
+  <div style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:26px; margin-bottom:8px; color:#22252B;">Mustannsirr's <span style="background:linear-gradient(100deg,#FF4E6A,#7C5CFC); -webkit-background-clip:text; background-clip:text; color:transparent;">Task Board</span></div>
   <div style="font-size:12.5px; color:#8A8A85; margin-bottom:20px; font-weight:600;">This dashboard is password protected</div>
   <input type="password" id="authInput" placeholder="Enter password" style="width:100%; max-width:280px; background:#fff; border:1.5px solid #ECEAE3; color:#22252B; padding:12px 16px; border-radius:14px; font-size:14px; margin-bottom:10px; text-align:center;" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
   <button onclick="checkAuth()" style="background:linear-gradient(135deg,#7C5CFC,#FF4E6A); color:#fff; border:none; padding:11px 30px; border-radius:14px; font-weight:800; font-size:14px; cursor:pointer; font-family:'Karla',sans-serif;">Unlock</button>
@@ -479,7 +479,7 @@ async function generateInvoiceImage(data) {
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'left';
     ctx.font = `800 40px ${BALOO}`;
-    ctx.fillText('Mustansirr Malik', 46, 78);
+    ctx.fillText('Mustannsirr Mallik', 46, 78);
     ctx.font = `700 20px ${KARLA}`;
     ctx.globalAlpha = 0.92;
     ctx.fillText('Tax & Accounts Consultant, Indore', 46, 108);
@@ -567,7 +567,7 @@ async function generateInvoiceImage(data) {
     ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 18px ${KARLA}`;
     wrapText('Thank you for your continued trust — please reach out if you have any questions about this invoice.', 46, y + 34, W - 92, 26);
     ctx.fillStyle = INK; ctx.font = `700 24px ${BALOO}`;
-    ctx.fillText('Mustansirr Malik', 46, y + 98);
+    ctx.fillText('Mustannsirr Mallik', 46, y + 98);
     ctx.fillStyle = INK_SOFT; ctx.font = `600 17px ${KARLA}`;
     ctx.fillText('Tax & Accounts Consultant · Indore', 46, y + 124);
 
@@ -675,7 +675,7 @@ async function sendWhatsAppReminder(taskId, balance) {
   // original greeting and signature. ".replace(/&/g, 'and')" stays on as a safety net - the
   // signature has one ("Tax & Accounts Consultant") and a client name could too.
   const invoiceLine = invoiceUrl ? `\n\n📄 *Invoice ${invoiceNumber}:*\n${invoiceUrl}` : '';
-  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustansirr Malik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
   // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
   // preference toward the standard WhatsApp package and doesn't always fall back to Business cleanly
   // even when only Business is installed.
@@ -945,7 +945,7 @@ function buildReceiptMessage(t, paidNow) {
   // Only the invoice NUMBER goes in the link, same as the fee reminder - invoice.html looks the
   // rest up itself, and shows PAID / the updated balance as of the moment the client opens it.
   if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
-  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustansirr Malik*\n_Tax & Accounts Consultant, Indore_`;
+  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
   // Same safety net as the fee reminder: a literal "&" anywhere in a pre-filled WhatsApp text can
   // cut off everything after it, and the signature above (or a client's name) can contain one.
   return msg.replace(/&/g, 'and');
