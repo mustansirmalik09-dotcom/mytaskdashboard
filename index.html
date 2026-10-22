@@ -5,189 +5,261 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live Task Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600&family=Public+Sans:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#F3F5F8">
 <style>
+  /* ------------------------------------------------------------------
+     Look: working papers. Blue-black ink on cool paper, a serif for the
+     title, section heads and money figures, a plain civic sans for
+     everything else. Red is only ever money owed or overdue, green only
+     money in or settled. Festival themes swap --accent and the paper tint.
+     ------------------------------------------------------------------ */
   :root {
-    --bg: #FAFAF7;
-    --card: #FFFFFF;
-    --line: #ECEAE3;
-    --ink: #22252B;
-    --ink-soft: #8A8A85;
-    --coral: #FF4E6A;
-    --coral-soft: #FFE4E9;
-    --teal: #00BFA6;
-    --teal-soft: #DAF7F1;
-    --yellow: #FFB800;
-    --yellow-soft: #FFF3D6;
-    --violet: #7C5CFC;
-    --violet-soft: #EBE5FF;
-    --sky: #1F9EFF;
-    --sky-soft: #DFF0FF;
-    --pink: #FF3D9A;
-    --pink-soft: #FFE0F1;
+    --bg: #F3F5F8;          /* paper */
+    --sheet: #FFFFFF;
+    --ink: #14223C;
+    --muted: #5A667B;
+    --icon: #8792A5;        /* icons and chevrons only - too light for text */
+    --field: #8E99AC;       /* input and checkbox outlines */
+    --rule: #DCE1E9;
+    --rule-soft: #E8ECF2;
+    --accent: #1F4E9C;      /* buttons, links, focus - festival themes replace this */
+    --accent-soft: #E9EFF9;
+    --red: #B3261E;   --red-soft: #FBEBE9;
+    --green: #146C43; --green-soft: #E7F3EC;
+    --amber: #84570A; --amber-soft: #FBF1DC;
+    /* section colours stay fixed so a festival palette never blurs which section is which */
+    --c-mhj: #2E6DB4; --c-shk: #6F55B3; --c-own: #0E7C86; --c-personal: #B24C7A; --c-fees: #B7791F;
+    --serif: 'Newsreader', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --sans: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  @supports (color: color-mix(in srgb, red 10%, white)) {
+    :root { --accent-soft: color-mix(in srgb, var(--accent) 9%, white); }
   }
   * { box-sizing: border-box; }
-  html, body { overflow-x: hidden; max-width: 100vw; }
+  html { background: var(--bg); overflow-x: hidden; max-width: 100vw; -webkit-text-size-adjust: 100%; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   body {
-    font-family: 'Karla', -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-    margin: 0;
-    padding: 22px 16px 44px;
-    line-height: 1.5;
+    font-family: var(--sans); font-size: 15px; line-height: 1.45; color: var(--ink);
+    background: var(--bg); margin: 0 auto; max-width: 1080px; padding: 22px 16px 64px; overflow-x: hidden;
   }
-  h1 {
-    font-family: 'Baloo 2', sans-serif;
-    font-weight: 700;
-    font-size: 32px;
-    margin: 0 0 4px 0;
-    letter-spacing: -0.01em;
-    color: var(--ink);
+  button, input, select { font-family: var(--sans); }
+  button, [role=button] { -webkit-tap-highlight-color: transparent; }
+  :where(button, input, select, a, [role=button]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #searchBox:focus, .add-box input:focus, .add-box select:focus, #modalFields input:focus, #modalFields select:focus, #authInput:focus {
+    outline: 2px solid transparent; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
   }
-  h1 .accent {
-    background: linear-gradient(100deg, var(--coral), var(--violet));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .sub { color: var(--ink-soft); font-size: 12.5px; margin-bottom: 18px; font-weight: 600; }
+  .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---- masthead ---- */
+  .masthead { margin-bottom: 16px; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.12; letter-spacing: -0.012em; margin: 0; color: var(--ink); }
+  .sub { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+  .masthead .status { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 16px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
   #resetBtn {
-    background: #fff; color: var(--ink-soft); border: 1.5px solid var(--line);
-    padding: 7px 16px; border-radius: 20px; font-size: 11.5px; cursor: pointer;
-    margin-bottom: 22px; font-family: 'Karla', sans-serif; font-weight: 700; transition: all 0.2s ease;
+    background: none; border: 0; padding: 6px 0; margin: -6px 0; font: 500 12.5px var(--sans); color: var(--muted); cursor: pointer;
+    text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
   }
-  #resetBtn:hover { border-color: var(--violet); color: var(--violet); }
-
-  .hero-stats {
-    display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
-  }
-  .hero-card {
-    flex: 1; min-width: 90px; border-radius: 16px; padding: 14px 16px; color: #fff;
-    animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-  }
-  .hero-card.pct { background: linear-gradient(135deg, var(--violet), var(--coral)); }
-  .hero-card.done-c { background: linear-gradient(135deg, var(--teal), #00d9a3); }
-  .hero-card.pending-c { background: linear-gradient(135deg, var(--yellow), #ff9d00); }
-  .hero-card.overdue-c { background: linear-gradient(135deg, var(--pink), var(--coral)); }
-  @keyframes pop-in {
-    0% { transform: scale(0.85) translateY(6px); opacity: 0; }
-    100% { transform: scale(1) translateY(0); opacity: 1; }
-  }
-  .hero-card .n { font-family: 'Baloo 2', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; }
-  .hero-card .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; opacity: 0.9; margin-top: 3px; }
-
-  .filters { display: flex; gap: 7px; margin-bottom: 14px; flex-wrap: wrap; }
-  .filter-btn {
-    background: #fff; border: 1.5px solid var(--line); color: var(--ink-soft);
-    padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer;
-    font-family: 'Karla', sans-serif; font-weight: 700; transition: all 0.2s ease;
-  }
-  .filter-btn:hover { border-color: var(--violet); color: var(--violet); }
-  .filter-btn.active { background: var(--ink); border-color: var(--ink); color: #fff; }
-
-  .cat-section { margin-bottom: 24px; }
-  .cat-heading {
-    font-family: 'Baloo 2', sans-serif; font-size: 16px; font-weight: 700; margin: 0 0 10px 2px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .cat-heading .dot { width: 12px; height: 12px; border-radius: 5px; display: inline-block; }
-  .cat-heading .count {
-    font-family: 'Karla', sans-serif; font-size: 11px; color: #fff; font-weight: 700;
-    background: var(--ink-soft); border-radius: 10px; padding: 1px 8px; margin-left: auto;
+  #resetBtn:hover { color: var(--accent); }
+  .festival-banner {
+    text-align: center; font: 600 13px var(--sans); color: var(--accent); background: var(--accent-soft);
+    padding: 7px 12px; margin: 0 0 14px; border-radius: 8px;
   }
 
-  /* Keeping the page short: foldable sections, a "completed" bar, search, back-to-top */
-  .cat-heading .count { white-space: nowrap; flex-shrink: 0; }
-  @media (max-width: 560px) {
-    /* the four stat cards fit on one row on a phone instead of wrapping onto two */
-    .hero-stats { gap: 8px; margin-bottom: 14px; }
-    .hero-card { min-width: 0; padding: 11px 10px; border-radius: 14px; }
-    .hero-card .n { font-size: 23px; }
-    .hero-card .l { font-size: 9.5px; letter-spacing: 0.03em; }
+  /* ---- summary: one sheet, two rows of figures ---- */
+  .summary-sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 11px 14px 10px; }
+  .hero-card + .hero-card { border-left: 1px solid var(--rule-soft); }
+  .hero-card .l { font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .hero-card.alert .n { color: var(--red); }
+  @media (max-width: 400px) { .hero-card { padding-left: 10px; padding-right: 8px; } }
+  /* the money figures read like a small ledger: label on the left, amount on the right, so any amount fits */
+  .totals { border-top: 1px solid var(--rule-soft); padding: 5px 0 3px; }
+  .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; padding: 4px 14px; }
+  .totals .l { font-size: 13.5px; color: var(--muted); }
+  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .totals .fig.recd { color: var(--green); }
+  /* a single rule above the bottom line and a double rule under it, the way a total sits in a ledger */
+  .totals > .tot.sum { margin: 5px 14px 0; padding: 8px 0 4px; border-top: 1px solid var(--rule); }
+  .totals .fig.out { color: var(--red); font-size: 21px; line-height: 1.1; padding-bottom: 1px; border-bottom: 3px double currentColor; }
+  .totals .fig.out.clear { color: var(--green); }
+  .totals > .totals-note { padding: 2px 14px 7px; font-size: 12.5px; color: var(--muted); }
+  .credit-note {
+    background: var(--green-soft); border: 1px solid #CBE4D6; border-left: 3px solid var(--green); border-radius: 10px;
+    padding: 9px 14px 10px; margin-bottom: 14px; font-size: 13.5px;
   }
-  .cat-heading.fold { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .credit-title { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--green); }
+  .credit-line { margin-top: 2px; }
+  .credit-hint { margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+
+  /* ---- filters ---- */
+  .filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filters.seg { gap: 2px; flex-wrap: nowrap; padding: 3px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 11px; overflow-x: auto; scrollbar-width: none; }
+  .filters.seg::-webkit-scrollbar { display: none; }
+  .filter-btn { cursor: pointer; font: 500 13.5px var(--sans); transition: background-color .12s ease, color .12s ease, border-color .12s ease; }
+  .filters.seg .filter-btn { flex: 1 1 auto; border: 0; background: transparent; color: var(--muted); padding: 8px 10px; border-radius: 8px; white-space: nowrap; }
+  .filters.seg .filter-btn:hover { color: var(--ink); background: var(--rule-soft); }
+  .filters.seg .filter-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .filters.chips { margin-bottom: 12px; }
+  .filters.chips .filter-btn { display: inline-flex; align-items: center; background: var(--sheet); border: 1px solid var(--rule); color: var(--ink); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+  .filters.chips .filter-btn:hover { border-color: var(--field); }
+  .filters.chips .filter-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .filter-btn .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; flex: none; }
+  @media (max-width: 400px) { .filters.seg .filter-btn { padding: 8px 6px; font-size: 13px; } }
+
+  /* ---- search and add ---- */
+  #searchRow { margin: 0 0 10px; }
+  #searchWrap { position: relative; }
+  #searchWrap .ico { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 18px; height: 18px; }
+  #searchBox {
+    width: 100%; height: 44px; background: var(--sheet); border: 1px solid var(--field); color: var(--ink);
+    padding: 0 42px 0 40px; border-radius: 10px; font: 400 15px var(--sans);
+  }
+  #searchBox::placeholder { color: #6B778C; opacity: 1; }
+  #searchClear { display: none; position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; padding: 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; border-radius: 8px; }
+  #searchClear svg { display: block; margin: auto; }
+  #searchClear:hover { background: var(--rule-soft); }
+  #searchInfo { font-size: 12.5px; color: var(--muted); margin: 6px 2px 0; }
+  #searchInfo:empty { display: none; }
+  .add-box { display: flex; gap: 8px; margin-top: 0; margin-bottom: 8px; flex-wrap: wrap; }
+  .add-box input, .add-box select {
+    height: 42px; background: var(--sheet); border: 1px solid var(--field); color: var(--ink);
+    padding: 0 12px; border-radius: 10px; font: 400 15px var(--sans); max-width: 100%; min-width: 0;
+  }
+  .add-box input::placeholder { color: #6B778C; opacity: 1; }
+  .add-box select {
+    -webkit-appearance: none; appearance: none; padding-right: 34px;
+    background: var(--sheet) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235A667B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center;
+  }
+  #newCat { flex: 1 1 150px; }
+  .add-box input[type=text] { flex: 2 1 180px; }
+  .add-box button { height: 42px; padding: 0 24px; background: var(--accent); color: #fff; border: 0; border-radius: 10px; font: 600 15px var(--sans); cursor: pointer; }
+  .add-box button:hover { filter: brightness(1.08); }
+  /* narrow phones: category and name each get a full row, date and Add share the last one */
+  @media (max-width: 399px) { #newCat, #newTask { flex: 1 1 100%; } }
+  /* phones: the linked-client and phone fields get a full row each (they carry inline flex values, hence !important) */
+  @media (max-width: 719px) { #feeLinked, #feePhone { flex: 1 1 100% !important; } }
+  #app { margin-top: 20px; }
+  .empty { color: var(--muted); font-size: 15px; text-align: center; padding: 36px 16px; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+  /* ---- sections ---- */
+  .cat-section { margin-bottom: 22px; }
+  .cat-heading { display: flex; align-items: center; gap: 8px; margin: 0 2px 8px; min-height: 28px; }
+  .cat-heading .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .cat-heading .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 7px; min-width: 0; font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.25; }
+  .cat-heading .kind { font: 500 12.5px var(--sans); color: var(--muted); }
+  .cat-heading .count { margin-left: auto; padding-left: 8px; font: 400 12.5px var(--sans); color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  .cat-heading .count b { font-weight: 600; color: var(--ink); }
+  .cat-heading .chev { width: 16px; height: 16px; flex: none; color: var(--icon); transition: transform .15s ease; }
+  .cat-heading.fold { cursor: pointer; user-select: none; }
   .cat-heading.fold:hover .chev { color: var(--ink); }
-  .cat-heading .chev { display: inline-block; width: 12px; font-size: 11px; color: var(--ink-soft); transition: transform 0.15s ease; }
   .cat-section.collapsed { margin-bottom: 12px; }
   .cat-section.collapsed .cat-heading { margin-bottom: 0; }
   .cat-section.collapsed .cat-heading .chev { transform: rotate(-90deg); }
+
+  /* one ruled sheet per section on a phone; separate cards from tablet width up */
+  .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+  .task { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px 8px; border-top: 1px solid var(--rule-soft); position: relative; }
+  .task:first-child { border-top: 0; }
+  .task.overdue { box-shadow: inset 3px 0 0 var(--red); }
+  .task.urgent { box-shadow: inset 3px 0 0 var(--amber); }
+  .task .num { flex: none; width: 19px; margin-left: -4px; text-align: right; font-size: 12px; line-height: 21px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .task input[type=checkbox] {
+    -webkit-appearance: none; appearance: none; flex: none; position: relative; display: grid; place-content: center;
+    width: 20px; height: 20px; margin: 1px 0 0; border: 1.5px solid var(--field); border-radius: 6px; background: var(--sheet); cursor: pointer;
+  }
+  .task input[type=checkbox]::after { content: ''; position: absolute; inset: -11px; }   /* roomier tap target */
+  .task input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+  .task input[type=checkbox]:checked::before { content: ''; width: 10px; height: 5px; margin-top: -2px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); }
+  .task-body { flex: 1; min-width: 0; }
+  .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .task-name { flex: 1; min-width: 0; font-size: 15px; line-height: 1.38; font-weight: 600; overflow-wrap: anywhere; }
+  .amt { flex: none; text-align: right; font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .amt.owed { color: var(--red); }
+  .amt.clear { font: 600 13px var(--sans); color: var(--green); line-height: 1.5; }
+  .amt small { display: block; font: 400 12px/1.2 var(--sans); color: var(--muted); }
+  .task-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 1px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .task-sub > span { display: inline-flex; align-items: center; gap: 4px; overflow-wrap: anywhere; }
+  .task-sub > .state { gap: 6px; }
+  .note { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; width: fit-content; max-width: 100%; padding: 4px 9px; border-radius: 8px; background: var(--amber-soft); color: var(--amber); font-size: 12.5px; line-height: 1.4; }
+  .note .ic { margin-top: 2px; width: 14px; height: 14px; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 3px; font-size: 13px; }
+  .badge { font-size: 12px; font-weight: 600; line-height: 1.5; padding: 0 7px; border-radius: 6px; }
+  .badge.over { background: var(--red-soft); color: var(--red); }
+  .badge.urgent { background: var(--amber-soft); color: var(--amber); }
+  .due { font-size: 12.5px; color: var(--muted); }
+  .due.over { color: var(--red); }
+  .act { display: inline-flex; align-items: center; gap: 4px; padding: 6px 0; background: none; border: 0; font: 600 13px var(--sans); color: var(--accent); cursor: pointer; text-underline-offset: 3px; }
+  .act:hover { text-decoration: underline; }
+  .act.wa { color: var(--green); }
+  .act.pay { padding: 4px 9px; margin: 2px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+  .act.pay:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-soft); }
+  .act.del { flex: none; justify-content: center; width: 32px; height: 32px; margin: -6px -9px -6px 0; padding: 0; border-radius: 8px; color: var(--icon); }
+  .act.del:hover { color: var(--red); background: var(--red-soft); text-decoration: none; }
+  .act.del .ic { width: 17px; height: 17px; }
+
+  /* finished rows: quiet, and a single line when there is nothing else to say */
+  .task.done { padding: 9px 14px 8px; }
+  .task.done .task-name { font-weight: 400; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--field); }
+  .task.done .task-meta { margin-top: 0; }
   .done-toggle {
-    grid-column: 1 / -1; background: #fff; border: 1.5px dashed var(--line); color: var(--ink-soft);
-    padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: left;
-    font-family: 'Karla', sans-serif; cursor: pointer; transition: all 0.2s ease;
+    display: block; width: 100%; text-align: left; padding: 11px 14px; background: var(--sheet); border: 0; border-top: 1px solid var(--rule-soft);
+    color: var(--muted); font: 500 13px var(--sans); cursor: pointer; transition: background-color .12s ease, color .12s ease;
   }
-  .done-toggle:hover { border-color: var(--teal); color: #00806e; }
-  .task.done { padding: 8px 12px; }
-  .task.done .task-meta { margin-top: 4px; }
-  .task.done .task-meta .tag { display: none; }
+  .done-toggle:first-child { border-top: 0; }
+  .done-toggle:hover { background: #F8FAFC; color: var(--ink); }
+  .done-toggle:focus-visible { outline-offset: -2px; }
   #app.no-anim .task { animation: none; }
-  #searchRow { margin: 2px 0 12px; }
-  #searchWrap { position: relative; }
-  #searchBox {
-    width: 100%; background: #fff; border: 1.5px solid var(--line); color: var(--ink);
-    padding: 10px 38px 10px 14px; border-radius: 12px; font-size: 12.5px; font-family: 'Karla', sans-serif; font-weight: 600;
-  }
-  #searchBox:focus { outline: none; border-color: var(--violet); }
-  #searchClear {
-    display: none; position: absolute; right: 5px; top: 5px; width: 32px; height: 32px;
-    border: none; background: transparent; color: var(--ink-soft); font-size: 15px; cursor: pointer;
-  }
-  #searchInfo { font-size: 11px; color: var(--ink-soft); font-weight: 700; margin: 5px 2px 0; }
-  #searchInfo:empty { display: none; }
+
   #toTop {
-    position: fixed; right: 16px; bottom: 18px; width: 44px; height: 44px; border-radius: 50%;
-    border: none; background: var(--ink); color: #fff; font-size: 18px; cursor: pointer;
-    box-shadow: 0 6px 16px rgba(34,37,43,0.25); opacity: 0; pointer-events: none; transform: translateY(8px);
+    position: fixed; right: 16px; bottom: 18px; width: 44px; height: 44px; padding: 0; border-radius: 50%;
+    border: 0; background: var(--ink); color: #fff; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(20,34,60,0.25); opacity: 0; pointer-events: none; transform: translateY(8px);
     transition: opacity 0.2s ease, transform 0.2s ease; z-index: 900;
   }
-  #toTop.show { opacity: 0.92; pointer-events: auto; transform: none; }
+  #toTop svg { display: block; margin: auto; width: 20px; height: 20px; }
+  #toTop.show { opacity: 0.94; pointer-events: auto; transform: none; }
 
-  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
-  .task {
-    display: flex; align-items: flex-start; gap: 10px; background: var(--card);
-    border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 13px;
-    animation: rise 0.3s ease-out; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    position: relative;
+  /* ---- buttons, dialogs, lock screen ---- */
+  .btn { height: 40px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent; font: 600 14.5px var(--sans); cursor: pointer; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-wa { background: var(--green); color: #fff; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-quiet { background: var(--sheet); color: var(--ink); border-color: var(--field); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn-quiet:hover { filter: none; background: var(--rule-soft); }
+  #modalOverlay { position: fixed; inset: 0; background: rgba(20,34,60,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+  .modal { background: var(--sheet); border-radius: 14px; padding: 20px; width: 100%; max-width: 380px; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; box-shadow: 0 18px 48px rgba(20,34,60,0.3); }
+  #modalTitle { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.25; margin-bottom: 12px; overflow-wrap: anywhere; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+  #modalFields label { display: block; margin: 0 0 4px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+  #modalFields input:not([type=checkbox]), #modalFields select {
+    display: block; width: 100%; height: 42px; margin-bottom: 12px; padding: 0 12px; background: var(--sheet); color: var(--ink);
+    border: 1px solid var(--field); border-radius: 10px; font: 400 15px var(--sans);
   }
-  .task:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(34,37,43,0.09); border-color: var(--catcolor, var(--violet)); }
-  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .task.done { opacity: 0.55; }
-  .task input[type=checkbox] {
-    margin-top: 2px; width: 19px; height: 19px; accent-color: var(--teal); flex-shrink: 0; cursor: pointer;
-  }
-  .task-body { flex: 1; min-width: 0; }
-  .task-name { font-size: 13px; line-height: 1.35; font-weight: 600; overflow-wrap: break-word; word-break: break-word; }
-  .task.done .task-name { text-decoration: line-through; color: var(--ink-soft); font-weight: 400; }
-  .task-meta { font-size: 10px; margin-top: 7px; display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
-  .tag {
-    display: inline-block; font-family: 'Karla', sans-serif; font-size: 9.5px; font-weight: 800;
-    padding: 3px 8px; border-radius: 8px; letter-spacing: 0.02em; text-transform: uppercase;
-  }
-  .own { background: var(--teal-soft); color: #00806e; }
-  .mhj { background: var(--sky-soft); color: #0b6fc9; }
-  .shk { background: var(--violet-soft); color: #5c3fd6; }
-  .fees { background: var(--coral-soft); color: #e0184a; }
-  .generic-cat { background: var(--yellow-soft); color: #a56800; }
-  .personal { background: var(--pink-soft); color: #d40e79; }
-  .urgent-tag { background: var(--coral); color: #fff; }
-  .due { color: var(--ink-soft); font-family: 'Karla', sans-serif; font-size: 10px; font-weight: 700; }
+  #modalFields .check-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; font-size: 13.5px; font-weight: 600; color: var(--green); cursor: pointer; }
+  #modalFields .check-row input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--green); }
+  .hint { font-size: 12.5px; line-height: 1.45; color: var(--muted); margin-bottom: 10px; }
+  #modalReceiptHint { margin: 3px 0 0 26px; font-size: 12.5px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .preset { padding: 6px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); color: var(--ink); font: 500 12.5px var(--sans); cursor: pointer; }
+  .preset:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .receipt-preview { white-space: pre-wrap; word-break: break-word; background: var(--green-soft); border: 1px solid #CBE4D6; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.5; max-height: 290px; overflow: auto; color: var(--ink); }
+  .alt-link { margin-top: 10px; font-size: 13px; }
+  .alt-link a { color: var(--green); font-weight: 600; }
 
-  .add-box { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
-  .add-box input, .add-box select {
-    background: #fff; border: 1.5px solid var(--line); color: var(--ink);
-    padding: 10px 12px; border-radius: 12px; font-size: 12.5px; font-family: 'Karla', sans-serif; font-weight: 600;
-    max-width: 100%;
-  }
-  #newCat { flex: 1; min-width: 140px; }
-  .add-box input:focus, .add-box select:focus { outline: none; border-color: var(--violet); }
-  .add-box input[type=text] { flex: 1; }
-  .add-box button {
-    background: linear-gradient(135deg, var(--violet), var(--coral)); color: #fff; border: none; padding: 10px 22px;
-    border-radius: 12px; font-weight: 800; font-size: 12.5px; cursor: pointer;
-    font-family: 'Karla', sans-serif; transition: opacity 0.2s ease;
-  }
-  .add-box button:hover { opacity: 0.88; }
-  .empty { color: var(--ink-soft); font-size: 14px; text-align: center; padding: 34px; font-family: 'Baloo 2', sans-serif; font-weight: 600; }
-  .loading { text-align: center; padding: 40px; color: var(--ink-soft); font-weight: 700; }
+  #authGate { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-card { width: 100%; max-width: 320px; text-align: center; }
+  .auth-title { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.12; letter-spacing: -0.012em; }
+  .auth-sub { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+  .auth-note { margin: 22px 0 10px; font-size: 13.5px; color: var(--muted); }
+  #authInput { display: block; width: 100%; height: 46px; margin-bottom: 10px; padding: 0 14px; background: var(--sheet); color: var(--ink); border: 1px solid var(--field); border-radius: 10px; font: 400 16px var(--sans); text-align: center; }
+  .auth-card .btn { width: 100%; height: 46px; font-size: 15px; }
+  #authError { display: none; margin-top: 12px; font-size: 13.5px; font-weight: 600; color: var(--red); }
 
   .confetti-piece {
     position: fixed; top: 0; z-index: 3000; pointer-events: none; border-radius: 2px;
@@ -197,30 +269,58 @@
     0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
     100% { transform: translateY(100vh) rotate(540deg); opacity: 0; }
   }
+
+  /* ---- wider screens: summary on one row, sections become a grid of cards ---- */
+  @media (min-width: 720px) {
+    body { padding: 36px 28px 72px; }
+    h1 { font-size: 34px; }
+    .summary-sheet { display: grid; grid-template-columns: 1fr 1fr; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); align-content: stretch; }
+    .hero-card { padding: 12px 16px 11px; }
+    .hero-card:nth-child(odd) { border-left: 0; }
+    .hero-card:nth-child(n+3) { border-top: 1px solid var(--rule-soft); }
+    .hero-stats:only-child { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }
+    .hero-stats:only-child .hero-card:nth-child(n+3) { border-top: 0; }
+    .hero-stats:only-child .hero-card:nth-child(n+2) { border-left: 1px solid var(--rule-soft); }
+    .filters.seg { max-width: 540px; }
+    .totals { border-top: 0; border-left: 1px solid var(--rule-soft); align-self: center; padding: 8px 0 4px; }
+    .totals > .tot { padding: 5px 18px; }
+    .totals > .tot.sum { margin: 6px 18px 0; padding: 9px 0 4px; }
+    .totals > .totals-note { padding: 2px 18px 8px; }
+    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; background: none; border: 0; border-radius: 0; overflow: visible; }
+    .task { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; }
+    .task:first-child { border-top: 1px solid var(--rule); }
+    .done-toggle { grid-column: 1 / -1; border: 1px solid var(--rule); border-radius: 10px; }
+    .done-toggle:first-child { border-top: 1px solid var(--rule); }
+    @media (hover: hover) { .task:hover { border-color: var(--field); } }
+  }
 </style>
 </head>
 <body>
-<div class="sub" style="margin-bottom:2px; font-family:'Karla',sans-serif; text-transform:uppercase; letter-spacing:0.08em; font-size:11px; color:var(--violet);">Indore · Tax &amp; Accounts</div>
-<h1>Mustannsirr's <span class="accent">Task Board</span></h1>
-<div class="sub" id="lastSync">Loading...</div>
-<button id="resetBtn" onclick="resetData()">↻ Reset data (if stuck on old tasks)</button>
+<header class="masthead">
+  <h1>Mustannsirr's Task Board</h1>
+  <div class="sub">Tax &amp; accounts, Indore</div>
+  <div class="status"><span id="lastSync">Loading...</span><button id="resetBtn" type="button" onclick="resetData()" title="Use this if the board is stuck on old tasks">Reset data</button></div>
+</header>
 
-<div id="authGate" style="position:fixed; inset:0; background:#FAFAF7; z-index:2000; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
-  <div style="font-family:'Karla',sans-serif; font-size:11px; letter-spacing:0.08em; color:#7C5CFC; text-transform:uppercase; margin-bottom:8px; font-weight:700;">Indore · Tax &amp; Accounts</div>
-  <div style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:26px; margin-bottom:8px; color:#22252B;">Mustannsirr's <span style="background:linear-gradient(100deg,#FF4E6A,#7C5CFC); -webkit-background-clip:text; background-clip:text; color:transparent;">Task Board</span></div>
-  <div style="font-size:12.5px; color:#8A8A85; margin-bottom:20px; font-weight:600;">This dashboard is password protected</div>
-  <input type="password" id="authInput" placeholder="Enter password" style="width:100%; max-width:280px; background:#fff; border:1.5px solid #ECEAE3; color:#22252B; padding:12px 16px; border-radius:14px; font-size:14px; margin-bottom:10px; text-align:center;" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
-  <button onclick="checkAuth()" style="background:linear-gradient(135deg,#7C5CFC,#FF4E6A); color:#fff; border:none; padding:11px 30px; border-radius:14px; font-weight:800; font-size:14px; cursor:pointer; font-family:'Karla',sans-serif;">Unlock</button>
-  <div id="authError" style="color:#FF4E6A; font-size:12px; margin-top:12px; display:none; font-weight:700;">Incorrect password — try again.</div>
+<div id="authGate">
+  <div class="auth-card">
+    <div class="auth-title">Mustannsirr's Task Board</div>
+    <div class="auth-sub">Tax &amp; accounts, Indore</div>
+    <div class="auth-note">This dashboard is password protected</div>
+    <input type="password" id="authInput" placeholder="Enter password" aria-label="Password" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
+    <button type="button" class="btn btn-primary" onclick="checkAuth()">Unlock</button>
+    <div id="authError">Incorrect password — try again.</div>
+  </div>
 </div>
 
-<div id="modalOverlay" style="display:none; position:fixed; inset:0; background:rgba(34,37,43,0.5); z-index:1000; align-items:center; justify-content:center;">
-  <div style="background:var(--bg); border-radius:20px; padding:22px; width:90%; max-width:340px; box-shadow:0 16px 44px rgba(34,37,43,0.3);">
-    <div id="modalTitle" style="font-family:'Baloo 2',sans-serif; font-size:17px; font-weight:700; margin-bottom:14px;"></div>
+<div id="modalOverlay" style="display:none;">
+  <div class="modal" role="dialog" aria-labelledby="modalTitle">
+    <div id="modalTitle"></div>
     <div id="modalFields"></div>
-    <div style="display:flex; gap:8px; margin-top:16px; justify-content:flex-end;">
-      <button onclick="closeModal()" style="background:#fff; color:var(--ink); border:1.5px solid var(--line); padding:9px 18px; border-radius:12px; font-size:13px; cursor:pointer; font-family:'Karla',sans-serif; font-weight:700;">Skip</button>
-      <button id="modalConfirmBtn" style="background:linear-gradient(135deg,var(--teal),#00d9a3); color:#fff; border:none; padding:9px 18px; border-radius:12px; font-size:13px; cursor:pointer; font-weight:800; font-family:'Karla',sans-serif;">Save</button>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-quiet" onclick="closeModal()">Skip</button>
+      <button type="button" id="modalConfirmBtn" class="btn btn-primary">Save</button>
     </div>
   </div>
 </div>
@@ -229,22 +329,23 @@
 
 <div id="searchRow">
   <div id="searchWrap">
-    <input type="text" id="searchBox" placeholder="🔍 Search a client, task or invoice number…" autocomplete="off" aria-label="Search tasks" oninput="onSearch(this.value)">
-    <button id="searchClear" aria-label="Clear search" onclick="clearSearch()">✕</button>
+    <svg class="ic ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="text" id="searchBox" placeholder="Search clients, tasks, invoices…" autocomplete="off" aria-label="Search tasks" oninput="onSearch(this.value)">
+    <button type="button" id="searchClear" aria-label="Clear search" onclick="clearSearch()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
   <div id="searchInfo"></div>
 </div>
 
 <div class="add-box">
   <select id="newCat" onchange="onCategoryChange()">
-    <option value="PERSONAL">PERSONAL</option>
+    <option value="PERSONAL">Personal</option>
     <option value="OWN">Professional — OWN</option>
     <option value="MHJ">Professional — MHJ</option>
     <option value="SHK">Professional — SHK Husain Arif</option>
-    <option value="FEES">Fees (Payable/Received)</option>
-    <option value="__NEW__">+ Add new category...</option>
+    <option value="FEES">Fees</option>
+    <option value="__NEW__">+ Add new category…</option>
   </select>
-  <input type="text" id="newTask" placeholder="Add a new task / client name..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+  <input type="text" id="newTask" placeholder="New task or client name…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
   <input type="date" id="newDueDate" style="flex:1; min-width:130px;" title="Due date (optional)">
   <button onclick="addTask()">Add</button>
 </div>
@@ -255,11 +356,11 @@
   <input type="tel" id="feePhone" placeholder="Client phone (optional, for WhatsApp)" style="flex:2; min-width:150px;">
 </div>
 
-<div id="app" style="margin-top:20px;">
+<div id="app">
   <div class="loading">Loading tasks...</div>
 </div>
 
-<button id="toTop" aria-label="Back to top" title="Back to top" onclick="scrollToTop()">↑</button>
+<button type="button" id="toTop" aria-label="Back to top" title="Back to top" onclick="scrollToTop()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 19V5"/></svg></button>
 
 <script>
 const STORAGE_KEY = 'tasks-v2';
@@ -267,6 +368,22 @@ const WEBHOOK_KEY = 'webhookUrl';
 const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 let tasks = [];
 let filter = 'all'; // all, own, mhj, pending, done
+
+// ---- Look: small line icons, section colours and rupee formatting ----
+const ICON = {
+  chat:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+  doc:    '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+  note:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  wallet: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>',
+  x:      '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  chev:   '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
+};
+const EXTRA_COLORS = ['#5B6B84', '#9A5B2E', '#2F8F6B', '#A04E9B', '#4D7FB8'];   // sections for client groups added later
+// Rupee amounts with Indian digit grouping, e.g. ₹14,50,000
+function inr(n) {
+  const v = Math.round((Number(n) || 0) * 100) / 100;
+  return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
+}
 
 // ---- Keeping the page short ----
 // Finished tasks and settled fees sit behind a "✓ N completed" bar under each section instead of
@@ -431,7 +548,7 @@ function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
   const newBtn = btn.cloneNode(true);
   btn.parentNode.replaceChild(newBtn, btn);
   newBtn.textContent = confirmLabel || 'Save';
-  newBtn.style.background = confirmLabel === 'Delete' ? 'var(--coral)' : 'var(--teal)';
+  newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
   newBtn.onclick = () => { onConfirm(); closeModal(); };
   document.querySelector('#modalOverlay button[onclick="closeModal()"]').textContent = skipLabel || 'Skip';
 }
@@ -441,12 +558,12 @@ function closeModal() {
 }
 
 function inputStyle() {
-  return "width:100%; box-sizing:border-box; background:#fff; border:1.5px solid var(--line); color:var(--ink); padding:10px 12px; border-radius:10px; font-size:13px; margin-bottom:10px; font-family:'Karla',sans-serif;";
+  return '';   // dialog inputs are styled in the stylesheet (#modalFields)
 }
 
 function fireConfetti() {
   if (document.body.style.getPropertyValue('--confetti-disabled') === 'true') return;
-  const colors = ['#FF4E6A', '#00BFA6', '#FFB800', '#7C5CFC', '#1F9EFF', '#FF3D9A'];
+  const colors = ['#1F4E9C', '#146C43', '#B7791F', '#6F55B3', '#0E7C86', '#B3261E'];
   for (let i = 0; i < 26; i++) {
     const piece = document.createElement('div');
     piece.className = 'confetti-piece';
@@ -480,11 +597,11 @@ function toggleTask(id) {
     const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052' };
     const defaultPhone = (t.cat && t.cat !== 'OWN' && t.cat !== 'MHJ' && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
     showModal('Fee for "' + t.name + '"?', `
-      <label style="font-size:11px; color:var(--ink-soft);">Payable amount (leave blank to skip)</label>
+      <label>Payable amount (leave blank to skip)</label>
       <input type="number" id="modalPayable" style="${inputStyle()}" placeholder="₹ Payable">
-      <label style="font-size:11px; color:var(--ink-soft);">Received now</label>
+      <label>Received now</label>
       <input type="number" id="modalReceived" style="${inputStyle()}" placeholder="₹ Received" value="0">
-      <label style="font-size:11px; color:var(--ink-soft);">Client phone (optional, for WhatsApp reminder)</label>
+      <label>Client phone (optional, for WhatsApp reminder)</label>
       <input type="tel" id="modalPhone" style="${inputStyle()}" placeholder="e.g. 9876543210" value="${defaultPhone}">
     `, () => {
       const payable = parseFloat(document.getElementById('modalPayable').value);
@@ -834,7 +951,7 @@ function onCategoryChange() {
   const select = document.getElementById('newCat');
   if (select.value === '__NEW__') {
     showModal('Add a new category', `
-      <label style="font-size:11px; color:var(--ink-soft);">Category name (e.g. a new employer or client group)</label>
+      <label>Category name (e.g. a new employer or client group)</label>
       <input type="text" id="modalNewCatName" style="${inputStyle()}" placeholder="e.g. ABC Company">
     `, () => {
       const raw = document.getElementById('modalNewCatName').value.trim();
@@ -925,10 +1042,10 @@ const REMARK_PRESETS = ['Waiting for documents', 'Waiting for client confirmatio
 function setRemark(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  const presetsHtml = REMARK_PRESETS.map(p => `<button type="button" onclick="document.getElementById('modalRemarkText').value='${p}'" style="background:var(--paper-deep, #f0eee6); border:1px solid var(--line, #ECEAE3); color:var(--ink); padding:5px 10px; border-radius:20px; font-size:11px; cursor:pointer; margin:2px;">${p}</button>`).join('');
+  const presetsHtml = REMARK_PRESETS.map(p => `<button type="button" onclick="document.getElementById('modalRemarkText').value='${p}'" class="preset">${p}</button>`).join('');
   showModal('Remark — ' + t.name, `
-    <div style="margin-bottom:8px;">${presetsHtml}</div>
-    <label style="font-size:11px; color:var(--ink-soft);">Or type your own</label>
+    <div class="presets">${presetsHtml}</div>
+    <label>Or type your own</label>
     <input type="text" id="modalRemarkText" style="${inputStyle()}" placeholder="Why is this pending?" value="${(t.remark || '').replace(/"/g, '&quot;')}">
   `, async () => {
     const val = document.getElementById('modalRemarkText').value.trim();
@@ -948,7 +1065,7 @@ function setDueDate(id) {
   if (!t) return;
   const currentVal = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
   showModal('Due date — ' + t.name, `
-    <label style="font-size:11px; color:var(--ink-soft);">Pick a due date</label>
+    <label>Pick a due date</label>
     <input type="date" id="modalDueDate" style="${inputStyle()}" value="${currentVal}">
   `, async () => {
     const val = document.getElementById('modalDueDate').value;
@@ -968,16 +1085,16 @@ function recordPayment(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   showModal('Record payment — ' + t.name, `
-    <div style="font-size:11px; color:var(--ink-soft); margin-bottom:8px;">Currently ₹${t.received} of ₹${t.payable} received</div>
-    <label style="font-size:11px; color:var(--ink-soft);">Total amount received so far</label>
+    <div class="hint">Currently ${inr(t.received)} of ${inr(t.payable)} received</div>
+    <label>Total amount received so far</label>
     <input type="number" id="modalReceivedAmt" style="${inputStyle()}" value="${t.received}">
-    <label style="font-size:11px; color:var(--ink-soft);">Discount to write off (optional)</label>
+    <label>Discount to write off (optional)</label>
     <input type="number" id="modalDiscountAmt" style="${inputStyle()}" placeholder="₹ Discount" value="${t.discount || 0}">
-    <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#1a9c52; cursor:pointer; margin-top:2px;">
-      <input type="checkbox" id="modalSendReceipt" checked style="width:16px; height:16px; margin:0; flex-shrink:0;">
+    <label class="check-row">
+      <input type="checkbox" id="modalSendReceipt" checked>
       Offer a WhatsApp receipt after saving
     </label>
-    <div id="modalReceiptHint" style="font-size:11px; color:var(--ink-soft); margin:3px 0 0 24px; line-height:1.4;"></div>
+    <div id="modalReceiptHint" class="hint"></div>
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
@@ -1089,10 +1206,10 @@ function offerReceipt(taskId, paidNow, afterSave) {
     : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
 
   showModal('Send payment receipt?', `
-    <div style="font-size:12px; color:var(--ink-soft); margin-bottom:8px;">${intro}</div>
-    <div style="white-space:pre-wrap; word-break:break-word; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; font-size:12px; line-height:1.45; max-height:290px; overflow:auto; color:var(--ink);">${escapeForHtml(message)}</div>
-    ${isAndroid ? `<div style="margin-top:10px; font-size:12px;">
-      <a href="${escapeForHtml(waUrl)}" target="_blank" rel="noopener" onclick="closeModal()" style="color:#25D366; font-weight:700;">Open in regular WhatsApp instead</a>
+    <div class="hint">${intro}</div>
+    <div class="receipt-preview">${escapeForHtml(message)}</div>
+    ${isAndroid ? `<div class="alt-link">
+      <a href="${escapeForHtml(waUrl)}" target="_blank" rel="noopener" onclick="closeModal()">Open in regular WhatsApp instead</a>
     </div>` : ''}
   `, () => {
     if (isAndroid) launchWhatsApp(waBusinessIntent);
@@ -1112,7 +1229,7 @@ async function updateFeeOnCalendar(taskId, received, discount) {
 function deleteTask(id) {
   const t = tasks.find(x => x.id === id);
   showModal('Remove "' + (t ? t.name : 'this task') + '"?', `
-    <div style="font-size:12.5px; color:var(--ink-soft);">This will also remove it from your Calendar.</div>
+    <div class="hint">This will also remove it from your Calendar.</div>
   `, () => {
     tasks = tasks.filter(x => x.id !== id);
     saveTasks();
@@ -1123,7 +1240,7 @@ function deleteTask(id) {
 
 function resetData() {
   showModal('Reset dashboard data?', `
-    <div style="font-size:12.5px; color:var(--ink-soft);">This clears saved progress on THIS device and reloads the latest task list fresh from Calendar.</div>
+    <div class="hint">This clears saved progress on THIS device and reloads the latest task list fresh from Calendar. Use it if the board looks stuck on old tasks.</div>
   `, () => {
     localStorage.removeItem(STORAGE_KEY);
     window.location.href = window.location.pathname + '?t=' + Date.now();
@@ -1192,39 +1309,37 @@ function render(listOnly) {
     return 0;
   });
 
+  const filterBtn = (key, label, dotColor) =>
+    `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" aria-pressed="${filter === key}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
+
   let summaryHtml = `
+    <div class="summary-sheet">
+      <div class="hero-stats">
+        <div class="hero-card pct"><div class="n">${pct}%</div><div class="l">Complete</div></div>
+        <div class="hero-card done-c"><div class="n">${done}</div><div class="l">Done</div></div>
+        <div class="hero-card pending-c"><div class="n">${pending}</div><div class="l">Pending</div></div>
+        <div class="hero-card overdue-c${overdue > 0 ? ' alert' : ''}"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
+      </div>
+      ${feeTasks.length > 0 ? `
+      <div class="totals">
+        <div class="tot"><div class="l">Receivable</div><div class="fig">${inr(totalPayable)}</div></div>
+        <div class="tot"><div class="l">Received</div><div class="fig recd">${inr(totalReceived)}</div></div>
+        <div class="tot sum"><div class="l">Outstanding</div><div class="fig out${totalOutstanding > 0 ? '' : ' clear'}">${inr(totalOutstanding)}</div></div>
+        ${totalDiscount > 0 ? `<div class="totals-note">Discounts allowed: ${inr(totalDiscount)}</div>` : ''}
+      </div>` : ''}
+    </div>
     ${creditBalances.length > 0 ? `
-    <div style="background:linear-gradient(135deg, var(--teal), #00d9a3); border-radius:16px; padding:14px 18px; margin-bottom:16px; color:#fff;">
-      <div style="font-weight:800; font-size:13px; margin-bottom:6px;">💳 Advance Credit Available</div>
-      ${creditBalances.map(c => `<div style="font-size:13px; margin-bottom:2px;">${c.name.replace('Advance Credit Balance', '').replace(/[—\-–]\s*$/, '').trim() || c.name} — <strong>₹${c.payable}</strong> remaining</div>`).join('')}
-      <div style="font-size:11px; opacity:0.85; margin-top:6px;">Check before charging again — this may already cover upcoming work.</div>
+    <div class="credit-note">
+      <div class="credit-title">${ICON.wallet}Advance Credit Available</div>
+      ${creditBalances.map(c => `<div class="credit-line">${c.name.replace('Advance Credit Balance', '').replace(/^[\s—\-–]+|[\s—\-–]+$/g, '') || c.name} — <strong>${inr(c.payable)}</strong> remaining</div>`).join('')}
+      <div class="credit-hint">Check before charging again — this may already cover upcoming work.</div>
     </div>` : ''}
-    <div class="hero-stats">
-      <div class="hero-card pct"><div class="n">${pct}%</div><div class="l">Complete</div></div>
-      <div class="hero-card done-c"><div class="n">${done}</div><div class="l">Done</div></div>
-      <div class="hero-card pending-c"><div class="n">${pending}</div><div class="l">Pending</div></div>
-      <div class="hero-card overdue-c"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
+    <div class="filters seg" role="group" aria-label="Show">
+      ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
     </div>
-    ${feeTasks.length > 0 ? `
-    <div style="display:flex; gap:18px; margin-bottom:20px; padding:14px 16px; background:#fff; border:1.5px solid var(--line); border-radius:16px; flex-wrap:wrap; font-size:12px;">
-      <div><span style="color:var(--ink-soft); font-weight:700; font-size:10.5px; text-transform:uppercase;">Receivable</span><br><strong style="font-family:'Baloo 2',sans-serif; font-size:17px;">₹${totalPayable}</strong></div>
-      <div><span style="color:var(--ink-soft); font-weight:700; font-size:10.5px; text-transform:uppercase;">Received</span><br><strong style="font-family:'Baloo 2',sans-serif; font-size:17px; color:var(--teal);">₹${totalReceived}</strong></div>
-      ${totalDiscount > 0 ? `<div><span style="color:var(--ink-soft); font-weight:700; font-size:10.5px; text-transform:uppercase;">Discounts</span><br><strong style="font-family:'Baloo 2',sans-serif; font-size:17px;">₹${totalDiscount}</strong></div>` : ''}
-      <div><span style="color:var(--ink-soft); font-weight:700; font-size:10.5px; text-transform:uppercase;">Outstanding</span><br><strong style="font-family:'Baloo 2',sans-serif; font-size:17px; color:var(--coral);">₹${totalOutstanding}</strong></div>
-    </div>` : ''}
-    <div class="filters">
-      <button class="filter-btn ${filter==='all'?'active':''}" onclick="setFilter('all')">All</button>
-      <button class="filter-btn ${filter==='personal'?'active':''}" onclick="setFilter('personal')">Personal</button>
-      <button class="filter-btn ${filter==='professional'?'active':''}" onclick="setFilter('professional')">Professional</button>
-      <button class="filter-btn ${filter==='pending'?'active':''}" onclick="setFilter('pending')">Pending</button>
-      <button class="filter-btn ${filter==='done'?'active':''}" onclick="setFilter('done')">Done</button>
-    </div>
-    <div class="filters">
-      <button class="filter-btn ${filter==='own'?'active':''}" onclick="setFilter('own')">OWN</button>
-      <button class="filter-btn ${filter==='mhj'?'active':''}" onclick="setFilter('mhj')">MHJ</button>
-      <button class="filter-btn ${filter==='shk'?'active':''}" onclick="setFilter('shk')">SHK Husain Arif</button>
-      <button class="filter-btn ${filter==='fees'?'active':''}" onclick="setFilter('fees')">Fees</button>
-      ${extraCats.map(cat => `<button class="filter-btn ${filter===cat?'active':''}" onclick="setFilter('${cat}')">${cat.replace(/_/g, ' ')}</button>`).join('')}
+    <div class="filters chips" role="group" aria-label="Client group">
+      ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK Husain Arif', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
+      ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
     </div>
   `;
 
@@ -1234,53 +1349,60 @@ function render(listOnly) {
   if (filtered.length === 0) {
     html += searchActive
       ? '<div class="empty">No tasks match “' + escapeForHtml(searchQuery.trim()) + '”</div>'
-      : '<div class="empty">No tasks here 🎉</div>';
+      : '<div class="empty">No tasks here.</div>';
   } else {
     const groupDefs = [
-      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--sky)', match: t => t.cat === 'MHJ' },
+      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' },
     ];
     // Any category beyond the fixed set (e.g. a newly created employer/client group)
     // gets its own section here, right after MHJ, so nothing ever becomes invisible.
-    const extraColors = ['#7C5CFC', '#00BFA6', '#FFB800', '#FF3D9A', '#FF4E6A'];
+    const extraColors = EXTRA_COLORS;
     extraCats.forEach((cat, i) => {
       groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: extraColors[i % extraColors.length], match: t => t.cat === cat });
     });
     groupDefs.push(
-      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--violet)', match: t => t.cat === 'SHK' },
-      { key: 'OWN', label: 'Professional — OWN', color: 'var(--teal)', match: t => t.cat === 'OWN' },
-      { key: 'personal', label: 'Personal', color: 'var(--pink)', match: t => t.type === 'personal' },
-      { key: 'FEES', label: 'Fees', color: 'var(--coral)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
+      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
+      { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' },
+      { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' },
+      { key: 'FEES', label: 'Fees', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
     );
 
-    // One card. Same markup as always; the only difference is that the "linked:" text is left
-    // out when it just repeats the title, which saved a line or two on almost every fee card.
+    // One row. A fee shows what is still due at the right (red) or "Settled" (green); the small line
+    // under the name keeps the received / payable figures, the overdue and due-date status, any
+    // different linked name and the invoice number.
     const renderCard = (t, idx, g) => {
-        const tagClass = t.type === 'personal' ? 'personal' : (t.type === 'fee' ? 'fees' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'generic-cat'))));
-        const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
         const isFee = t.type === 'fee';
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
         const taskOverdue = isOverdue(t);
         const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
         const showLinked = !!t.linked && t.linked.trim().toLowerCase() !== t.name.replace(/^✅\s*/, '').trim().toLowerCase();
+        const stateClass = (isFee ? ' fee' : '') + (t.done ? ' done' : (taskOverdue ? ' overdue' : (t.urgent ? ' urgent' : '')));
+        const amount = !isFee ? '' : (balance > 0
+          ? `<div class="amt owed">${inr(balance)}<small>due</small></div>`
+          : '<div class="amt clear">Settled</div>');
+        const status = (taskOverdue ? '<span class="badge over">Overdue</span>' : (t.urgent && !t.done ? '<span class="badge urgent">Urgent</span>' : ''))
+          + (dueDateLabel && !t.done ? `<span class="due${taskOverdue ? ' over' : ''}">Due ${dueDateLabel}</span>` : '');
+        const sub = !isFee ? '' : `<div class="task-sub"><span>${inr(t.received)} of ${inr(t.payable)} received${t.discount ? ' + ' + inr(t.discount) + ' discount' : ''}</span>${status ? '<span class="state">' + status + '</span>' : ''}${showLinked ? '<span>linked: ' + t.linked + '</span>' : ''}${t.invoice ? '<span>' + ICON.doc + t.invoice + '</span>' : ''}</div>`;
+        const actions = [
+          isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
+          isFee && balance > 0 && t.phone ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : '',
+          isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}')">${ICON.doc}Send receipt</button>` : '',
+          !t.done ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Change' : 'Set'} due date</button>` : '',
+          !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Edit' : 'Add'} remark</button>` : ''
+        ].join('');
+        const meta = (isFee ? '' : status) + actions;   // a fee keeps its status on the detail line; other tasks keep it beside their buttons
         return `
-          <div class="task ${t.done?'done':''}" style="--catcolor:${g.color};${!t.done ? `border-left:4px solid ${taskOverdue ? 'var(--coral)' : (g.color.startsWith('var')?g.color:g.color)};` : ''}">
-            <span style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; color:var(--ink-soft); flex-shrink:0; min-width:20px;">${idx + 1}.</span>
-            ${isFee ? '' : `<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">`}
+          <div class="task${stateClass}" style="--catcolor:${g.color}">
+            <span class="num">${idx + 1}.</span>
+            ${isFee ? '' : `<input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')" aria-label="Mark done: ${escapeForHtml(t.name)}">`}
             <div class="task-body">
-              <div class="task-name">${t.name}</div>
-              ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft); font-weight:600;">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${showLinked ? ' · linked: ' + t.linked : ''}${t.invoice ? ' · 📄 ' + t.invoice : ''}</div>` : ''}
-              ${isFee && balance > 0 && t.phone ? `<span onclick="sendWhatsAppReminder('${t.id}', ${balance})" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">📱 Send WhatsApp reminder</span>` : ''}
-              ${isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<span onclick="offerReceipt('${t.id}')" style="display:inline-block; margin-top:5px; ${balance > 0 && t.phone ? 'margin-left:12px;' : ''} font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">🧾 Send receipt</span>` : ''}
-              ${t.remark && !t.done ? `<div style="display:inline-block; margin-top:4px; font-size:10.5px; font-weight:700; background:var(--yellow-soft, #FFF3D6); color:#a56800; padding:3px 8px; border-radius:8px;">💬 ${t.remark}</div>` : ''}
-              <div class="task-meta">
-                <span class="tag ${tagClass}">${tagLabel}</span>
-                ${taskOverdue ? '<span class="tag urgent-tag">OVERDUE</span>' : (t.urgent && !t.done ? '<span class="tag urgent-tag">URGENT</span>' : '')}
-                ${dueDateLabel && !t.done ? `<span class="due" style="${taskOverdue ? 'color:var(--coral);' : ''}">Due ${dueDateLabel}</span>` : ''}
-                ${!t.done ? `<span onclick="setDueDate('${t.id}')" style="cursor:pointer; color:var(--violet); font-size:11px; font-weight:700; text-decoration:underline;">${t.dueDate ? 'Change' : 'Set'} due date</span>` : ''}
-                ${!t.done ? `<span onclick="setRemark('${t.id}')" style="cursor:pointer; color:#a56800; font-size:11px; font-weight:700; text-decoration:underline;">${t.remark ? 'Edit' : 'Add'} remark</span>` : ''}
-                ${isFee ? `<span onclick="recordPayment('${t.id}')" style="cursor:pointer; color:var(--sky); font-size:11px; font-weight:700; text-decoration:underline;">Record payment</span>` : ''}
-                <span onclick="deleteTask('${t.id}')" style="cursor:pointer; color:var(--ink-soft); font-size:14px; margin-left:auto;" title="Remove task">✕</span>
+              <div class="task-top">
+                <div class="task-name">${t.name}</div>${amount}
+                <button type="button" class="act del" onclick="deleteTask('${t.id}')" title="Remove task" aria-label="Remove task">${ICON.x}</button>
               </div>
+              ${sub}
+              ${t.remark && !t.done ? `<div class="note">${ICON.note}<span>${t.remark}</span></div>` : ''}
+              ${meta ? `<div class="task-meta">${meta}</div>` : ''}
             </div>
           </div>
         `;
@@ -1300,10 +1422,12 @@ function render(listOnly) {
       const ordered = open.concat(closed);   // card numbers run 1..n through the open cards, then carry on through the completed ones
       const collapsed = !forceOpen && !!uiState.collapsed[g.key];
       const key = escapeForHtml(g.key);
-      const countLabel = open.length + ' pending' + (closed.length ? ' · ' + closed.length + ' done' : '');
+      const countHtml = '<b>' + open.length + ' pending</b>' + (closed.length ? ' · ' + closed.length + ' done' : '');
+      const titleParts = g.label.match(/^(Professional) — (.+)$/);
+      const titleHtml = titleParts ? '<span class="kind">' + titleParts[1] + '</span><span>' + titleParts[2] + '</span>' : '<span>' + g.label + '</span>';
       const headAttrs = forceOpen ? '' : ` role="button" tabindex="0" aria-expanded="${!collapsed}" data-key="${key}" onclick="toggleGroup(this.dataset.key)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleGroup(this.dataset.key);}"`;
       html += `<div class="cat-section${collapsed ? ' collapsed' : ''}">
-        <div class="cat-heading${forceOpen ? '' : ' fold'}"${headAttrs}>${forceOpen ? '' : '<span class="chev">▾</span>'}<span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${countLabel}</span></div>`;
+        <div class="cat-heading${forceOpen ? '' : ' fold'}"${headAttrs}>${forceOpen ? '' : ICON.chev}<span class="dot" style="background:${g.color}"></span><span class="title">${titleHtml}</span><span class="count">${countHtml}</span></div>`;
       if (!collapsed) {
         html += '<div class="task-grid">';
         open.forEach(t => { html += renderCard(t, ordered.indexOf(t), g); });
@@ -1336,7 +1460,7 @@ function render(listOnly) {
 // need updating for 2027 onward.
 const FESTIVAL_THEMES = [
   { name: 'Republic Day', start: '2026-01-25', end: '2026-01-26', vars: { coral:'#FF9933', teal:'#138808', violet:'#0B3D91', sky:'#138808', pink:'#FF9933', bg:'#FFF8ED' } },
-  { name: 'Holi', start: '2026-03-03', end: '2026-03-05', vars: { coral:'#FF3D71', teal:'#00C2A8', violet:'#9B4DFF', sky:'#1FC4FF', pink:'#FF61D2', yellow:'#FFD400', bg:'#FFF9F0' } },
+  { name: 'Holi', start: '2026-03-03', end: '2026-03-05', accent: '#6D2FD0', vars: { coral:'#FF3D71', teal:'#00C2A8', violet:'#9B4DFF', sky:'#1FC4FF', pink:'#FF61D2', yellow:'#FFD400', bg:'#FFF9F0' } },
   { name: 'Eid al-Fitr', start: '2026-03-19', end: '2026-03-22', vars: { coral:'#0F9D6F', teal:'#0F9D6F', violet:'#0B6E4F', sky:'#0F9D6F', pink:'#C9A227', yellow:'#C9A227', bg:'#F5FBF7' } },
   { name: 'Eid al-Adha', start: '2026-05-26', end: '2026-05-29', vars: { coral:'#0F9D6F', teal:'#0F9D6F', violet:'#0B6E4F', sky:'#0F9D6F', pink:'#C9A227', yellow:'#C9A227', bg:'#F5FBF7' } },
   { name: 'Muharram (Ashara Mubaraka)', start: '2026-06-16', end: '2026-06-26', mourning: true, vars: { coral:'#3A3A3E', teal:'#4A4A4E', violet:'#2B2B2F', sky:'#5A5A5E', pink:'#3A3A3E', yellow:'#6A6A6E', bg:'#F2F1EF', ink:'#1C1C1E' } },
@@ -1355,12 +1479,16 @@ function applyFestivalTheme() {
   if (!active) return;
   const root = document.documentElement.style;
   Object.entries(active.vars).forEach(([key, val]) => root.setProperty('--' + key, val));
+  const accent = active.accent || active.vars.violet;   // every theme's deep colour doubles as the accent
+  if (accent) root.setProperty('--accent', accent);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');   // keep the phone's address bar in step with the page colour
+  if (themeMeta && active.vars.bg) themeMeta.setAttribute('content', active.vars.bg);
   if (active.mourning) {
     document.body.style.setProperty('--confetti-disabled', 'true');
   }
   const banner = document.createElement('div');
   banner.textContent = active.mourning ? '· ' + active.name + ' ·' : '✨ ' + active.name + ' ✨';
-  banner.style.cssText = 'text-align:center; font-family:"Baloo 2",sans-serif; font-weight:700; font-size:12px; letter-spacing:0.04em; padding:6px; margin-bottom:12px; border-radius:10px; background:rgba(0,0,0,0.06); color:var(--ink);';
+  banner.className = 'festival-banner';
   document.body.insertBefore(banner, document.body.firstChild);
 }
 applyFestivalTheme();
