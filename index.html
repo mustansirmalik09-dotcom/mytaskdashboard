@@ -95,6 +95,52 @@
     background: var(--ink-soft); border-radius: 10px; padding: 1px 8px; margin-left: auto;
   }
 
+  /* Keeping the page short: foldable sections, a "completed" bar, search, back-to-top */
+  .cat-heading .count { white-space: nowrap; flex-shrink: 0; }
+  @media (max-width: 560px) {
+    /* the four stat cards fit on one row on a phone instead of wrapping onto two */
+    .hero-stats { gap: 8px; margin-bottom: 14px; }
+    .hero-card { min-width: 0; padding: 11px 10px; border-radius: 14px; }
+    .hero-card .n { font-size: 23px; }
+    .hero-card .l { font-size: 9.5px; letter-spacing: 0.03em; }
+  }
+  .cat-heading.fold { cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .cat-heading.fold:hover .chev { color: var(--ink); }
+  .cat-heading .chev { display: inline-block; width: 12px; font-size: 11px; color: var(--ink-soft); transition: transform 0.15s ease; }
+  .cat-section.collapsed { margin-bottom: 12px; }
+  .cat-section.collapsed .cat-heading { margin-bottom: 0; }
+  .cat-section.collapsed .cat-heading .chev { transform: rotate(-90deg); }
+  .done-toggle {
+    grid-column: 1 / -1; background: #fff; border: 1.5px dashed var(--line); color: var(--ink-soft);
+    padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; text-align: left;
+    font-family: 'Karla', sans-serif; cursor: pointer; transition: all 0.2s ease;
+  }
+  .done-toggle:hover { border-color: var(--teal); color: #00806e; }
+  .task.done { padding: 8px 12px; }
+  .task.done .task-meta { margin-top: 4px; }
+  .task.done .task-meta .tag { display: none; }
+  #app.no-anim .task { animation: none; }
+  #searchRow { margin: 2px 0 12px; }
+  #searchWrap { position: relative; }
+  #searchBox {
+    width: 100%; background: #fff; border: 1.5px solid var(--line); color: var(--ink);
+    padding: 10px 38px 10px 14px; border-radius: 12px; font-size: 12.5px; font-family: 'Karla', sans-serif; font-weight: 600;
+  }
+  #searchBox:focus { outline: none; border-color: var(--violet); }
+  #searchClear {
+    display: none; position: absolute; right: 5px; top: 5px; width: 32px; height: 32px;
+    border: none; background: transparent; color: var(--ink-soft); font-size: 15px; cursor: pointer;
+  }
+  #searchInfo { font-size: 11px; color: var(--ink-soft); font-weight: 700; margin: 5px 2px 0; }
+  #searchInfo:empty { display: none; }
+  #toTop {
+    position: fixed; right: 16px; bottom: 18px; width: 44px; height: 44px; border-radius: 50%;
+    border: none; background: var(--ink); color: #fff; font-size: 18px; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(34,37,43,0.25); opacity: 0; pointer-events: none; transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease; z-index: 900;
+  }
+  #toTop.show { opacity: 0.92; pointer-events: auto; transform: none; }
+
   .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
   .task {
     display: flex; align-items: flex-start; gap: 10px; background: var(--card);
@@ -181,6 +227,14 @@
 
 <div id="summaryArea"></div>
 
+<div id="searchRow">
+  <div id="searchWrap">
+    <input type="text" id="searchBox" placeholder="🔍 Search a client, task or invoice number…" autocomplete="off" aria-label="Search tasks" oninput="onSearch(this.value)">
+    <button id="searchClear" aria-label="Clear search" onclick="clearSearch()">✕</button>
+  </div>
+  <div id="searchInfo"></div>
+</div>
+
 <div class="add-box">
   <select id="newCat" onchange="onCategoryChange()">
     <option value="PERSONAL">PERSONAL</option>
@@ -205,12 +259,66 @@
   <div class="loading">Loading tasks...</div>
 </div>
 
+<button id="toTop" aria-label="Back to top" title="Back to top" onclick="scrollToTop()">↑</button>
+
 <script>
 const STORAGE_KEY = 'tasks-v2';
 const WEBHOOK_KEY = 'webhookUrl';
 const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 let tasks = [];
 let filter = 'all'; // all, own, mhj, pending, done
+
+// ---- Keeping the page short ----
+// Finished tasks and settled fees sit behind a "✓ N completed" bar under each section instead of
+// filling the page, sections can be folded (remembered), search jumps straight to a client, and a
+// round button takes you back to the top. Nothing is removed - it is all one tap away.
+const UI_KEY = 'dash-ui-v1';
+let uiState = { collapsed: {} };   // folded sections - remembered between visits
+try {
+  const saved = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
+  if (saved && saved.collapsed && typeof saved.collapsed === 'object') uiState.collapsed = saved.collapsed;
+} catch (e) { /* storage unavailable - sections simply start unfolded */ }
+let doneOpen = {};                 // "completed" bars opened during this visit (not remembered)
+let searchQuery = '';
+let searchTimer = null;
+
+function saveUi() {
+  try { localStorage.setItem(UI_KEY, JSON.stringify(uiState)); } catch (e) { /* ignore */ }
+}
+function toggleGroup(key) {
+  const keyboard = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('cat-heading');
+  if (uiState.collapsed[key]) delete uiState.collapsed[key]; else uiState.collapsed[key] = true;
+  saveUi();
+  render();
+  if (keyboard) { // keep keyboard focus on the same heading after the list is redrawn
+    const again = [...document.querySelectorAll('.cat-heading[data-key]')].find(el => el.dataset.key === key);
+    if (again) again.focus();
+  }
+}
+function toggleDone(key) {
+  doneOpen[key] = !doneOpen[key];
+  render();
+}
+function onSearch(value) {
+  searchQuery = value || '';
+  document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => render(true), 120);   // list only, so the box keeps focus and the stats don't flicker
+}
+function clearSearch() {
+  const box = document.getElementById('searchBox');
+  box.value = '';
+  onSearch('');
+  box.focus();
+}
+function scrollToTop() {
+  const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({ top: 0, behavior: calm ? 'auto' : 'smooth' });
+}
+window.addEventListener('scroll', () => {
+  const b = document.getElementById('toTop');
+  if (b) b.classList.toggle('show', window.scrollY > 600);
+}, { passive: true });
 
 function getWebhook() {
   return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
@@ -1027,7 +1135,7 @@ function setFilter(f) {
   render();
 }
 
-function render() {
+function render(listOnly) {
   const summaryEl = document.getElementById('summaryArea');
   const app = document.getElementById('app');
   const done = tasks.filter(t => t.done).length;
@@ -1058,6 +1166,18 @@ function render() {
   else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
   else if (filter === 'done') filtered = tasks.filter(t => t.done);
   else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
+
+  // Search runs on top of whichever filter is chosen. Every word must match somewhere in the
+  // task's name, linked client, invoice number, remark, phone or category.
+  const q = searchQuery.trim().toLowerCase();
+  const searchActive = q.length > 0;
+  if (searchActive) {
+    const words = q.split(/\s+/);
+    filtered = filtered.filter(t => {
+      const hay = [t.name, t.linked, t.invoice, t.remark, t.phone, t.cat].join(' ').toLowerCase();
+      return words.every(w => hay.includes(w));
+    });
+  }
 
   filtered = [...filtered].sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -1109,8 +1229,12 @@ function render() {
   `;
 
   let html = '';
+  const forceOpen = filter !== 'all' || searchActive; // an explicit filter or search always beats a folded section
+  let shownCount = 0;
   if (filtered.length === 0) {
-    html += '<div class="empty">No tasks here 🎉</div>';
+    html += searchActive
+      ? '<div class="empty">No tasks match “' + escapeForHtml(searchQuery.trim()) + '”</div>'
+      : '<div class="empty">No tasks here 🎉</div>';
   } else {
     const groupDefs = [
       { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--sky)', match: t => t.cat === 'MHJ' },
@@ -1128,26 +1252,23 @@ function render() {
       { key: 'FEES', label: 'Fees', color: 'var(--coral)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
     );
 
-    groupDefs.forEach(g => {
-      const groupTasks = filtered.filter(g.match);
-      if (groupTasks.length === 0) return;
-      html += `<div class="cat-section">
-        <div class="cat-heading"><span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${groupTasks.length}</span></div>
-        <div class="task-grid">`;
-      groupTasks.forEach((t, idx) => {
+    // One card. Same markup as always; the only difference is that the "linked:" text is left
+    // out when it just repeats the title, which saved a line or two on almost every fee card.
+    const renderCard = (t, idx, g) => {
         const tagClass = t.type === 'personal' ? 'personal' : (t.type === 'fee' ? 'fees' : (t.cat === 'OWN' ? 'own' : (t.cat === 'MHJ' ? 'mhj' : (t.cat === 'SHK' ? 'shk' : 'generic-cat'))));
         const tagLabel = t.type === 'personal' ? 'PERSONAL' : t.cat;
         const isFee = t.type === 'fee';
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
         const taskOverdue = isOverdue(t);
         const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
-        html += `
+        const showLinked = !!t.linked && t.linked.trim().toLowerCase() !== t.name.replace(/^✅\s*/, '').trim().toLowerCase();
+        return `
           <div class="task ${t.done?'done':''}" style="--catcolor:${g.color};${!t.done ? `border-left:4px solid ${taskOverdue ? 'var(--coral)' : (g.color.startsWith('var')?g.color:g.color)};` : ''}">
             <span style="font-family:'Baloo 2',sans-serif; font-weight:700; font-size:12px; color:var(--ink-soft); flex-shrink:0; min-width:20px;">${idx + 1}.</span>
             ${isFee ? '' : `<input type="checkbox" ${t.done?'checked':''} onchange="toggleTask('${t.id}')">`}
             <div class="task-body">
               <div class="task-name">${t.name}</div>
-              ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft); font-weight:600;">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${t.linked ? ' · linked: ' + t.linked : ''}${t.invoice ? ' · 📄 ' + t.invoice : ''}</div>` : ''}
+              ${isFee ? `<div style="font-size:11px; margin-top:3px; color:var(--ink-soft); font-weight:600;">₹${t.received} of ₹${t.payable} received${t.discount ? ' + ₹' + t.discount + ' discount' : ''}${balance > 0 ? ' — ₹' + balance + ' due' : ' — fully settled'}${showLinked ? ' · linked: ' + t.linked : ''}${t.invoice ? ' · 📄 ' + t.invoice : ''}</div>` : ''}
               ${isFee && balance > 0 && t.phone ? `<span onclick="sendWhatsAppReminder('${t.id}', ${balance})" style="display:inline-block; margin-top:5px; font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">📱 Send WhatsApp reminder</span>` : ''}
               ${isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<span onclick="offerReceipt('${t.id}')" style="display:inline-block; margin-top:5px; ${balance > 0 && t.phone ? 'margin-left:12px;' : ''} font-size:11px; color:#25D366; text-decoration:none; font-weight:700; cursor:pointer;">🧾 Send receipt</span>` : ''}
               ${t.remark && !t.done ? `<div style="display:inline-block; margin-top:4px; font-size:10.5px; font-weight:700; background:var(--yellow-soft, #FFF3D6); color:#a56800; padding:3px 8px; border-radius:8px;">💬 ${t.remark}</div>` : ''}
@@ -1163,13 +1284,48 @@ function render() {
             </div>
           </div>
         `;
-      });
-      html += `</div></div>`;
+    };
+
+    // Finished tasks and fully settled fees are tucked behind a "✓ N completed" bar. Anything that
+    // still needs attention stays in the list, including a fee marked done while money is still due.
+    const feeBalance = t => (t.type === 'fee' && !t.name.includes('Advance Credit Balance')) ? (t.payable - t.received - (t.discount || 0)) : 0;
+    const isFinished = t => t.done && feeBalance(t) <= 0;
+
+    groupDefs.forEach(g => {
+      const groupTasks = filtered.filter(g.match);
+      if (groupTasks.length === 0) return;
+      shownCount += groupTasks.length;
+      const open = groupTasks.filter(t => !isFinished(t));
+      const closed = groupTasks.filter(isFinished);
+      const ordered = open.concat(closed);   // card numbers run 1..n through the open cards, then carry on through the completed ones
+      const collapsed = !forceOpen && !!uiState.collapsed[g.key];
+      const key = escapeForHtml(g.key);
+      const countLabel = open.length + ' pending' + (closed.length ? ' · ' + closed.length + ' done' : '');
+      const headAttrs = forceOpen ? '' : ` role="button" tabindex="0" aria-expanded="${!collapsed}" data-key="${key}" onclick="toggleGroup(this.dataset.key)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleGroup(this.dataset.key);}"`;
+      html += `<div class="cat-section${collapsed ? ' collapsed' : ''}">
+        <div class="cat-heading${forceOpen ? '' : ' fold'}"${headAttrs}>${forceOpen ? '' : '<span class="chev">▾</span>'}<span class="dot" style="background:${g.color}"></span>${g.label} <span class="count">${countLabel}</span></div>`;
+      if (!collapsed) {
+        html += '<div class="task-grid">';
+        open.forEach(t => { html += renderCard(t, ordered.indexOf(t), g); });
+        if (closed.length) {
+          const showAll = filter === 'done' || searchActive;   // asked for explicitly, so no bar is needed
+          const expanded = showAll || !!doneOpen[g.key];
+          if (!showAll) {
+            html += `<button class="done-toggle" data-key="${key}" aria-expanded="${expanded}" onclick="toggleDone(this.dataset.key)">${expanded ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>`;
+          }
+          if (expanded) closed.forEach(t => { html += renderCard(t, ordered.indexOf(t), g); });
+        }
+        html += '</div>';
+      }
+      html += '</div>';
     });
   }
 
-  summaryEl.innerHTML = summaryHtml;
+  if (!listOnly) summaryEl.innerHTML = summaryHtml;
+  app.classList.toggle('no-anim', !!listOnly);   // no fade-in while typing in the search box
   app.innerHTML = html;
+  const info = document.getElementById('searchInfo');
+  if (info) info.textContent = searchActive ? shownCount + ' of ' + tasks.length + ' tasks' : '';
 }
 
 // Festival theming: overrides the base color palette for a few days around
