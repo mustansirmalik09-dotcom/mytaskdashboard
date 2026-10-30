@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600&family=Public+Sans:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#F3F5F8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   /* ------------------------------------------------------------------
      Look: working papers. Blue-black ink on cool paper, a serif for the
@@ -1519,6 +1521,15 @@ if (localStorage.getItem(AUTH_KEY) === 'yes') {
   startDashboard();
 } else {
   document.getElementById('authInput').focus();
+}
+</script>
+<script>
+// Makes the dashboard installable as an app on Android (Chrome menu > Install app) and lets it open with no signal.
+// Only the page and fonts are kept; Calendar sync and everything live is never touched. See sw.js.
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* the dashboard works exactly the same without it */ });
+  });
 }
 </script>
 </body>
