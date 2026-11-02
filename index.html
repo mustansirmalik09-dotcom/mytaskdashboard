@@ -1260,7 +1260,7 @@ function showSingleReceiptModal(t, phone, message, paidNow, afterSave) {
     : paidNow > 0 ? '✓ Payment saved. '
     : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
   const intro = saved + (cleanPhone
-    ? 'This opens ' + escapeForHtml(t.linked || t.name) + \'s chat with the receipt ready — you just press Send.'
+    ? 'This opens ' + escapeForHtml(t.linked || t.name) + \"'s chat with the receipt ready — you just press Send.\"
     : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
 
   const phonePart = cleanPhone ? 'phone=' + cleanPhone + '&' : '';
