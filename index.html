@@ -498,6 +498,7 @@ async function pullFromCalendar() {
         task.linked = ev.linked || '';
         task.phone = ev.phone || '';
         task.invoice = ev.invoice || '';
+        task.feeCat = ev.feeCat || '';
       }
       tasks.push(task);
       added++;
@@ -611,11 +612,11 @@ function toggleTask(id) {
       const phone = document.getElementById('modalPhone').value.trim();
       if (!isNaN(payable) && payable > 0) {
         const localId = 'u'+Date.now();
-        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name, phone };
+        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || '', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name, phone };
         tasks.push(feeTask);
         saveTasks();
         render();
-        pushFeeToCalendar(t.name, payable, received, t.name, phone).then(calId => {
+        pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || '').then(calId => {
           if (calId) { feeTask.id = calId; saveTasks(); }
         });
       }
@@ -990,7 +991,12 @@ function addTask() {
     const linked = document.getElementById('feeLinked').value.trim();
     const phone = document.getElementById('feePhone').value.trim();
     const localId = 'u'+Date.now();
-    const task = { id: localId, name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked, phone };
+    let feeCat = '';
+    if (linked) {
+      const matchT = tasks.find(x => x.type === 'professional' && x.cat && (x.name.toLowerCase() === linked.toLowerCase() || x.name.toLowerCase().includes(linked.toLowerCase()) || linked.toLowerCase().includes(x.name.toLowerCase())));
+      if (matchT) feeCat = matchT.cat;
+    }
+    const task = { id: localId, name, type: 'fee', cat: 'FEES', feeCat, due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked, phone };
     tasks.push(task);
     input.value = '';
     document.getElementById('feePayable').value = '';
@@ -999,7 +1005,7 @@ function addTask() {
     document.getElementById('feePhone').value = '';
     saveTasks();
     render();
-    pushFeeToCalendar(name, payable, received, linked, phone).then(calId => {
+    pushFeeToCalendar(name, payable, received, linked, phone, feeCat).then(calId => {
       if (calId) { task.id = calId; saveTasks(); }
     });
     return;
@@ -1028,11 +1034,11 @@ function addTask() {
   });
 }
 
-async function pushFeeToCalendar(name, payable, received, linked, phone) {
+async function pushFeeToCalendar(name, payable, received, linked, phone, feeCat) {
   const url = getWebhook();
   if (!url) return null;
   try {
-    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '' });
+    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '', feeCat: feeCat || '' });
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     return data.id || null;
@@ -1178,9 +1184,134 @@ function buildReceiptMessage(t, paidNow) {
   return msg.replace(/&/g, 'and');
 }
 
+// ---- Category phone mapping & persistence ----
+const CAT_PHONES_KEY = 'dash-cat-phones-v1';
+const DEFAULT_CATEGORY_PHONES = {
+  SHK: '9425320184',
+  HATIM_BHAI_ADV: '9826768052',
+  MHJ: '',
+  OWN: ''
+};
+
+function getCategoryPhones() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CAT_PHONES_KEY) || '{}');
+    return Object.assign({}, DEFAULT_CATEGORY_PHONES, saved);
+  } catch (e) {
+    return Object.assign({}, DEFAULT_CATEGORY_PHONES);
+  }
+}
+
+function saveCategoryPhone(catKey, phone) {
+  try {
+    const current = getCategoryPhones();
+    current[catKey] = (phone || '').replace(/[^0-9]/g, '');
+    localStorage.setItem(CAT_PHONES_KEY, JSON.stringify(current));
+  } catch (e) {}
+}
+
+function detectFeeCategory(t) {
+  if (t.feeCat) return t.feeCat;
+  const targetName = (t.linked || t.name || '').trim().toLowerCase();
+  const linkedTask = tasks.find(x => x.type === 'professional' && x.cat && (
+    x.name.trim().toLowerCase() === targetName ||
+    targetName.includes(x.name.trim().toLowerCase()) ||
+    x.name.trim().toLowerCase().includes(targetName)
+  ));
+  if (linkedTask && linkedTask.cat) return linkedTask.cat;
+  if (t.cat && t.cat !== 'FEES') return t.cat;
+  return 'SHK';
+}
+
+function getCatDisplayName(k) {
+  const map = {
+    SHK: 'SHK Husain Arif',
+    MHJ: 'MHJ',
+    OWN: 'Professional — OWN',
+    HATIM_BHAI_ADV: 'Hatim Bhai Adv'
+  };
+  return map[k] || k.replace(/_/g, ' ');
+}
+
 // Separate function so the actual hand-off to the phone's WhatsApp app is one replaceable line.
 function launchWhatsApp(url) {
   window.location.href = url;
+}
+
+function openReceiptWhatsApp(phone, message, useRegular) {
+  let clean = (phone || '').replace(/[^0-9]/g, '');
+  if (clean.length === 10) clean = '91' + clean;
+  const encoded = encodeURIComponent(message);
+  const phonePart = clean ? 'phone=' + clean + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
+  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid && !useRegular) {
+    launchWhatsApp(waBusinessIntent);
+  } else {
+    window.open(waUrl, '_blank');
+  }
+}
+
+function sendReceiptToClient(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
+  openReceiptWhatsApp(t.phone || '', message, useRegular);
+  const btn = document.getElementById('btnReceiptClient');
+  if (btn) {
+    btn.style.background = 'var(--muted)';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '✓ Opened for Client';
+  }
+}
+
+function sendReceiptToCategory(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const catSelect = document.getElementById('receiptCatSelect');
+  const catKey = catSelect ? catSelect.value : 'SHK';
+  const phoneInput = document.getElementById('receiptCatPhone');
+  const catPhone = phoneInput ? phoneInput.value.trim() : '';
+  if (catPhone) saveCategoryPhone(catKey, catPhone);
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
+  openReceiptWhatsApp(catPhone, message, useRegular);
+  const btn = document.getElementById('btnReceiptCat');
+  if (btn) {
+    btn.style.background = 'var(--muted)';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '✓ Opened for ' + getCatDisplayName(catKey);
+  }
+}
+
+function onReceiptCatChange(taskId) {
+  const catSelect = document.getElementById('receiptCatSelect');
+  if (!catSelect) return;
+  const catKey = catSelect.value;
+  const phones = getCategoryPhones();
+  const phone = phones[catKey] || '';
+  const phoneInput = document.getElementById('receiptCatPhone');
+  if (phoneInput) phoneInput.value = phone;
+  const phoneTag = document.getElementById('catPhoneTag');
+  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
+  const btnText = document.getElementById('btnReceiptCatText');
+  if (btnText) btnText.textContent = 'Send to ' + getCatDisplayName(catKey);
+  const btn = document.getElementById('btnReceiptCat');
+  if (btn) btn.style.background = 'var(--green)';
+}
+
+function onReceiptCatPhoneInput(taskId) {
+  const catSelect = document.getElementById('receiptCatSelect');
+  const phoneInput = document.getElementById('receiptCatPhone');
+  if (!catSelect || !phoneInput) return;
+  const catKey = catSelect.value;
+  const phone = phoneInput.value.trim();
+  saveCategoryPhone(catKey, phone);
+  const phoneTag = document.getElementById('catPhoneTag');
+  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
 }
 
 // afterSave = opened straight after Record payment (so the first line can say what was saved);
@@ -1188,35 +1319,76 @@ function launchWhatsApp(url) {
 function offerReceipt(taskId, paidNow, afterSave) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
-  let phone = (t.phone || '').replace(/[^0-9]/g, '');
-  if (phone.length === 10) phone = '91' + phone;
+  const clientPhone = (t.phone || '').trim();
+  const clientLabel = t.linked || t.name;
   const message = buildReceiptMessage(t, paidNow || 0);
-  const encoded = encodeURIComponent(message);
-  // No saved number: leave "phone" out and WhatsApp itself asks which contact to send to.
-  const phonePart = phone ? 'phone=' + phone + '&' : '';
-  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
-  // Same exact-package targeting as the fee reminder's "Open in WhatsApp Business" button.
-  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
-    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
-  // intent:// links only exist on Android; anywhere else the main button opens the normal link.
+
+  const detectedCat = detectFeeCategory(t);
+  const catPhones = getCategoryPhones();
+
+  const knownCats = ['SHK', 'MHJ', 'OWN'];
+  const extraCats = [...new Set(tasks.filter(x => x.type === 'professional' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(x.cat)).map(x => x.cat))];
+  const allCatKeys = [...new Set(['SHK', 'MHJ', 'OWN', ...extraCats])];
+  let currentCatKey = detectedCat || 'SHK';
+  if (!allCatKeys.includes(currentCatKey)) allCatKeys.unshift(currentCatKey);
+
+  const currentCatPhone = catPhones[currentCatKey] || '';
+  const currentCatLabel = getCatDisplayName(currentCatKey);
+
   const isAndroid = /Android/i.test(navigator.userAgent);
   const saved = !afterSave ? ''
     : paidNow > 0 ? '✓ Payment saved. '
     : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
-  const intro = saved + (phone
-    ? 'This opens ' + escapeForHtml(t.linked || t.name) + '\'s chat with the receipt ready — you just press Send.'
-    : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
 
-  showModal('Send payment receipt?', `
-    <div class="hint">${intro}</div>
+  const catOptionsHtml = allCatKeys.map(k =>
+    `<option value="${k}" ${k === currentCatKey ? 'selected' : ''}>${escapeForHtml(getCatDisplayName(k))}</option>`
+  ).join('');
+
+  const modalHtml = `
+    <div class="hint">${saved}Choose who to send the receipt to via WhatsApp:</div>
     <div class="receipt-preview">${escapeForHtml(message)}</div>
-    ${isAndroid ? `<div class="alt-link">
-      <a href="${escapeForHtml(waUrl)}" target="_blank" rel="noopener" onclick="closeModal()">Open in regular WhatsApp instead</a>
+
+    <div style="margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+          <span style="font-weight: 600; font-size: 13.5px; color: var(--ink);">1. Client (${escapeForHtml(clientLabel)})</span>
+          <span style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;">${clientPhone ? clientPhone : 'No number'}</span>
+        </div>
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
+          ${clientPhone ? 'Sends directly to this client\'s WhatsApp chat.' : 'No phone saved — WhatsApp will prompt you to pick the contact.'}
+        </div>
+        <button type="button" id="btnReceiptClient" class="btn btn-wa" style="width: 100%; height: 38px; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToClient('${t.id}', ${paidNow || 0})">
+          ${ICON.chat} <span>Send to Client</span>
+        </button>
+      </div>
+
+      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+          <span style="font-weight: 600; font-size: 13.5px; color: var(--ink);">2. Category Head / Principal</span>
+          <span id="catPhoneTag" style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;">${currentCatPhone || 'Enter phone'}</span>
+        </div>
+        <div style="display: flex; gap: 8px; margin: 6px 0 8px;">
+          <select id="receiptCatSelect" onchange="onReceiptCatChange('${t.id}')" style="flex: 1.2; height: 36px; padding: 0 8px; font-size: 13px; border: 1px solid var(--field); border-radius: 8px; background: var(--sheet); color: var(--ink);">
+            ${catOptionsHtml}
+          </select>
+          <input type="tel" id="receiptCatPhone" placeholder="Mobile number" value="${currentCatPhone}" oninput="onReceiptCatPhoneInput('${t.id}')" style="flex: 1; height: 36px; padding: 0 10px; font-size: 13px; border: 1px solid var(--field); border-radius: 8px; background: var(--sheet); color: var(--ink);">
+        </div>
+        <button type="button" id="btnReceiptCat" class="btn btn-wa" style="width: 100%; height: 38px; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToCategory('${t.id}', ${paidNow || 0})">
+          ${ICON.chat} <span id="btnReceiptCatText">Send to ${escapeForHtml(currentCatLabel)}</span>
+        </button>
+      </div>
+    </div>
+
+    ${isAndroid ? `
+    <div style="margin-top: 10px; text-align: center; font-size: 12.5px;">
+      <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--muted);">
+        <input type="checkbox" id="receiptUseRegular" style="accent-color: var(--accent);">
+        Use regular WhatsApp instead of WhatsApp Business
+      </label>
     </div>` : ''}
-  `, () => {
-    if (isAndroid) launchWhatsApp(waBusinessIntent);
-    else window.open(waUrl, '_blank');
-  }, isAndroid ? 'WhatsApp Business' : 'Open WhatsApp', 'Skip');
+  `;
+
+  showModal('Send payment receipt?', modalHtml, () => {}, 'Done', 'Close');
 }
 
 async function updateFeeOnCalendar(taskId, received, discount) {
