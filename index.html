@@ -101,7 +101,7 @@
   .filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
   .filters.seg { gap: 2px; flex-wrap: nowrap; padding: 3px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 11px; overflow-x: auto; scrollbar-width: none; }
   .filters.seg::-webkit-scrollbar { display: none; }
-  .filter-btn { cursor: pointer; font: 500 13.5px var(--sans); transition: background-color .12s ease, color .12s ease, border-color .12s ease; }
+  .filter-btn { cursor: font: 500 13.5px var(--sans); transition: background-color .12s ease, color .12s ease, border-color .12s ease; }
   .filters.seg .filter-btn { flex: 1 1 auto; border: 0; background: transparent; color: var(--muted); padding: 8px 10px; border-radius: 8px; white-space: nowrap; }
   .filters.seg .filter-btn:hover { color: var(--ink); background: var(--rule-soft); }
   .filters.seg .filter-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
@@ -371,6 +371,12 @@ const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLyd
 let tasks = [];
 let filter = 'all'; // all, own, mhj, pending, done
 
+// Global directory for category-level principal contacts
+const CATEGORY_CONTACTS = {
+  SHK: { name: 'SHK Husain Arif', phone: '9425320184' },
+  HATIM_BHAI_ADV: { name: 'Hatim Bhai Adv', phone: '9826768052' }
+};
+
 // ---- Look: small line icons, section colours and rupee formatting ----
 const ICON = {
   chat:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
@@ -388,16 +394,13 @@ function inr(n) {
 }
 
 // ---- Keeping the page short ----
-// Finished tasks and settled fees sit behind a "✓ N completed" bar under each section instead of
-// filling the page, sections can be folded (remembered), search jumps straight to a client, and a
-// round button takes you back to the top. Nothing is removed - it is all one tap away.
 const UI_KEY = 'dash-ui-v1';
 let uiState = { collapsed: {} };   // folded sections - remembered between visits
 try {
   const saved = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
   if (saved && saved.collapsed && typeof saved.collapsed === 'object') uiState.collapsed = saved.collapsed;
-} catch (e) { /* storage unavailable - sections simply start unfolded */ }
-let doneOpen = {};                 // "completed" bars opened during this visit (not remembered)
+} catch (e) { /* storage unavailable */ }
+let doneOpen = {};
 let searchQuery = '';
 let searchTimer = null;
 
@@ -409,7 +412,7 @@ function toggleGroup(key) {
   if (uiState.collapsed[key]) delete uiState.collapsed[key]; else uiState.collapsed[key] = true;
   saveUi();
   render();
-  if (keyboard) { // keep keyboard focus on the same heading after the list is redrawn
+  if (keyboard) {
     const again = [...document.querySelectorAll('.cat-heading[data-key]')].find(el => el.dataset.key === key);
     if (again) again.focus();
   }
@@ -422,7 +425,7 @@ function onSearch(value) {
   searchQuery = value || '';
   document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => render(true), 120);   // list only, so the box keeps focus and the stats don't flicker
+  searchTimer = setTimeout(() => render(true), 120);
 }
 function clearSearch() {
   const box = document.getElementById('searchBox');
@@ -478,9 +481,6 @@ async function pullFromCalendar() {
 
     events.forEach(ev => {
       if (existingIds.has(ev.id)) {
-        // Already on this device. The one thing the server can change behind this page's back
-        // is an invoice number (the 9am digest issues one for any pending fee that has a phone
-        // number), so keep just that in step - a payment receipt links to it.
         if (ev.tag === 'FEES' && ev.invoice) {
           const local = tasks.find(x => x.id === ev.id);
           if (local && local.invoice !== ev.invoice) { local.invoice = ev.invoice; refreshed++; }
@@ -503,8 +503,6 @@ async function pullFromCalendar() {
       added++;
     });
 
-    // Remove tasks whose calendar event was deleted directly on Calendar
-    // (only affects tasks that originated from / are linked to a real calendar event)
     const beforeCount = tasks.length;
     tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
     const removed = beforeCount - tasks.length;
@@ -560,7 +558,7 @@ function closeModal() {
 }
 
 function inputStyle() {
-  return '';   // dialog inputs are styled in the stylesheet (#modalFields)
+  return '';
 }
 
 function fireConfetti() {
@@ -594,17 +592,14 @@ function toggleTask(id) {
 
   // When marking a professional (non-fee, non-personal) task complete, ask about fees
   if (t && t.done && t.type === 'professional') {
-    // For client groups billed through one principal contact, default the phone number
-    // so it doesn't need retyping every time - applies to any category other than OWN/MHJ.
-    const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052' };
-    const defaultPhone = (t.cat && t.cat !== 'OWN' && t.cat !== 'MHJ' && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
+    const defaultContact = (t.cat && CATEGORY_CONTACTS[t.cat]) ? CATEGORY_CONTACTS[t.cat].phone : '';
     showModal('Fee for "' + t.name + '"?', `
       <label>Payable amount (leave blank to skip)</label>
       <input type="number" id="modalPayable" style="${inputStyle()}" placeholder="₹ Payable">
       <label>Received now</label>
       <input type="number" id="modalReceived" style="${inputStyle()}" placeholder="₹ Received" value="0">
       <label>Client phone (optional, for WhatsApp reminder)</label>
-      <input type="tel" id="modalPhone" style="${inputStyle()}" placeholder="e.g. 9876543210" value="${defaultPhone}">
+      <input type="tel" id="modalPhone" style="${inputStyle()}" placeholder="e.g. 9876543210" value="${defaultContact}">
     `, () => {
       const payable = parseFloat(document.getElementById('modalPayable').value);
       const received = parseFloat(document.getElementById('modalReceived').value) || 0;
@@ -632,16 +627,11 @@ async function toggleOnCalendar(taskId, done) {
   } catch (e) { /* fire and forget */ }
 }
 
-// Draws the invoice as a real PNG image (client-side, via canvas) so it can be shared as an
-// actual attachment through the phone's native Share sheet — a plain link can never be
-// auto-attached to a WhatsApp message, only text can. Returns a Blob, or null on failure.
 async function generateInvoiceImage(data) {
   try {
     const W = 900;
-    // Height depends on how many optional line items actually appear (received/discount) -
-    // computed up front so the image is sized to its real content, not padded with blank space.
-    let bodyY = 466; // first "Professional Fees" row baseline
-    bodyY += 80; // its divider + gap
+    let bodyY = 466;
+    bodyY += 80;
     if (data.received > 0) bodyY += 80;
     if (data.discount > 0) bodyY += 80;
     const balanceDueY = bodyY + 10;
@@ -652,8 +642,6 @@ async function generateInvoiceImage(data) {
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // Make sure the webfonts are actually loaded before drawing text with them, so canvas
-    // doesn't silently fall back to the default sans-serif for the whole image.
     try {
       await Promise.all([
         document.fonts.load('800 40px "Baloo 2"'),
@@ -663,7 +651,7 @@ async function generateInvoiceImage(data) {
         document.fonts.load('700 20px "Karla"'),
         document.fonts.load('600 24px "IBM Plex Mono"')
       ]);
-    } catch (e) { /* draw with fallback fonts below if webfonts aren't ready in time */ }
+    } catch (e) { /* fallback fonts */ }
 
     const BALOO = "'Baloo 2', sans-serif", KARLA = "'Karla', sans-serif", MONO = "'IBM Plex Mono', monospace";
     const INK = '#22252B', INK_SOFT = '#8A8A85', LINE = '#ECEAE3';
@@ -692,11 +680,9 @@ async function generateInvoiceImage(data) {
       return yy;
     }
 
-    // Background
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, W, H);
 
-    // Header band
     const grad = ctx.createLinearGradient(0, 0, W, 220);
     grad.addColorStop(0, CORAL);
     grad.addColorStop(1, VIOLET);
@@ -725,7 +711,6 @@ async function generateInvoiceImage(data) {
     ctx.fillText(data.date, W - 46, 138);
     ctx.globalAlpha = 1;
 
-    // Status badge
     const settled = data.balance <= 0;
     const badgeText = settled ? 'PAID' : 'PENDING';
     ctx.font = `700 22px ${BALOO}`;
@@ -738,7 +723,6 @@ async function generateInvoiceImage(data) {
     ctx.textAlign = 'center';
     ctx.fillText(badgeText, W / 2, badgeY + 30);
 
-    // Billed To / For
     let y = 320;
     ctx.textAlign = 'left';
     ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
@@ -751,7 +735,6 @@ async function generateInvoiceImage(data) {
     ctx.fillStyle = INK; ctx.font = `700 20px ${BALOO}`;
     wrapText(data.desc, W / 2 + 20, y + 30, W / 2 - 66, 26);
 
-    // Table
     y += 100;
     hLine(y);
     ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
@@ -786,7 +769,6 @@ async function generateInvoiceImage(data) {
     ctx.textAlign = 'right'; ctx.fillStyle = settled ? TEAL : CORAL; ctx.font = `800 34px ${MONO}`;
     ctx.fillText(fmt(Math.max(data.balance, 0)), W - 46, y);
 
-    // Footer
     y = footerTop;
     ctx.strokeStyle = LINE; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
     ctx.beginPath(); ctx.moveTo(46, y); ctx.lineTo(W - 46, y); ctx.stroke();
@@ -800,7 +782,7 @@ async function generateInvoiceImage(data) {
 
     return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png', 0.95));
   } catch (e) {
-    return null; // the image is a bonus on top of the link-based reminder — never throw from here
+    return null;
   }
 }
 
@@ -811,7 +793,6 @@ async function sendWhatsAppReminder(taskId, balance) {
   if (phone.length === 10) phone = '91' + phone;
   const clientName = t.linked || t.name;
 
-  // Open the window immediately (synchronously, within the click) so browsers don't block it as a popup
   const newWin = window.open('', '_blank');
   if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Generating your payment link and invoice — this can take a few seconds...</body>');
 
@@ -822,12 +803,12 @@ async function sendWhatsAppReminder(taskId, balance) {
   try {
     const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName });
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // generous 25s - this call chains two external APIs
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     const res = await fetch(url + '?' + params.toString(), { signal: controller.signal });
     clearTimeout(timeoutId);
     const data = await res.json();
     if (data.status === 'ok' && data.shortUrl) {
-      payUrl = data.shortUrl; // real link already has the exact amount, no need to ask them to type it
+      payUrl = data.shortUrl;
     } else {
       diagnosticNote = 'Server said: ' + (data.message || JSON.stringify(data));
     }
@@ -841,18 +822,13 @@ async function sendWhatsAppReminder(taskId, balance) {
       const res2 = await fetch(url + '?action=fallbacklink');
       const data2 = await res2.json();
       if (data2.status === 'ok' && data2.shortUrl) payUrl = data2.shortUrl;
-    } catch (e) { /* absolute last resort below */ }
+    } catch (e) { /* fallback link error */ }
   }
 
   if (!payUrl) {
-    // Straight to Razorpay's own page, no go.html hop - that page showed a visible
-    // "Redirecting..." step before forwarding, an extra page/domain flash on every click.
     payUrl = 'https://razorpay.me/@mustansirmalik';
   }
 
-  // Auto-generate (or reuse, if this fee was already invoiced before) an invoice to send alongside the reminder.
-  // The server splits the raw title into a client name ("Billed To") and a work description
-  // ("For") itself - see splitClientWork() in Apps Script - so it sends both back split.
   let invoiceUrl = null;
   let invoiceNumber = null;
   let invoiceClient = clientName;
@@ -876,13 +852,8 @@ async function sendWhatsAppReminder(taskId, balance) {
       if (invData.date) invoiceDate = invData.date;
       if (t.invoice !== invoiceNumber) { t.invoice = invoiceNumber; saveTasks(); render(); }
     }
-  } catch (e) { /* invoice is a nice-to-have on top of the reminder — never block sending it */ }
+  } catch (e) { /* ignore invoice failures */ }
 
-  // Draw the invoice as a real image so it can be shared as an actual WhatsApp attachment
-  // (a click-to-chat link can only ever pre-fill text, never a file — this is the only way).
-  // Uses the server's persisted invoice date (same one shown on the hosted invoice page)
-  // rather than today's date, so re-sending a reminder for an old invoice doesn't show two
-  // different dates for the same invoice number across the image and the web page.
   let invoiceFile = null;
   if (invoiceNumber) {
     const invBlob = await generateInvoiceImage({
@@ -894,21 +865,27 @@ async function sendWhatsAppReminder(taskId, balance) {
   let canShareFile = false;
   try { canShareFile = !!(invoiceFile && navigator.canShare && navigator.canShare({ files: [invoiceFile] })); } catch (e) { canShareFile = false; }
 
-  // Length was never actually the problem - two real screenshots proved that (a shorter message
-  // cut off *earlier* than a longer one, which a length limit could never do). The real causes
-  // were a literal "&" in the decoded text and a full URL embedded inside another URL's query
-  // string, both now fixed at the source (the invoice link itself has neither). So back to the
-  // full original message with both the invoice link and the payment link shown, plus the
-  // original greeting and signature. ".replace(/&/g, 'and')" stays on as a safety net - the
-  // signature has one ("Tax & Accounts Consultant") and a client name could too.
-  const invoiceLine = invoiceUrl ? `\n\n📄 *Invoice ${invoiceNumber}:*\n${invoiceUrl}` : '';
-  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
-  // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
-  // preference toward the standard WhatsApp package and doesn't always fall back to Business cleanly
-  // even when only Business is installed.
+  const invoiceLine = invoiceUrl ? `
+
+📄 *Invoice ${invoiceNumber}:*
+${invoiceUrl}` : '';
+  const message = `🧾 *Fee Reminder*
+
+Dear Sir/Madam,
+
+A gentle reminder that your fee for *"${clientName}"* is currently pending.
+
+💰 *Amount Due:* ₹${balance}${invoiceLine}
+
+👉 *Pay securely here${amountNote}:*
+${payUrl}
+
+Thank you for your continued trust — do reach out if you have any questions.
+
+Warm regards,
+*Mustannsirr Mallik*
+_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
   const waUrl = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(message);
-  // Explicitly target WhatsApp Business's exact app package, bypassing Android's generic link
-  // resolution (which seems to have a stale preference toward regular WhatsApp on this device)
   const waBusinessIntent = 'intent://send?phone=' + phone + '&text=' + encodeURIComponent(message) +
     '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
 
@@ -936,7 +913,7 @@ async function sendWhatsAppReminder(taskId, balance) {
       const shareBtn = newWin.document.getElementById('shareInvoiceBtn');
       if (shareBtn) {
         shareBtn.addEventListener('click', () => {
-          newWin.navigator.share({ files: [invoiceFile], text: message }).catch(() => { /* user cancelled the share sheet - the fallback buttons below still work */ });
+          newWin.navigator.share({ files: [invoiceFile], text: message }).catch(() => { });
         });
       }
     }
@@ -960,7 +937,6 @@ function onCategoryChange() {
       if (!raw) { select.value = 'PERSONAL'; return; }
       const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       if (!tag) { select.value = 'PERSONAL'; return; }
-      // avoid duplicating an existing option
       let exists = false;
       for (const opt of select.options) { if (opt.value === tag) { exists = true; break; } }
       if (!exists) {
@@ -972,7 +948,7 @@ function onCategoryChange() {
       select.value = tag;
       toggleFeeFields();
     }, 'Create', 'Cancel');
-    select.value = 'PERSONAL'; // revert selection until they confirm in the modal
+    select.value = 'PERSONAL';
   } else {
     toggleFeeFields();
   }
@@ -1018,10 +994,9 @@ function addTask() {
   render();
   pushToCalendar(name, catVal, dueDateVal).then(calId => {
     if (calId) {
-      task.id = calId; // replace temp id with real calendar id for future delete/toggle
+      task.id = calId;
       saveTasks();
       if (task.done) {
-        // task was marked done while the calendar event was still being created — sync it now
         toggleOnCalendar(task.id, task.done);
       }
     }
@@ -1100,7 +1075,7 @@ function recordPayment(id) {
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
-    const wantReceipt = document.getElementById('modalSendReceipt').checked; // read now - the receipt box below reuses this modal
+    const wantReceipt = document.getElementById('modalSendReceipt').checked;
     if (isNaN(amount)) return;
     const prevReceived = Number(t.received) || 0;
     t.received = amount;
@@ -1111,19 +1086,12 @@ function recordPayment(id) {
     if (t.id.startsWith('cal_')) {
       updateFeeOnCalendar(t.id, amount, discount);
     }
-    // Ticked and something has been received - offer the receipt. A new payment gets a receipt for
-    // that payment; saving with no new money (same total again, a correction, a discount) gets one
-    // for the total received so far, so a ticked box never just does nothing.
-    // showModal() calls closeModal() right after this callback returns, which would instantly
-    // hide a modal opened from in here, so the receipt prompt opens on the next tick instead.
     const paidNow = Math.round((amount - prevReceived) * 100) / 100;
     if (wantReceipt && amount > 0 && !t.name.includes('Advance Credit Balance')) {
       setTimeout(() => offerReceipt(t.id, paidNow > 0 ? paidNow : 0, true), 0);
     }
   });
 
-  // Small live line under the tick-box saying exactly what will be offered, so it is clear
-  // before pressing Save (and clear why when no new payment has been typed in).
   const amtEl = document.getElementById('modalReceivedAmt');
   const boxEl = document.getElementById('modalSendReceipt');
   const hintEl = document.getElementById('modalReceiptHint');
@@ -1142,9 +1110,6 @@ function recordPayment(id) {
 }
 
 // ---- One-tap WhatsApp payment receipt ----
-// A normal WhatsApp number can't send messages by itself - a click-to-chat link can only pre-fill
-// one - so the final tap on Send is always yours. Everything before it is ready: the message is
-// written, the client's chat is open, and the invoice link is in it.
 const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
 
 function moneyText(n) {
@@ -1155,8 +1120,6 @@ function escapeForHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// paidNow = the payment just recorded. Left out when re-sending a receipt later, in which
-// case the message states the total received so far instead.
 function buildReceiptMessage(t, paidNow) {
   const label = t.linked || t.name;
   const payable = Number(t.payable) || 0;
@@ -1166,46 +1129,142 @@ function buildReceiptMessage(t, paidNow) {
   const amount = paidNow > 0 ? paidNow : received;
   const invoiceNumber = String(t.invoice || '').split('|')[0].trim();
 
-  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${moneyText(amount)}`;
-  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
-  if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${moneyText(balance)}` : `\n✅ *Status:* Fully settled`;
-  // Only the invoice NUMBER goes in the link, same as the fee reminder - invoice.html looks the
-  // rest up itself, and shows PAID / the updated balance as of the moment the client opens it.
-  if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
-  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
-  // Same safety net as the fee reminder: a literal "&" anywhere in a pre-filled WhatsApp text can
-  // cut off everything after it, and the signature above (or a client's name) can contain one.
+  let msg = `🧾 *Payment Receipt*
+
+Dear Sir/Madam,
+
+We have received your payment for *"${label}"*. Thank you!
+
+✅ *Amount Received:* ₹${moneyText(amount)}`;
+  if (discount > 0) msg += `
+🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
+  if (payable > 0) msg += balance > 0 ? `
+💰 *Balance Due:* ₹${moneyText(balance)}` : `
+✅ *Status:* Fully settled`;
+  if (invoiceNumber) msg += `
+
+📄 *Invoice ${invoiceNumber}:*
+${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
+  msg += `
+
+Thank you for your payment and your continued trust.
+
+Warm regards,
+*Mustannsirr Mallik*
+_Tax & Accounts Consultant, Indore_`;
   return msg.replace(/&/g, 'and');
 }
 
-// Separate function so the actual hand-off to the phone's WhatsApp app is one replaceable line.
 function launchWhatsApp(url) {
   window.location.href = url;
 }
 
-// afterSave = opened straight after Record payment (so the first line can say what was saved);
-// the card's "Send receipt" link leaves it out.
+function openWhatsAppChat(phone, message) {
+  let cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+  if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+  const encoded = encodeURIComponent(message);
+  const phonePart = cleanPhone ? 'phone=' + cleanPhone + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
+  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid) {
+    launchWhatsApp(waBusinessIntent);
+  } else {
+    window.open(waUrl, '_blank');
+  }
+}
+
+function getCategoryContactForFee(feeTask) {
+  if (!feeTask) return null;
+  // If task has a specific cat and it's recognized in CATEGORY_CONTACTS
+  if (feeTask.cat && feeTask.cat !== 'FEES' && CATEGORY_CONTACTS[feeTask.cat]) {
+    return CATEGORY_CONTACTS[feeTask.cat];
+  }
+  // Check if linked to another task
+  const linkedName = (feeTask.linked || feeTask.name || '').trim().toLowerCase();
+  const parentTask = tasks.find(t =>
+    t.type === 'professional' &&
+    (t.name.trim().toLowerCase() === linkedName || (t.linked && t.linked.trim().toLowerCase() === linkedName))
+  );
+  if (parentTask && parentTask.cat && CATEGORY_CONTACTS[parentTask.cat]) {
+    return CATEGORY_CONTACTS[parentTask.cat];
+  }
+  return null;
+}
+
 function offerReceipt(taskId, paidNow, afterSave) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
-  let phone = (t.phone || '').replace(/[^0-9]/g, '');
-  if (phone.length === 10) phone = '91' + phone;
+
+  const clientPhone = (t.phone || '').trim();
+  const groupContact = getCategoryContactForFee(t);
   const message = buildReceiptMessage(t, paidNow || 0);
-  const encoded = encodeURIComponent(message);
-  // No saved number: leave "phone" out and WhatsApp itself asks which contact to send to.
-  const phonePart = phone ? 'phone=' + phone + '&' : '';
-  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
-  // Same exact-package targeting as the fee reminder's "Open in WhatsApp Business" button.
-  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
-    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
-  // intent:// links only exist on Android; anywhere else the main button opens the normal link.
+
+  const cleanClient = clientPhone.replace(/[^0-9]/g, '');
+  const cleanGroup = groupContact ? groupContact.phone.replace(/[^0-9]/g, '') : '';
+
+  // If no group contact or group contact has identical phone to client, show standard modal
+  if (!groupContact || (cleanClient && cleanGroup && cleanClient.slice(-10) === cleanGroup.slice(-10))) {
+    showSingleReceiptModal(t, clientPhone, message, paidNow, afterSave);
+    return;
+  }
+
   const isAndroid = /Android/i.test(navigator.userAgent);
   const saved = !afterSave ? ''
     : paidNow > 0 ? '✓ Payment saved. '
     : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
-  const intro = saved + (phone
-    ? 'This opens ' + escapeForHtml(t.linked || t.name) + '\'s chat with the receipt ready — you just press Send.'
+
+  showModal('Send payment receipt?', `
+    <div class="hint">${saved}Select who should receive this receipt via WhatsApp:</div>
+    <div style="margin: 12px 0; display: flex; flex-direction: column; gap: 8px;">
+      <label class="check-row">
+        <input type="checkbox" id="sendToClient" ${clientPhone ? 'checked' : ''}>
+        Client: ${escapeForHtml(t.linked || t.name)} (${clientPhone || 'No number saved'})
+      </label>
+      <label class="check-row">
+        <input type="checkbox" id="sendToGroup" checked>
+        Category Contact: ${escapeForHtml(groupContact.name)} (${groupContact.phone})
+      </label>
+    </div>
+    <div class="receipt-preview">${escapeForHtml(message)}</div>
+  `, () => {
+    const toClient = document.getElementById('sendToClient') ? document.getElementById('sendToClient').checked : false;
+    const toGroup = document.getElementById('sendToGroup') ? document.getElementById('sendToGroup').checked : false;
+
+    if (toClient && toGroup) {
+      openWhatsAppChat(clientPhone, message);
+      setTimeout(() => {
+        showModal('Send to Category Contact?', `
+          <div class="hint">Sent to client! Now open chat for <strong>${escapeForHtml(groupContact.name)}</strong> (${groupContact.phone})?</div>
+        `, () => {
+          openWhatsAppChat(groupContact.phone, message);
+        }, isAndroid ? 'WhatsApp Business' : 'Open WhatsApp', 'Skip');
+      }, 800);
+    } else if (toClient) {
+      openWhatsAppChat(clientPhone, message);
+    } else if (toGroup) {
+      openWhatsAppChat(groupContact.phone, message);
+    }
+  }, isAndroid ? 'WhatsApp Business' : 'Open WhatsApp', 'Skip');
+}
+
+function showSingleReceiptModal(t, phone, message, paidNow, afterSave) {
+  let cleanPhone = phone.replace(/[^0-9]/g, '');
+  if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const saved = !afterSave ? ''
+    : paidNow > 0 ? '✓ Payment saved. '
+    : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
+  const intro = saved + (cleanPhone
+    ? 'This opens ' + escapeForHtml(t.linked || t.name) + \"'s chat with the receipt ready — you just press Send.\"
     : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
+
+  const phonePart = cleanPhone ? 'phone=' + cleanPhone + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encodeURIComponent(message);
 
   showModal('Send payment receipt?', `
     <div class="hint">${intro}</div>
@@ -1214,8 +1273,7 @@ function offerReceipt(taskId, paidNow, afterSave) {
       <a href="${escapeForHtml(waUrl)}" target="_blank" rel="noopener" onclick="closeModal()">Open in regular WhatsApp instead</a>
     </div>` : ''}
   `, () => {
-    if (isAndroid) launchWhatsApp(waBusinessIntent);
-    else window.open(waUrl, '_blank');
+    openWhatsAppChat(cleanPhone, message);
   }, isAndroid ? 'WhatsApp Business' : 'Open WhatsApp', 'Skip');
 }
 
@@ -1286,8 +1344,6 @@ function render(listOnly) {
   else if (filter === 'done') filtered = tasks.filter(t => t.done);
   else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
 
-  // Search runs on top of whichever filter is chosen. Every word must match somewhere in the
-  // task's name, linked client, invoice number, remark, phone or category.
   const q = searchQuery.trim().toLowerCase();
   const searchActive = q.length > 0;
   if (searchActive) {
@@ -1302,8 +1358,6 @@ function render(listOnly) {
     if (a.done !== b.done) return a.done ? 1 : -1;
     if (!a.done && !b.done) {
       if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
-      // Timeline order: tasks with a real due date come first (earliest/most overdue
-      // first), tasks with no due date follow, keeping their existing relative order.
       const aHas = !!a.dueDate, bHas = !!b.dueDate;
       if (aHas !== bHas) return aHas ? -1 : 1;
       if (aHas && bHas) return new Date(a.dueDate) - new Date(b.dueDate);
@@ -1346,7 +1400,7 @@ function render(listOnly) {
   `;
 
   let html = '';
-  const forceOpen = filter !== 'all' || searchActive; // an explicit filter or search always beats a folded section
+  const forceOpen = filter !== 'all' || searchActive;
   let shownCount = 0;
   if (filtered.length === 0) {
     html += searchActive
@@ -1356,8 +1410,6 @@ function render(listOnly) {
     const groupDefs = [
       { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' },
     ];
-    // Any category beyond the fixed set (e.g. a newly created employer/client group)
-    // gets its own section here, right after MHJ, so nothing ever becomes invisible.
     const extraColors = EXTRA_COLORS;
     extraCats.forEach((cat, i) => {
       groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: extraColors[i % extraColors.length], match: t => t.cat === cat });
@@ -1369,9 +1421,6 @@ function render(listOnly) {
       { key: 'FEES', label: 'Fees', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
     );
 
-    // One row. A fee shows what is still due at the right (red) or "Settled" (green); the small line
-    // under the name keeps the received / payable figures, the overdue and due-date status, any
-    // different linked name and the invoice number.
     const renderCard = (t, idx, g) => {
         const isFee = t.type === 'fee';
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
@@ -1392,7 +1441,7 @@ function render(listOnly) {
           !t.done ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Change' : 'Set'} due date</button>` : '',
           !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Edit' : 'Add'} remark</button>` : ''
         ].join('');
-        const meta = (isFee ? '' : status) + actions;   // a fee keeps its status on the detail line; other tasks keep it beside their buttons
+        const meta = (isFee ? '' : status) + actions;
         return `
           <div class="task${stateClass}" style="--catcolor:${g.color}">
             <span class="num">${idx + 1}.</span>
@@ -1410,8 +1459,6 @@ function render(listOnly) {
         `;
     };
 
-    // Finished tasks and fully settled fees are tucked behind a "✓ N completed" bar. Anything that
-    // still needs attention stays in the list, including a fee marked done while money is still due.
     const feeBalance = t => (t.type === 'fee' && !t.name.includes('Advance Credit Balance')) ? (t.payable - t.received - (t.discount || 0)) : 0;
     const isFinished = t => t.done && feeBalance(t) <= 0;
 
@@ -1421,7 +1468,7 @@ function render(listOnly) {
       shownCount += groupTasks.length;
       const open = groupTasks.filter(t => !isFinished(t));
       const closed = groupTasks.filter(isFinished);
-      const ordered = open.concat(closed);   // card numbers run 1..n through the open cards, then carry on through the completed ones
+      const ordered = open.concat(closed);
       const collapsed = !forceOpen && !!uiState.collapsed[g.key];
       const key = escapeForHtml(g.key);
       const countHtml = '<b>' + open.length + ' pending</b>' + (closed.length ? ' · ' + closed.length + ' done' : '');
@@ -1434,7 +1481,7 @@ function render(listOnly) {
         html += '<div class="task-grid">';
         open.forEach(t => { html += renderCard(t, ordered.indexOf(t), g); });
         if (closed.length) {
-          const showAll = filter === 'done' || searchActive;   // asked for explicitly, so no bar is needed
+          const showAll = filter === 'done' || searchActive;
           const expanded = showAll || !!doneOpen[g.key];
           if (!showAll) {
             html += `<button class="done-toggle" data-key="${key}" aria-expanded="${expanded}" onclick="toggleDone(this.dataset.key)">${expanded ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>`;
@@ -1448,18 +1495,28 @@ function render(listOnly) {
   }
 
   if (!listOnly) summaryEl.innerHTML = summaryHtml;
-  app.classList.toggle('no-anim', !!listOnly);   // no fade-in while typing in the search box
+  app.classList.toggle('no-anim', !!listOnly);
   app.innerHTML = html;
   const info = document.getElementById('searchInfo');
   if (info) info.textContent = searchActive ? shownCount + ' of ' + tasks.length + ' tasks' : '';
 }
 
-// Festival theming: overrides the base color palette for a few days around
-// major festivals. Muharram/Ashura is treated as a mourning period, not a
-// celebration, so it gets a deliberately muted, sombre palette instead of
-// bright festive colors. Dates are for 2026 (confirmed from multiple sources
-// where possible); Islamic dates shift ~11 days earlier each year and will
-// need updating for 2027 onward.
+// Auto-fill phone on feeLinked input
+document.addEventListener('DOMContentLoaded', () => {
+  const linkedInput = document.getElementById('feeLinked');
+  if (linkedInput) {
+    linkedInput.addEventListener('input', function(e) {
+      const query = e.target.value.trim().toLowerCase();
+      if (!query) return;
+      const match = tasks.find(t => t.name.toLowerCase().includes(query) && t.cat && CATEGORY_CONTACTS[t.cat]);
+      const phoneField = document.getElementById('feePhone');
+      if (match && phoneField && !phoneField.value) {
+        phoneField.value = CATEGORY_CONTACTS[match.cat].phone;
+      }
+    });
+  }
+});
+
 const FESTIVAL_THEMES = [
   { name: 'Republic Day', start: '2026-01-25', end: '2026-01-26', vars: { coral:'#FF9933', teal:'#138808', violet:'#0B3D91', sky:'#138808', pink:'#FF9933', bg:'#FFF8ED' } },
   { name: 'Holi', start: '2026-03-03', end: '2026-03-05', accent: '#6D2FD0', vars: { coral:'#FF3D71', teal:'#00C2A8', violet:'#9B4DFF', sky:'#1FC4FF', pink:'#FF61D2', yellow:'#FFD400', bg:'#FFF9F0' } },
@@ -1481,9 +1538,9 @@ function applyFestivalTheme() {
   if (!active) return;
   const root = document.documentElement.style;
   Object.entries(active.vars).forEach(([key, val]) => root.setProperty('--' + key, val));
-  const accent = active.accent || active.vars.violet;   // every theme's deep colour doubles as the accent
+  const accent = active.accent || active.vars.violet;
   if (accent) root.setProperty('--accent', accent);
-  const themeMeta = document.querySelector('meta[name="theme-color"]');   // keep the phone's address bar in step with the page colour
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta && active.vars.bg) themeMeta.setAttribute('content', active.vars.bg);
   if (active.mourning) {
     document.body.style.setProperty('--confetti-disabled', 'true');
@@ -1524,11 +1581,9 @@ if (localStorage.getItem(AUTH_KEY) === 'yes') {
 }
 </script>
 <script>
-// Makes the dashboard installable as an app on Android (Chrome menu > Install app) and lets it open with no signal.
-// Only the page and fonts are kept; Calendar sync and everything live is never touched. See sw.js.
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* the dashboard works exactly the same without it */ });
+    navigator.serviceWorker.register('sw.js').catch(function () { });
   });
 }
 </script>
