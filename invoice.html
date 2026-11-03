@@ -108,6 +108,28 @@
     box-shadow: 0 8px 20px rgba(0,191,166,0.28);
   }
 
+  .bank {
+    background: #F7F5FF; border: 1.5px solid var(--violet-soft); border-radius: 14px;
+    padding: 16px 18px 14px; margin: 0 0 24px;
+  }
+  .bank-title { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--violet); margin-bottom:10px; }
+  .bank-list { margin:0; }
+  .bank-row { display:flex; align-items:baseline; gap:10px; padding:8px 0; border-top:1px solid var(--violet-soft); }
+  .bank-row:first-child { border-top:none; padding-top:0; }
+  .bank-row dt { flex:0 0 108px; margin:0; font-size:12px; font-weight:700; color:var(--ink-soft); }
+  .bank-row dd { flex:1 1 0; min-width:0; margin:0; font-size:13.5px; font-weight:700; color:var(--ink); overflow-wrap:anywhere; }
+  .bank-row dd.mono { font-family:'IBM Plex Mono',monospace; font-weight:600; letter-spacing:0.02em; }
+  .copy {
+    flex:0 0 auto; font-family:'Karla',sans-serif; font-weight:700; font-size:11.5px; cursor:pointer;
+    border:1.5px solid var(--violet); background:#fff; color:var(--violet); border-radius:8px; padding:3px 11px;
+  }
+  .copy.done { background:var(--violet); color:#fff; }
+  .bank-note { margin-top:10px; font-size:11.5px; color:var(--ink-soft); line-height:1.45; }
+  @media (max-width: 440px) {
+    .bank-row { flex-wrap:wrap; row-gap:2px; }
+    .bank-row dt { flex:1 0 100%; }
+  }
+
   .footer-note { border-top: 1.5px dashed var(--line); padding: 18px 0 26px; font-size:12px; color:var(--ink-soft); }
   .sign { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14.5px; color:var(--ink); margin-top:12px; }
   .sign small { display:block; font-family:'Karla',sans-serif; font-weight:600; color: var(--ink-soft); font-size:11px; margin-top:2px; }
@@ -127,6 +149,7 @@
     body { background:#fff; padding:0; }
     .sheet { box-shadow:none; border-radius:0; max-width:100%; }
     .actions { display:none; }
+    .copy { display:none; }
   }
 </style>
 </head>
@@ -169,6 +192,18 @@
 
       <a href="#" id="payBtn" class="pay-btn" style="display:none;">Pay Now →</a>
 
+      <div class="bank" id="bankBlock" style="display:none;">
+        <div class="bank-title">Pay by bank transfer</div>
+        <dl class="bank-list">
+          <div class="bank-row"><dt>Account name</dt><dd id="bankHolder"></dd></div>
+          <div class="bank-row"><dt>Account number</dt><dd class="mono" id="bankAccount"></dd><button type="button" class="copy" data-copy="bankAccount" aria-label="Copy account number">Copy</button></div>
+          <div class="bank-row"><dt>IFSC</dt><dd class="mono" id="bankIfsc"></dd><button type="button" class="copy" data-copy="bankIfsc" aria-label="Copy IFSC code">Copy</button></div>
+          <div class="bank-row"><dt>Bank</dt><dd id="bankName"></dd></div>
+          <div class="bank-row"><dt>Branch</dt><dd id="bankBranch"></dd></div>
+        </dl>
+        <div class="bank-note" id="bankNote"></div>
+      </div>
+
       <div class="footer-note">
         Thank you for your continued trust — please reach out if you have any questions about this invoice.
         <div class="sign">Mustannsirr Mallik<small>Tax &amp; Accounts Consultant · Indore</small></div>
@@ -183,6 +218,53 @@
 <script>
   function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
   function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+
+  // Bank account for paying this invoice by transfer. Shown only while a balance is due.
+  // The invoice image in index.html keeps a copy of these lines - change both together.
+  // The bank's Customer ID is deliberately left off: it is not needed to receive a transfer.
+  const BANK_DETAILS = {
+    holder: 'Mustansir Malik',          // exactly as the bank holds it
+    account: '033311501064738',
+    ifsc: 'NESF0000333',
+    bank: 'slice Small Finance Bank',
+    branch: 'Koramangala, Bangalore'
+  };
+
+  function showBank(show, invoiceNumber) {
+    const box = document.getElementById('bankBlock');
+    if (!show) { box.style.display = 'none'; return; }
+    document.getElementById('bankHolder').textContent = BANK_DETAILS.holder;
+    document.getElementById('bankAccount').textContent = BANK_DETAILS.account;
+    document.getElementById('bankIfsc').textContent = BANK_DETAILS.ifsc;
+    document.getElementById('bankName').textContent = BANK_DETAILS.bank;
+    document.getElementById('bankBranch').textContent = BANK_DETAILS.branch;
+    document.getElementById('bankNote').textContent = 'Name as per bank records. Please quote ' +
+      (invoiceNumber && invoiceNumber !== '—' ? invoiceNumber : 'the invoice number') + ' as the payment reference.';
+    box.style.display = 'block';
+  }
+
+  // Copy button beside the account number and IFSC. Falls back to the older copy command where the
+  // clipboard API is not available (some in-app browsers).
+  function copyBankValue(btn) {
+    const text = document.getElementById(btn.getAttribute('data-copy')).textContent;
+    const done = function () {
+      btn.textContent = 'Copied'; btn.classList.add('done');
+      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+    };
+    const fallback = function () {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) done();
+      } catch (e) { /* the number stays selectable on screen */ }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }
 
   const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 
@@ -204,6 +286,7 @@
     document.getElementById('itemsBody').innerHTML =
       '<tr><td colspan="2" style="text-align:center; color:var(--ink-soft);">Loading…</td></tr>';
     document.getElementById('payBtn').style.display = 'none';
+    showBank(false);
   }
 
   function showError() {
@@ -213,6 +296,7 @@
     document.getElementById('descLine').textContent = '—';
     document.getElementById('itemsBody').innerHTML =
       '<tr><td colspan="2" style="text-align:center; color:var(--ink-soft);">—</td></tr>';
+    showBank(false);
   }
 
   function render(d) {
@@ -250,6 +334,8 @@
       badge.classList.add('pending');
     }
 
+    showBank(!settled, inv);
+
     const payBtn = document.getElementById('payBtn');
     if (d.pay && !settled) {
       payBtn.href = d.pay;
@@ -284,6 +370,7 @@
       });
   }
 
+  document.querySelectorAll('.copy').forEach(function (btn) { btn.addEventListener('click', function () { copyBankValue(btn); }); });
   document.getElementById('retryBtn').addEventListener('click', loadInvoice);
   loadInvoice();
 </script>

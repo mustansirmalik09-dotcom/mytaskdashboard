@@ -6,413 +6,262 @@
 <title>Live Task Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600&family=Public+Sans:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#F3F5F8">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   /* ------------------------------------------------------------------
-     Executive Financial Suite Design System
-     Deep navy & sapphire accents, warm slate canvas, editorial serif
-     numbers & headers, crisp geometric sans interface.
+     Look: working papers. Blue-black ink on cool paper, a serif for the
+     title, section heads and money figures, a plain civic sans for
+     everything else. Red is only ever money owed or overdue, green only
+     money in or settled. Festival themes swap --accent and the paper tint.
      ------------------------------------------------------------------ */
   :root {
-    --bg: #F8FAFC;
+    --bg: #F3F5F8;          /* paper */
     --sheet: #FFFFFF;
-    --sheet-alt: #F1F5F9;
-    --ink: #0F172A;
-    --ink-light: #1E293B;
-    --muted: #64748B;
-    --muted-light: #94A3B8;
-    --icon: #94A3B8;
-    --field: #CBD5E1;
-    --rule: #E2E8F0;
-    --rule-soft: #F1F5F9;
-
-    /* Executive Navy & Sapphire */
-    --accent: #1E3A8A;
-    --accent-hover: #1D4ED8;
-    --accent-soft: #EFF6FF;
-    --accent-border: #BFDBFE;
-
-    /* Financial Indicators */
-    --red: #BE123C;
-    --red-soft: #FFF1F2;
-    --red-border: #FECDD3;
-
-    --green: #047857;
-    --green-soft: #ECFDF5;
-    --green-border: #A7F3D0;
-
-    --amber: #B45309;
-    --amber-soft: #FFFBEB;
-    --amber-border: #FDE68A;
-
-    /* Jewel-toned Category Accents */
-    --c-mhj: #2563EB;
-    --c-shk: #6D28D9;
-    --c-own: #0F766E;
-    --c-personal: #BE185D;
-    --c-fees: #D97706;
-
-    --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
-    --sans: 'Plus Jakarta Sans', 'Public Sans', system-ui, -apple-system, sans-serif;
-
-    /* Shadow Hierarchy */
-    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
-    --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    --ink: #14223C;
+    --muted: #5A667B;
+    --icon: #8792A5;        /* icons and chevrons only - too light for text */
+    --field: #8E99AC;       /* input and checkbox outlines */
+    --rule: #DCE1E9;
+    --rule-soft: #E8ECF2;
+    --accent: #1F4E9C;      /* buttons, links, focus - festival themes replace this */
+    --accent-soft: #E9EFF9;
+    --red: #B3261E;   --red-soft: #FBEBE9;
+    --green: #146C43; --green-soft: #E7F3EC;
+    --amber: #84570A; --amber-soft: #FBF1DC;
+    /* section colours stay fixed so a festival palette never blurs which section is which */
+    --c-mhj: #2E6DB4; --c-shk: #6F55B3; --c-own: #0E7C86; --c-personal: #B24C7A; --c-fees: #B7791F;
+    --serif: 'Newsreader', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --sans: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   }
-
   @supports (color: color-mix(in srgb, red 10%, white)) {
-    :root { --accent-soft: color-mix(in srgb, var(--accent) 8%, white); }
+    :root { --accent-soft: color-mix(in srgb, var(--accent) 9%, white); }
   }
-
   * { box-sizing: border-box; }
   html { background: var(--bg); overflow-x: hidden; max-width: 100vw; -webkit-text-size-adjust: 100%; }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-  
   body {
-    font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--ink);
-    background: var(--bg); margin: 0 auto; max-width: 1120px; padding: 24px 18px 72px; overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+    font-family: var(--sans); font-size: 15px; line-height: 1.45; color: var(--ink);
+    background: var(--bg); margin: 0 auto; max-width: 1080px; padding: 22px 16px 64px; overflow-x: hidden;
   }
-
   button, input, select { font-family: var(--sans); }
   button, [role=button] { -webkit-tap-highlight-color: transparent; }
   :where(button, input, select, a, [role=button]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  #searchBox:focus, .add-box input:focus, .add-box select:focus, #modalFields input:focus, #modalFields select:focus {
-    outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  #searchBox:focus, .add-box input:focus, .add-box select:focus, #modalFields input:focus, #modalFields select:focus, #authInput:focus {
+    outline: 2px solid transparent; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
   }
-  .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* ---- Executive Masthead ---- */
-  .masthead {
-    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-    gap: 12px 20px; margin-bottom: 20px; padding: 18px 22px;
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 16px;
-    box-shadow: var(--shadow-sm);
-  }
-  .masthead-brand { display: flex; align-items: center; gap: 14px; }
-  .masthead-crest {
-    width: 44px; height: 44px; border-radius: 12px;
-    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-    color: #F8FAFC; display: grid; place-content: center;
-    font-family: var(--serif); font-weight: 600; font-size: 19px; letter-spacing: 0.04em;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18); border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-  h1 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
-  .sub { color: var(--muted); font-size: 13px; font-weight: 500; margin-top: 2px; display: flex; align-items: center; gap: 6px; }
-  .sub-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted-light); }
-  
-  .masthead .status {
-    display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--muted);
-  }
-  .sync-badge {
-    display: inline-flex; align-items: center; gap: 7px;
-    background: #F8FAFC; border: 1px solid var(--rule); border-radius: 999px;
-    padding: 4px 12px; font-size: 12px; font-weight: 500; color: #475569;
-  }
-  .pulse-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: #10B981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-  }
+  /* ---- masthead ---- */
+  .masthead { margin-bottom: 16px; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.12; letter-spacing: -0.012em; margin: 0; color: var(--ink); }
+  .sub { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+  .masthead .status { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 16px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
   #resetBtn {
-    background: transparent; border: 1px solid var(--rule); border-radius: 8px;
-    padding: 5px 11px; font: 600 12px var(--sans); color: var(--muted); cursor: pointer;
-    transition: all 0.15s ease;
+    background: none; border: 0; padding: 6px 0; margin: -6px 0; font: 500 12.5px var(--sans); color: var(--muted); cursor: pointer;
+    text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
   }
-  #resetBtn:hover { color: var(--ink); border-color: var(--muted); background: var(--sheet-alt); }
-  
+  #resetBtn:hover { color: var(--accent); }
   .festival-banner {
     text-align: center; font: 600 13px var(--sans); color: var(--accent); background: var(--accent-soft);
-    padding: 8px 16px; margin: 0 0 16px; border-radius: 10px; border: 1px solid var(--accent-border);
+    padding: 7px 12px; margin: 0 0 14px; border-radius: 8px;
   }
 
-  /* ---- KPI Summary Sheet ---- */
-  .summary-sheet {
-    background: var(--sheet); border: 1px solid var(--rule); border-radius: 16px;
-    margin-bottom: 16px; overflow: hidden; box-shadow: var(--shadow-sm);
-  }
+  /* ---- summary: one sheet, two rows of figures ---- */
+  .summary-sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
   .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 14px 18px 13px; transition: background 0.15s ease; }
+  .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 11px 14px 10px; }
   .hero-card + .hero-card { border-left: 1px solid var(--rule-soft); }
-  .hero-card .l { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.3; color: var(--muted); margin-top: 3px; }
-  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .hero-card .l { font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .hero-card.alert .n { color: var(--red); }
-  @media (max-width: 400px) { .hero-card { padding: 12px 10px 10px; } .hero-card .n { font-size: 24px; } }
-
-  /* Financial Ledger */
-  .totals { border-top: 1px solid var(--rule-soft); padding: 8px 0 6px; background: #FAFCFE; }
-  .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; padding: 5px 18px; }
-  .totals .l { font-size: 13.5px; font-weight: 500; color: var(--muted); }
-  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+  @media (max-width: 400px) { .hero-card { padding-left: 10px; padding-right: 8px; } }
+  /* the money figures read like a small ledger: label on the left, amount on the right, so any amount fits */
+  .totals { border-top: 1px solid var(--rule-soft); padding: 5px 0 3px; }
+  .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; padding: 4px 14px; }
+  .totals .l { font-size: 13.5px; color: var(--muted); }
+  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .totals .fig.recd { color: var(--green); }
-  .totals > .tot.sum { margin: 6px 18px 0; padding: 9px 0 5px; border-top: 1px dashed var(--rule); }
-  .totals .fig.out { color: var(--red); font-size: 21px; line-height: 1.1; padding-bottom: 2px; border-bottom: 2px solid var(--red); }
-  .totals .fig.out.clear { color: var(--green); border-bottom-color: var(--green); }
-  .totals > .totals-note { padding: 4px 18px 8px; font-size: 12px; color: var(--muted); }
-
+  /* a single rule above the bottom line and a double rule under it, the way a total sits in a ledger */
+  .totals > .tot.sum { margin: 5px 14px 0; padding: 8px 0 4px; border-top: 1px solid var(--rule); }
+  .totals .fig.out { color: var(--red); font-size: 21px; line-height: 1.1; padding-bottom: 1px; border-bottom: 3px double currentColor; }
+  .totals .fig.out.clear { color: var(--green); }
+  .totals > .totals-note { padding: 2px 14px 7px; font-size: 12.5px; color: var(--muted); }
   .credit-note {
-    background: var(--green-soft); border: 1px solid var(--green-border); border-left: 4px solid var(--green); border-radius: 12px;
-    padding: 11px 16px 12px; margin-bottom: 16px; font-size: 13.5px; box-shadow: var(--shadow-xs);
+    background: var(--green-soft); border: 1px solid #CBE4D6; border-left: 3px solid var(--green); border-radius: 10px;
+    padding: 9px 14px 10px; margin-bottom: 14px; font-size: 13.5px;
   }
-  .credit-title { display: flex; align-items: center; gap: 7px; font-weight: 600; color: var(--green); font-size: 14px; }
-  .credit-line { margin-top: 3px; color: #164E63; }
-  .credit-hint { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .credit-title { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--green); }
+  .credit-line { margin-top: 2px; }
+  .credit-hint { margin-top: 3px; font-size: 12.5px; color: var(--muted); }
 
-  /* ---- Refined Navigation Filters ---- */
-  .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-  .filters.seg {
-    gap: 3px; flex-wrap: nowrap; padding: 4px; background: #EEF2F6;
-    border: 1px solid #E2E8F0; border-radius: 12px; overflow-x: auto; scrollbar-width: none;
-  }
+  /* ---- filters ---- */
+  .filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filters.seg { gap: 2px; flex-wrap: nowrap; padding: 3px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 11px; overflow-x: auto; scrollbar-width: none; }
   .filters.seg::-webkit-scrollbar { display: none; }
-  .filter-btn { cursor: pointer; font: 500 13.5px var(--sans); transition: all 0.15s ease; }
-  .filters.seg .filter-btn {
-    flex: 1 1 auto; border: 0; background: transparent; color: var(--muted);
-    padding: 7px 12px; border-radius: 8px; white-space: nowrap;
-  }
-  .filters.seg .filter-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.5); }
-  .filters.seg .filter-btn.active { background: #FFFFFF; color: var(--accent); font-weight: 600; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); }
-  
-  .filters.chips { margin-bottom: 14px; gap: 7px; }
-  .filters.chips .filter-btn {
-    display: inline-flex; align-items: center; background: #FFFFFF; border: 1px solid var(--rule);
-    color: var(--ink); padding: 6px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 500;
-    box-shadow: var(--shadow-xs);
-  }
-  .filters.chips .filter-btn:hover { border-color: var(--field); background: var(--sheet-alt); }
-  .filters.chips .filter-btn.active {
-    background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); font-weight: 600;
-    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.08);
-  }
-  .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; flex: none; }
-  @media (max-width: 400px) { .filters.seg .filter-btn { padding: 7px 8px; font-size: 12.5px; } }
+  .filter-btn { cursor: pointer; font: 500 13.5px var(--sans); transition: background-color .12s ease, color .12s ease, border-color .12s ease; }
+  .filters.seg .filter-btn { flex: 1 1 auto; border: 0; background: transparent; color: var(--muted); padding: 8px 10px; border-radius: 8px; white-space: nowrap; }
+  .filters.seg .filter-btn:hover { color: var(--ink); background: var(--rule-soft); }
+  .filters.seg .filter-btn.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .filters.chips { margin-bottom: 12px; }
+  .filters.chips .filter-btn { display: inline-flex; align-items: center; background: var(--sheet); border: 1px solid var(--rule); color: var(--ink); padding: 6px 12px; border-radius: 999px; font-size: 13px; }
+  .filters.chips .filter-btn:hover { border-color: var(--field); }
+  .filters.chips .filter-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .filter-btn .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; flex: none; }
+  @media (max-width: 400px) { .filters.seg .filter-btn { padding: 8px 6px; font-size: 13px; } }
 
-  /* ---- Search & Task Creator Bar ---- */
-  #searchRow { margin: 0 0 12px; }
+  /* ---- search and add ---- */
+  #searchRow { margin: 0 0 10px; }
   #searchWrap { position: relative; }
-  #searchWrap .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 17px; height: 17px; }
+  #searchWrap .ico { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 18px; height: 18px; }
   #searchBox {
-    width: 100%; height: 46px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
-    padding: 0 42px 0 42px; border-radius: 12px; font: 400 14.5px var(--sans);
-    box-shadow: var(--shadow-xs); transition: all 0.15s ease;
+    width: 100%; height: 44px; background: var(--sheet); border: 1px solid var(--field); color: var(--ink);
+    padding: 0 42px 0 40px; border-radius: 10px; font: 400 15px var(--sans);
   }
-  #searchBox::placeholder { color: #94A3B8; opacity: 1; }
-  #searchClear {
-    display: none; position: absolute; right: 6px; top: 6px; width: 34px; height: 34px;
-    padding: 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; border-radius: 8px;
-  }
+  #searchBox::placeholder { color: #6B778C; opacity: 1; }
+  #searchClear { display: none; position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; padding: 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; border-radius: 8px; }
   #searchClear svg { display: block; margin: auto; }
-  #searchClear:hover { background: var(--rule-soft); color: var(--ink); }
-  #searchInfo { font-size: 12.5px; color: var(--muted); margin: 6px 4px 0; font-weight: 500; }
+  #searchClear:hover { background: var(--rule-soft); }
+  #searchInfo { font-size: 12.5px; color: var(--muted); margin: 6px 2px 0; }
   #searchInfo:empty { display: none; }
-
-  .add-box { display: flex; gap: 8px; margin-top: 0; margin-bottom: 10px; flex-wrap: wrap; }
+  .add-box { display: flex; gap: 8px; margin-top: 0; margin-bottom: 8px; flex-wrap: wrap; }
   .add-box input, .add-box select {
-    height: 44px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
-    padding: 0 13px; border-radius: 10px; font: 400 14.5px var(--sans); max-width: 100%; min-width: 0;
-    box-shadow: var(--shadow-xs); transition: all 0.15s ease;
+    height: 42px; background: var(--sheet); border: 1px solid var(--field); color: var(--ink);
+    padding: 0 12px; border-radius: 10px; font: 400 15px var(--sans); max-width: 100%; min-width: 0;
   }
-  .add-box input::placeholder { color: #94A3B8; opacity: 1; }
+  .add-box input::placeholder { color: #6B778C; opacity: 1; }
   .add-box select {
     -webkit-appearance: none; appearance: none; padding-right: 34px;
-    background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center;
+    background: var(--sheet) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235A667B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center;
   }
-  #newCat { flex: 1 1 160px; font-weight: 500; }
-  .add-box input[type=text] { flex: 2 1 200px; }
-  .add-box button {
-    height: 44px; padding: 0 24px;
-    background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
-    color: #FFFFFF; border: 0; border-radius: 10px; font: 600 14.5px var(--sans); cursor: pointer;
-    box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2); transition: all 0.15s ease;
-  }
-  .add-box button:hover { filter: brightness(1.08); transform: translateY(-1px); }
-  .add-box button:active { transform: translateY(0); }
-
+  #newCat { flex: 1 1 150px; }
+  .add-box input[type=text] { flex: 2 1 180px; }
+  .add-box button { height: 42px; padding: 0 24px; background: var(--accent); color: #fff; border: 0; border-radius: 10px; font: 600 15px var(--sans); cursor: pointer; }
+  .add-box button:hover { filter: brightness(1.08); }
+  /* narrow phones: category and name each get a full row, date and Add share the last one */
   @media (max-width: 399px) { #newCat, #newTask { flex: 1 1 100%; } }
+  /* phones: the linked-client and phone fields get a full row each (they carry inline flex values, hence !important) */
   @media (max-width: 719px) { #feeLinked, #feePhone { flex: 1 1 100% !important; } }
-  #app { margin-top: 22px; }
-  .empty { color: var(--muted); font-size: 15px; text-align: center; padding: 44px 16px; background: #FFFFFF; border: 1px dashed var(--rule); border-radius: 14px; }
-  .loading { text-align: center; padding: 48px; color: var(--muted); font-weight: 500; }
+  #app { margin-top: 20px; }
+  .empty { color: var(--muted); font-size: 15px; text-align: center; padding: 36px 16px; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
 
-  /* ---- Sections & Cards ---- */
-  .cat-section { margin-bottom: 24px; }
-  .cat-heading { display: flex; align-items: center; gap: 9px; margin: 0 2px 10px; min-height: 30px; }
-  .cat-heading .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; box-shadow: 0 0 0 2px rgba(0,0,0,0.04); }
-  .cat-heading .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; font-family: var(--serif); font-weight: 600; font-size: 18px; line-height: 1.25; color: var(--ink); }
+  /* ---- sections ---- */
+  .cat-section { margin-bottom: 22px; }
+  .cat-heading { display: flex; align-items: center; gap: 8px; margin: 0 2px 8px; min-height: 28px; }
+  .cat-heading .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .cat-heading .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 7px; min-width: 0; font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.25; }
   .cat-heading .kind { font: 500 12.5px var(--sans); color: var(--muted); }
-  .cat-heading .count {
-    margin-left: auto; padding: 2px 9px; background: #F1F5F9; border: 1px solid var(--rule);
-    border-radius: 999px; font: 500 12px var(--sans); color: var(--muted); white-space: nowrap; flex-shrink: 0;
-  }
+  .cat-heading .count { margin-left: auto; padding-left: 8px; font: 400 12.5px var(--sans); color: var(--muted); white-space: nowrap; flex-shrink: 0; }
   .cat-heading .count b { font-weight: 600; color: var(--ink); }
   .cat-heading .chev { width: 16px; height: 16px; flex: none; color: var(--icon); transition: transform .15s ease; }
   .cat-heading.fold { cursor: pointer; user-select: none; }
   .cat-heading.fold:hover .chev { color: var(--ink); }
-  .cat-section.collapsed { margin-bottom: 14px; }
+  .cat-section.collapsed { margin-bottom: 12px; }
   .cat-section.collapsed .cat-heading { margin-bottom: 0; }
   .cat-section.collapsed .cat-heading .chev { transform: rotate(-90deg); }
 
-  /* Card Grid Layout */
-  .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-sm); }
-  .task {
-    display: flex; align-items: flex-start; gap: 10px; padding: 13px 16px 11px;
-    border-top: 1px solid var(--rule-soft); position: relative; transition: all 0.15s ease;
-  }
+  /* one ruled sheet per section on a phone; separate cards from tablet width up */
+  .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+  .task { display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px 8px; border-top: 1px solid var(--rule-soft); position: relative; }
   .task:first-child { border-top: 0; }
-  .task.overdue { box-shadow: inset 3.5px 0 0 var(--red); background: #FFFDFD; }
-  .task.urgent { box-shadow: inset 3.5px 0 0 var(--amber); background: #FFFFFD; }
-  .task .num { flex: none; width: 20px; margin-left: -4px; text-align: right; font-size: 12px; line-height: 22px; color: var(--muted-light); font-variant-numeric: tabular-nums; font-weight: 500; }
-  
+  .task.overdue { box-shadow: inset 3px 0 0 var(--red); }
+  .task.urgent { box-shadow: inset 3px 0 0 var(--amber); }
+  .task .num { flex: none; width: 19px; margin-left: -4px; text-align: right; font-size: 12px; line-height: 21px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .task input[type=checkbox] {
     -webkit-appearance: none; appearance: none; flex: none; position: relative; display: grid; place-content: center;
     width: 20px; height: 20px; margin: 1px 0 0; border: 1.5px solid var(--field); border-radius: 6px; background: var(--sheet); cursor: pointer;
-    transition: all 0.12s ease;
   }
-  .task input[type=checkbox]::after { content: ''; position: absolute; inset: -10px; }
-  .task input[type=checkbox]:checked { background: #2563EB; border-color: #2563EB; }
-  .task input[type=checkbox]:checked::before { content: ''; width: 9px; height: 5px; margin-top: -2px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); }
-  
+  .task input[type=checkbox]::after { content: ''; position: absolute; inset: -11px; }   /* roomier tap target */
+  .task input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+  .task input[type=checkbox]:checked::before { content: ''; width: 10px; height: 5px; margin-top: -2px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); }
   .task-body { flex: 1; min-width: 0; }
   .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-  .task-name { flex: 1; min-width: 0; font-size: 15px; line-height: 1.38; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
-  .amt { flex: none; text-align: right; font-family: var(--serif); font-weight: 600; font-size: 17.5px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .task-name { flex: 1; min-width: 0; font-size: 15px; line-height: 1.38; font-weight: 600; overflow-wrap: anywhere; }
+  .amt { flex: none; text-align: right; font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.2; font-variant-numeric: tabular-nums; }
   .amt.owed { color: var(--red); }
-  .amt.clear { font: 600 12.5px var(--sans); color: var(--green); background: var(--green-soft); border: 1px solid var(--green-border); padding: 2px 7px; border-radius: 6px; }
-  .amt small { display: block; font: 500 11.5px var(--sans); color: var(--muted); }
-  
-  .task-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 2px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
-  .task-sub > span { display: inline-flex; align-items: center; gap: 5px; overflow-wrap: anywhere; }
+  .amt.clear { font: 600 13px var(--sans); color: var(--green); line-height: 1.5; }
+  .amt small { display: block; font: 400 12px/1.2 var(--sans); color: var(--muted); }
+  .task-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 1px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .task-sub > span { display: inline-flex; align-items: center; gap: 4px; overflow-wrap: anywhere; }
   .task-sub > .state { gap: 6px; }
-  
-  .note {
-    display: flex; align-items: flex-start; gap: 6px; margin-top: 7px; width: fit-content; max-width: 100%;
-    padding: 4px 10px; border-radius: 8px; background: var(--amber-soft); border: 1px solid var(--amber-border);
-    color: #92400E; font-size: 12px; line-height: 1.4; font-weight: 500;
-  }
-  .note .ic { margin-top: 2px; width: 13px; height: 13px; color: var(--amber); }
-
-  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 4px; font-size: 13px; }
-  .badge { font-size: 11.5px; font-weight: 600; line-height: 1.5; padding: 1px 7px; border-radius: 6px; }
-  .badge.over { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-border); }
-  .badge.urgent { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-border); }
-  .due { font-size: 12.5px; color: var(--muted); font-weight: 500; }
-  .due.over { color: var(--red); font-weight: 600; }
-
-  .act {
-    display: inline-flex; align-items: center; gap: 5px; padding: 5px 0; background: none; border: 0;
-    font: 600 12.5px var(--sans); color: var(--accent); cursor: pointer; text-underline-offset: 3px;
-    transition: all 0.12s ease;
-  }
-  .act:hover { text-decoration: underline; color: var(--accent-hover); }
+  .note { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; width: fit-content; max-width: 100%; padding: 4px 9px; border-radius: 8px; background: var(--amber-soft); color: var(--amber); font-size: 12.5px; line-height: 1.4; }
+  .note .ic { margin-top: 2px; width: 14px; height: 14px; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 3px; font-size: 13px; }
+  .badge { font-size: 12px; font-weight: 600; line-height: 1.5; padding: 0 7px; border-radius: 6px; }
+  .badge.over { background: var(--red-soft); color: var(--red); }
+  .badge.urgent { background: var(--amber-soft); color: var(--amber); }
+  .due { font-size: 12.5px; color: var(--muted); }
+  .due.over { color: var(--red); }
+  .act { display: inline-flex; align-items: center; gap: 4px; padding: 6px 0; background: none; border: 0; font: 600 13px var(--sans); color: var(--accent); cursor: pointer; text-underline-offset: 3px; }
+  .act:hover { text-decoration: underline; }
   .act.wa { color: var(--green); }
-  .act.pay {
-    padding: 4px 10px; margin: 2px 0; border: 1px solid var(--rule); border-radius: 8px;
-    background: #F8FAFC; color: #1E3A8A; font-weight: 600;
-  }
-  .act.pay:hover { text-decoration: none; border-color: var(--accent-border); background: var(--accent-soft); }
-  .act.del {
-    flex: none; justify-content: center; width: 30px; height: 30px; margin: -5px -8px -5px 0;
-    padding: 0; border-radius: 8px; color: var(--icon); transition: all 0.12s ease;
-  }
+  .act.pay { padding: 4px 9px; margin: 2px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+  .act.pay:hover { text-decoration: none; border-color: var(--accent); background: var(--accent-soft); }
+  .act.del { flex: none; justify-content: center; width: 32px; height: 32px; margin: -6px -9px -6px 0; padding: 0; border-radius: 8px; color: var(--icon); }
   .act.del:hover { color: var(--red); background: var(--red-soft); text-decoration: none; }
-  .act.del .ic { width: 16px; height: 16px; }
+  .act.del .ic { width: 17px; height: 17px; }
 
-  .task.done { padding: 10px 16px 9px; opacity: 0.78; }
+  /* finished rows: quiet, and a single line when there is nothing else to say */
+  .task.done { padding: 9px 14px 8px; }
   .task.done .task-name { font-weight: 400; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--field); }
   .task.done .task-meta { margin-top: 0; }
   .done-toggle {
-    display: block; width: 100%; text-align: left; padding: 12px 16px; background: #FAFCFE; border: 0; border-top: 1px solid var(--rule-soft);
-    color: var(--muted); font: 500 13px var(--sans); cursor: pointer; transition: all .12s ease;
+    display: block; width: 100%; text-align: left; padding: 11px 14px; background: var(--sheet); border: 0; border-top: 1px solid var(--rule-soft);
+    color: var(--muted); font: 500 13px var(--sans); cursor: pointer; transition: background-color .12s ease, color .12s ease;
   }
   .done-toggle:first-child { border-top: 0; }
-  .done-toggle:hover { background: #F1F5F9; color: var(--ink); }
+  .done-toggle:hover { background: #F8FAFC; color: var(--ink); }
   .done-toggle:focus-visible { outline-offset: -2px; }
   #app.no-anim .task { animation: none; }
 
   #toTop {
-    position: fixed; right: 20px; bottom: 22px; width: 44px; height: 44px; padding: 0; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.2); background: #0F172A; color: #fff; cursor: pointer;
-    box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.3); opacity: 0; pointer-events: none; transform: translateY(8px);
+    position: fixed; right: 16px; bottom: 18px; width: 44px; height: 44px; padding: 0; border-radius: 50%;
+    border: 0; background: var(--ink); color: #fff; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(20,34,60,0.25); opacity: 0; pointer-events: none; transform: translateY(8px);
     transition: opacity 0.2s ease, transform 0.2s ease; z-index: 900;
   }
   #toTop svg { display: block; margin: auto; width: 20px; height: 20px; }
-  #toTop.show { opacity: 0.95; pointer-events: auto; transform: none; }
-  #toTop:hover { transform: translateY(-2px); }
+  #toTop.show { opacity: 0.94; pointer-events: auto; transform: none; }
 
-  /* ---- Buttons & Modal Dialogs ---- */
-  .btn { height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent; font: 600 14px var(--sans); cursor: pointer; transition: all 0.15s ease; }
-  .btn-primary { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #fff; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2); }
-  .btn-wa { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff; box-shadow: 0 2px 5px rgba(5, 150, 105, 0.2); }
-  .btn-danger { background: linear-gradient(135deg, #BE123C 0%, #E11D48 100%); color: #fff; }
-  .btn-quiet { background: #FFFFFF; color: #334155; border-color: var(--field); }
-  .btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn-quiet:hover { filter: none; background: var(--sheet-alt); border-color: var(--muted-light); }
-
-  #modalOverlay {
-    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(8px);
-    z-index: 1000; align-items: center; justify-content: center; padding: 16px;
-  }
-  .modal {
-    background: #FFFFFF; border-radius: 18px; padding: 24px; width: 100%; max-width: 420px;
-    max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
-    box-shadow: var(--shadow-modal); border: 1px solid var(--rule);
-  }
-  #modalTitle { font-family: var(--serif); font-weight: 600; font-size: 21px; line-height: 1.25; margin-bottom: 14px; overflow-wrap: anywhere; color: var(--ink); }
-  .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
-  #modalFields label { display: block; margin: 0 0 5px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  /* ---- buttons, dialogs, lock screen ---- */
+  .btn { height: 40px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent; font: 600 14.5px var(--sans); cursor: pointer; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-wa { background: var(--green); color: #fff; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-quiet { background: var(--sheet); color: var(--ink); border-color: var(--field); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn-quiet:hover { filter: none; background: var(--rule-soft); }
+  #modalOverlay { position: fixed; inset: 0; background: rgba(20,34,60,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+  .modal { background: var(--sheet); border-radius: 14px; padding: 20px; width: 100%; max-width: 380px; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; box-shadow: 0 18px 48px rgba(20,34,60,0.3); }
+  #modalTitle { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.25; margin-bottom: 12px; overflow-wrap: anywhere; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+  #modalFields label { display: block; margin: 0 0 4px; font-size: 12.5px; font-weight: 500; color: var(--muted); }
   #modalFields input:not([type=checkbox]), #modalFields select {
-    display: block; width: 100%; height: 42px; margin-bottom: 14px; padding: 0 12px; background: #FFFFFF; color: var(--ink);
-    border: 1px solid var(--field); border-radius: 10px; font: 400 14.5px var(--sans);
-    transition: all 0.15s ease;
+    display: block; width: 100%; height: 42px; margin-bottom: 12px; padding: 0 12px; background: var(--sheet); color: var(--ink);
+    border: 1px solid var(--field); border-radius: 10px; font: 400 15px var(--sans);
   }
-  #modalFields .check-row { display: flex; align-items: center; gap: 9px; margin: 4px 0 0; font-size: 13.5px; font-weight: 600; color: var(--green); cursor: pointer; }
+  #modalFields .check-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; font-size: 13.5px; font-weight: 600; color: var(--green); cursor: pointer; }
   #modalFields .check-row input { width: 18px; height: 18px; margin: 0; flex: none; accent-color: var(--green); }
-  .hint { font-size: 13px; line-height: 1.5; color: var(--muted); margin-bottom: 12px; }
-  #modalReceiptHint { margin: 4px 0 0 28px; font-size: 12px; }
-  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-  .preset { padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; background: #FFFFFF; color: var(--ink); font: 500 12.5px var(--sans); cursor: pointer; transition: all 0.12s ease; }
-  .preset:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-  .receipt-preview { white-space: pre-wrap; word-break: break-word; background: var(--green-soft); border: 1px solid var(--green-border); border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.5; max-height: 280px; overflow: auto; color: var(--ink); }
+  .hint { font-size: 12.5px; line-height: 1.45; color: var(--muted); margin-bottom: 10px; }
+  #modalReceiptHint { margin: 3px 0 0 26px; font-size: 12.5px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .preset { padding: 6px 11px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet); color: var(--ink); font: 500 12.5px var(--sans); cursor: pointer; }
+  .preset:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .receipt-preview { white-space: pre-wrap; word-break: break-word; background: var(--green-soft); border: 1px solid #CBE4D6; border-radius: 10px; padding: 10px 12px; font-size: 13px; line-height: 1.5; max-height: 290px; overflow: auto; color: var(--ink); }
   .alt-link { margin-top: 10px; font-size: 13px; }
   .alt-link a { color: var(--green); font-weight: 600; }
 
-  /* ---- Executive Auth Gate (Lock Screen) ---- */
-  #authGate {
-    position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
-    background: radial-gradient(circle at 50% 35%, #1E293B 0%, #0F172A 100%);
-  }
-  .auth-card {
-    width: 100%; max-width: 360px; text-align: center;
-    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(20px); border-radius: 20px; padding: 36px 26px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-  }
-  .auth-crest {
-    width: 52px; height: 52px; margin: 0 auto 16px; border-radius: 14px;
-    background: linear-gradient(135deg, #1E3A8A, #2563EB);
-    color: #FFFFFF; display: grid; place-content: center;
-    font-family: var(--serif); font-size: 22px; font-weight: 600;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  .auth-title { font-family: var(--serif); font-weight: 600; font-size: 27px; line-height: 1.15; color: #FFFFFF; }
-  .auth-sub { margin-top: 4px; font-size: 13px; color: #94A3B8; font-weight: 500; }
-  .auth-note { margin: 24px 0 10px; font-size: 12.5px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-  #authInput {
-    display: block; width: 100%; height: 48px; margin-bottom: 12px; padding: 0 16px;
-    background: rgba(255, 255, 255, 0.08); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px; font: 400 16px var(--sans); text-align: center;
-    transition: all 0.15s ease;
-  }
-  #authInput:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); outline: none; }
-  #authInput::placeholder { color: #64748B; }
-  .auth-card .btn { width: 100%; height: 48px; font-size: 15px; border-radius: 12px; }
-  #authError { display: none; margin-top: 14px; font-size: 13.5px; font-weight: 600; color: #FB7185; }
+  #authGate { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .auth-card { width: 100%; max-width: 320px; text-align: center; }
+  .auth-title { font-family: var(--serif); font-weight: 600; font-size: 28px; line-height: 1.12; letter-spacing: -0.012em; }
+  .auth-sub { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+  .auth-note { margin: 22px 0 10px; font-size: 13.5px; color: var(--muted); }
+  #authInput { display: block; width: 100%; height: 46px; margin-bottom: 10px; padding: 0 14px; background: var(--sheet); color: var(--ink); border: 1px solid var(--field); border-radius: 10px; font: 400 16px var(--sans); text-align: center; }
+  .auth-card .btn { width: 100%; height: 46px; font-size: 15px; }
+  #authError { display: none; margin-top: 12px; font-size: 13.5px; font-weight: 600; color: var(--red); }
 
   .confetti-piece {
     position: fixed; top: 0; z-index: 3000; pointer-events: none; border-radius: 2px;
@@ -423,62 +272,44 @@
     100% { transform: translateY(100vh) rotate(540deg); opacity: 0; }
   }
 
-  /* ---- Wider Screens: Grid of Modern Cards ---- */
+  /* ---- wider screens: summary on one row, sections become a grid of cards ---- */
   @media (min-width: 720px) {
-    body { padding: 36px 32px 84px; }
-    h1 { font-size: 30px; }
-    .summary-sheet { display: grid; grid-template-columns: 1.1fr 0.9fr; }
+    body { padding: 36px 28px 72px; }
+    h1 { font-size: 34px; }
+    .summary-sheet { display: grid; grid-template-columns: 1fr 1fr; }
     .hero-stats { grid-template-columns: repeat(2, 1fr); align-content: stretch; }
-    .hero-card { padding: 16px 20px 14px; }
+    .hero-card { padding: 12px 16px 11px; }
     .hero-card:nth-child(odd) { border-left: 0; }
     .hero-card:nth-child(n+3) { border-top: 1px solid var(--rule-soft); }
     .hero-stats:only-child { grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); }
     .hero-stats:only-child .hero-card:nth-child(n+3) { border-top: 0; }
     .hero-stats:only-child .hero-card:nth-child(n+2) { border-left: 1px solid var(--rule-soft); }
-    .filters.seg { max-width: 580px; }
-    .totals { border-top: 0; border-left: 1px solid var(--rule-soft); align-self: center; padding: 10px 0 6px; }
-    .totals > .tot { padding: 6px 22px; }
-    .totals > .tot.sum { margin: 6px 22px 0; padding: 10px 0 6px; }
-    .totals > .totals-note { padding: 4px 22px 10px; }
-    
-    .task-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px;
-      background: none; border: 0; border-radius: 0; overflow: visible; box-shadow: none;
-    }
-    .task {
-      background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px;
-      border-left: 3.5px solid var(--catcolor, var(--rule)); box-shadow: var(--shadow-sm);
-    }
+    .filters.seg { max-width: 540px; }
+    .totals { border-top: 0; border-left: 1px solid var(--rule-soft); align-self: center; padding: 8px 0 4px; }
+    .totals > .tot { padding: 5px 18px; }
+    .totals > .tot.sum { margin: 6px 18px 0; padding: 9px 0 4px; }
+    .totals > .totals-note { padding: 2px 18px 8px; }
+    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; background: none; border: 0; border-radius: 0; overflow: visible; }
+    .task { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; }
     .task:first-child { border-top: 1px solid var(--rule); }
-    .done-toggle { grid-column: 1 / -1; border: 1px solid var(--rule); border-radius: 12px; background: #FFFFFF; }
+    .done-toggle { grid-column: 1 / -1; border: 1px solid var(--rule); border-radius: 10px; }
     .done-toggle:first-child { border-top: 1px solid var(--rule); }
-    @media (hover: hover) {
-      .task:hover { border-color: #CBD5E1; transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    }
+    @media (hover: hover) { .task:hover { border-color: var(--field); } }
   }
 </style>
 </head>
 <body>
 <header class="masthead">
-  <div class="masthead-brand">
-    <div class="masthead-crest">MM</div>
-    <div>
-      <h1>Mustannsirr Mallik</h1>
-      <div class="sub">Tax &amp; Accounts Consultant <span class="sub-dot"></span> Indore</div>
-    </div>
-  </div>
-  <div class="status">
-    <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Loading...</span></span>
-    <button id="resetBtn" type="button" onclick="resetData()" title="Use this if the board is stuck on old tasks">Reset data</button>
-  </div>
+  <h1>Mustannsirr's Task Board</h1>
+  <div class="sub">Tax &amp; accounts, Indore</div>
+  <div class="status"><span id="lastSync">Loading...</span><button id="resetBtn" type="button" onclick="resetData()" title="Use this if the board is stuck on old tasks">Reset data</button></div>
 </header>
 
 <div id="authGate">
   <div class="auth-card">
-    <div class="auth-crest">MM</div>
-    <div class="auth-title">Mustannsirr Mallik</div>
-    <div class="auth-sub">Tax &amp; Accounts Consultant &bull; Indore</div>
-    <div class="auth-note">Password Protected Dashboard</div>
+    <div class="auth-title">Mustannsirr's Task Board</div>
+    <div class="auth-sub">Tax &amp; accounts, Indore</div>
+    <div class="auth-note">This dashboard is password protected</div>
     <input type="password" id="authInput" placeholder="Enter password" aria-label="Password" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
     <button type="button" class="btn btn-primary" onclick="checkAuth()">Unlock</button>
     <div id="authError">Incorrect password — try again.</div>
@@ -667,7 +498,6 @@ async function pullFromCalendar() {
         task.linked = ev.linked || '';
         task.phone = ev.phone || '';
         task.invoice = ev.invoice || '';
-        task.feeCat = ev.feeCat || '';
       }
       tasks.push(task);
       added++;
@@ -781,11 +611,11 @@ function toggleTask(id) {
       const phone = document.getElementById('modalPhone').value.trim();
       if (!isNaN(payable) && payable > 0) {
         const localId = 'u'+Date.now();
-        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || '', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name, phone };
+        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', due: '', done: received >= payable, urgent: false, payable, received, linked: t.name, phone };
         tasks.push(feeTask);
         saveTasks();
         render();
-        pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || '').then(calId => {
+        pushFeeToCalendar(t.name, payable, received, t.name, phone).then(calId => {
           if (calId) { feeTask.id = calId; saveTasks(); }
         });
       }
@@ -802,6 +632,17 @@ async function toggleOnCalendar(taskId, done) {
   } catch (e) { /* fire and forget */ }
 }
 
+// Bank account printed on every unpaid invoice image. invoice.html keeps a copy of these lines
+// for the hosted invoice page - change both together.
+// The bank's Customer ID is deliberately left off: it is not needed to receive a transfer.
+const BANK_DETAILS = {
+  holder: 'Mustansir Malik',          // exactly as the bank holds it
+  account: '033311501064738',
+  ifsc: 'NESF0000333',
+  bank: 'slice Small Finance Bank',
+  branch: 'Koramangala, Bangalore'
+};
+
 // Draws the invoice as a real PNG image (client-side, via canvas) so it can be shared as an
 // actual attachment through the phone's native Share sheet — a plain link can never be
 // auto-attached to a WhatsApp message, only text can. Returns a Blob, or null on failure.
@@ -815,7 +656,18 @@ async function generateInvoiceImage(data) {
     if (data.received > 0) bodyY += 80;
     if (data.discount > 0) bodyY += 80;
     const balanceDueY = bodyY + 10;
-    const footerTop = balanceDueY + 80;
+    // The bank details box sits between the balance and the footer, and only while a balance is due
+    // (a settled invoice has no use for it).
+    const bankRows = (data.balance > 0) ? [
+      ['Account name', BANK_DETAILS.holder],
+      ['Account number', BANK_DETAILS.account],
+      ['IFSC', BANK_DETAILS.ifsc],
+      ['Bank', BANK_DETAILS.bank],
+      ['Branch', BANK_DETAILS.branch]
+    ] : [];
+    const bankTop = balanceDueY + 46;
+    const bankH = bankRows.length ? 146 + (bankRows.length - 1) * 38 : 0;
+    const footerTop = bankRows.length ? bankTop + bankH + 44 : balanceDueY + 80;
     const H = Math.round(footerTop + 160);
 
     const canvas = document.createElement('canvas');
@@ -955,6 +807,28 @@ async function generateInvoiceImage(data) {
     ctx.fillText(settled ? 'Balance Settled' : 'Balance Due', 46, y);
     ctx.textAlign = 'right'; ctx.fillStyle = settled ? TEAL : CORAL; ctx.font = `800 34px ${MONO}`;
     ctx.fillText(fmt(Math.max(data.balance, 0)), W - 46, y);
+
+    // Bank details (only while a balance is due)
+    if (bankRows.length) {
+      const bx = 46, bw = W - 92, by = bankTop;
+      ctx.fillStyle = '#F7F5FF';
+      roundRect(bx, by, bw, bankH, 16); ctx.fill();
+      ctx.strokeStyle = '#E2DAFF'; ctx.lineWidth = 1.5;
+      roundRect(bx, by, bw, bankH, 16); ctx.stroke();
+      ctx.textAlign = 'left';
+      ctx.fillStyle = VIOLET; ctx.font = `800 15px ${KARLA}`;
+      ctx.fillText('PAY BY BANK TRANSFER', bx + 28, by + 40);
+      bankRows.forEach((row, i) => {
+        const ry = by + 84 + i * 38;
+        ctx.fillStyle = INK_SOFT; ctx.font = `600 18px ${KARLA}`;
+        ctx.fillText(row[0], bx + 28, ry);
+        ctx.fillStyle = INK;
+        ctx.font = (i === 1 || i === 2) ? `600 21px ${MONO}` : `700 20px ${KARLA}`;   // account number and IFSC in the number face
+        ctx.fillText(row[1], bx + 236, ry);
+      });
+      ctx.fillStyle = INK_SOFT; ctx.font = `600 15px ${KARLA}`;
+      ctx.fillText('Name as per bank records. Quote ' + data.invoiceNumber + ' as the payment reference.', bx + 28, by + 84 + (bankRows.length - 1) * 38 + 40);
+    }
 
     // Footer
     y = footerTop;
@@ -1160,12 +1034,7 @@ function addTask() {
     const linked = document.getElementById('feeLinked').value.trim();
     const phone = document.getElementById('feePhone').value.trim();
     const localId = 'u'+Date.now();
-    let feeCat = '';
-    if (linked) {
-      const matchT = tasks.find(x => x.type === 'professional' && x.cat && (x.name.toLowerCase() === linked.toLowerCase() || x.name.toLowerCase().includes(linked.toLowerCase()) || linked.toLowerCase().includes(x.name.toLowerCase())));
-      if (matchT) feeCat = matchT.cat;
-    }
-    const task = { id: localId, name, type: 'fee', cat: 'FEES', feeCat, due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked, phone };
+    const task = { id: localId, name, type: 'fee', cat: 'FEES', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked, phone };
     tasks.push(task);
     input.value = '';
     document.getElementById('feePayable').value = '';
@@ -1174,7 +1043,7 @@ function addTask() {
     document.getElementById('feePhone').value = '';
     saveTasks();
     render();
-    pushFeeToCalendar(name, payable, received, linked, phone, feeCat).then(calId => {
+    pushFeeToCalendar(name, payable, received, linked, phone).then(calId => {
       if (calId) { task.id = calId; saveTasks(); }
     });
     return;
@@ -1203,11 +1072,11 @@ function addTask() {
   });
 }
 
-async function pushFeeToCalendar(name, payable, received, linked, phone, feeCat) {
+async function pushFeeToCalendar(name, payable, received, linked, phone) {
   const url = getWebhook();
   if (!url) return null;
   try {
-    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '', feeCat: feeCat || '' });
+    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '' });
     const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
     return data.id || null;
@@ -1353,134 +1222,9 @@ function buildReceiptMessage(t, paidNow) {
   return msg.replace(/&/g, 'and');
 }
 
-// ---- Category phone mapping & persistence ----
-const CAT_PHONES_KEY = 'dash-cat-phones-v1';
-const DEFAULT_CATEGORY_PHONES = {
-  SHK: '9425320184',
-  HATIM_BHAI_ADV: '9826768052',
-  MHJ: '',
-  OWN: ''
-};
-
-function getCategoryPhones() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CAT_PHONES_KEY) || '{}');
-    return Object.assign({}, DEFAULT_CATEGORY_PHONES, saved);
-  } catch (e) {
-    return Object.assign({}, DEFAULT_CATEGORY_PHONES);
-  }
-}
-
-function saveCategoryPhone(catKey, phone) {
-  try {
-    const current = getCategoryPhones();
-    current[catKey] = (phone || '').replace(/[^0-9]/g, '');
-    localStorage.setItem(CAT_PHONES_KEY, JSON.stringify(current));
-  } catch (e) {}
-}
-
-function detectFeeCategory(t) {
-  if (t.feeCat) return t.feeCat;
-  const targetName = (t.linked || t.name || '').trim().toLowerCase();
-  const linkedTask = tasks.find(x => x.type === 'professional' && x.cat && (
-    x.name.trim().toLowerCase() === targetName ||
-    targetName.includes(x.name.trim().toLowerCase()) ||
-    x.name.trim().toLowerCase().includes(targetName)
-  ));
-  if (linkedTask && linkedTask.cat) return linkedTask.cat;
-  if (t.cat && t.cat !== 'FEES') return t.cat;
-  return 'SHK';
-}
-
-function getCatDisplayName(k) {
-  const map = {
-    SHK: 'SHK Husain Arif',
-    MHJ: 'MHJ',
-    OWN: 'Professional — OWN',
-    HATIM_BHAI_ADV: 'Hatim Bhai Adv'
-  };
-  return map[k] || k.replace(/_/g, ' ');
-}
-
 // Separate function so the actual hand-off to the phone's WhatsApp app is one replaceable line.
 function launchWhatsApp(url) {
   window.location.href = url;
-}
-
-function openReceiptWhatsApp(phone, message, useRegular) {
-  let clean = (phone || '').replace(/[^0-9]/g, '');
-  if (clean.length === 10) clean = '91' + clean;
-  const encoded = encodeURIComponent(message);
-  const phonePart = clean ? 'phone=' + clean + '&' : '';
-  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
-  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
-    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  if (isAndroid && !useRegular) {
-    launchWhatsApp(waBusinessIntent);
-  } else {
-    window.open(waUrl, '_blank');
-  }
-}
-
-function sendReceiptToClient(taskId, paidNow) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const message = buildReceiptMessage(t, paidNow || 0);
-  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
-  openReceiptWhatsApp(t.phone || '', message, useRegular);
-  const btn = document.getElementById('btnReceiptClient');
-  if (btn) {
-    btn.style.background = 'var(--muted)';
-    const span = btn.querySelector('span');
-    if (span) span.textContent = '✓ Opened for Client';
-  }
-}
-
-function sendReceiptToCategory(taskId, paidNow) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const catSelect = document.getElementById('receiptCatSelect');
-  const catKey = catSelect ? catSelect.value : 'SHK';
-  const phoneInput = document.getElementById('receiptCatPhone');
-  const catPhone = phoneInput ? phoneInput.value.trim() : '';
-  if (catPhone) saveCategoryPhone(catKey, catPhone);
-  const message = buildReceiptMessage(t, paidNow || 0);
-  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
-  openReceiptWhatsApp(catPhone, message, useRegular);
-  const btn = document.getElementById('btnReceiptCat');
-  if (btn) {
-    btn.style.background = 'var(--muted)';
-    const span = btn.querySelector('span');
-    if (span) span.textContent = '✓ Opened for ' + getCatDisplayName(catKey);
-  }
-}
-
-function onReceiptCatChange(taskId) {
-  const catSelect = document.getElementById('receiptCatSelect');
-  if (!catSelect) return;
-  const catKey = catSelect.value;
-  const phones = getCategoryPhones();
-  const phone = phones[catKey] || '';
-  const phoneInput = document.getElementById('receiptCatPhone');
-  if (phoneInput) phoneInput.value = phone;
-  const phoneTag = document.getElementById('catPhoneTag');
-  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
-  const btnText = document.getElementById('btnReceiptCatText');
-  if (btnText) btnText.textContent = 'Send to ' + getCatDisplayName(catKey);
-  const btn = document.getElementById('btnReceiptCat');
-  if (btn) btn.style.background = 'var(--green)';
-}
-
-function onReceiptCatPhoneInput(taskId) {
-  const catSelect = document.getElementById('receiptCatSelect');
-  const phoneInput = document.getElementById('receiptCatPhone');
-  if (!catSelect || !phoneInput) return;
-  const catKey = catSelect.value;
-  const phone = phoneInput.value.trim();
-  saveCategoryPhone(catKey, phone);
-  const phoneTag = document.getElementById('catPhoneTag');
-  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
 }
 
 // afterSave = opened straight after Record payment (so the first line can say what was saved);
@@ -1488,76 +1232,35 @@ function onReceiptCatPhoneInput(taskId) {
 function offerReceipt(taskId, paidNow, afterSave) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
-  const clientPhone = (t.phone || '').trim();
-  const clientLabel = t.linked || t.name;
+  let phone = (t.phone || '').replace(/[^0-9]/g, '');
+  if (phone.length === 10) phone = '91' + phone;
   const message = buildReceiptMessage(t, paidNow || 0);
-
-  const detectedCat = detectFeeCategory(t);
-  const catPhones = getCategoryPhones();
-
-  const knownCats = ['SHK', 'MHJ', 'OWN'];
-  const extraCats = [...new Set(tasks.filter(x => x.type === 'professional' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(x.cat)).map(x => x.cat))];
-  const allCatKeys = [...new Set(['SHK', 'MHJ', 'OWN', ...extraCats])];
-  let currentCatKey = detectedCat || 'SHK';
-  if (!allCatKeys.includes(currentCatKey)) allCatKeys.unshift(currentCatKey);
-
-  const currentCatPhone = catPhones[currentCatKey] || '';
-  const currentCatLabel = getCatDisplayName(currentCatKey);
-
+  const encoded = encodeURIComponent(message);
+  // No saved number: leave "phone" out and WhatsApp itself asks which contact to send to.
+  const phonePart = phone ? 'phone=' + phone + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
+  // Same exact-package targeting as the fee reminder's "Open in WhatsApp Business" button.
+  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
+  // intent:// links only exist on Android; anywhere else the main button opens the normal link.
   const isAndroid = /Android/i.test(navigator.userAgent);
   const saved = !afterSave ? ''
     : paidNow > 0 ? '✓ Payment saved. '
     : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
+  const intro = saved + (phone
+    ? 'This opens ' + escapeForHtml(t.linked || t.name) + '\'s chat with the receipt ready — you just press Send.'
+    : 'No phone number is saved for this client, so WhatsApp will ask you to pick the contact.');
 
-  const catOptionsHtml = allCatKeys.map(k =>
-    `<option value="${k}" ${k === currentCatKey ? 'selected' : ''}>${escapeForHtml(getCatDisplayName(k))}</option>`
-  ).join('');
-
-  const modalHtml = `
-    <div class="hint">${saved}Choose who to send the receipt to via WhatsApp:</div>
+  showModal('Send payment receipt?', `
+    <div class="hint">${intro}</div>
     <div class="receipt-preview">${escapeForHtml(message)}</div>
-
-    <div style="margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px;">
-      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-          <span style="font-weight: 600; font-size: 13.5px; color: var(--ink);">1. Client (${escapeForHtml(clientLabel)})</span>
-          <span style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;">${clientPhone ? clientPhone : 'No number'}</span>
-        </div>
-        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
-          ${clientPhone ? 'Sends directly to this client\'s WhatsApp chat.' : 'No phone saved — WhatsApp will prompt you to pick the contact.'}
-        </div>
-        <button type="button" id="btnReceiptClient" class="btn btn-wa" style="width: 100%; height: 38px; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToClient('${t.id}', ${paidNow || 0})">
-          ${ICON.chat} <span>Send to Client</span>
-        </button>
-      </div>
-
-      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-          <span style="font-weight: 600; font-size: 13.5px; color: var(--ink);">2. Category Head / Principal</span>
-          <span id="catPhoneTag" style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;">${currentCatPhone || 'Enter phone'}</span>
-        </div>
-        <div style="display: flex; gap: 8px; margin: 6px 0 8px;">
-          <select id="receiptCatSelect" onchange="onReceiptCatChange('${t.id}')" style="flex: 1.2; height: 36px; padding: 0 8px; font-size: 13px; border: 1px solid var(--field); border-radius: 8px; background: var(--sheet); color: var(--ink);">
-            ${catOptionsHtml}
-          </select>
-          <input type="tel" id="receiptCatPhone" placeholder="Mobile number" value="${currentCatPhone}" oninput="onReceiptCatPhoneInput('${t.id}')" style="flex: 1; height: 36px; padding: 0 10px; font-size: 13px; border: 1px solid var(--field); border-radius: 8px; background: var(--sheet); color: var(--ink);">
-        </div>
-        <button type="button" id="btnReceiptCat" class="btn btn-wa" style="width: 100%; height: 38px; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToCategory('${t.id}', ${paidNow || 0})">
-          ${ICON.chat} <span id="btnReceiptCatText">Send to ${escapeForHtml(currentCatLabel)}</span>
-        </button>
-      </div>
-    </div>
-
-    ${isAndroid ? `
-    <div style="margin-top: 10px; text-align: center; font-size: 12.5px;">
-      <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--muted);">
-        <input type="checkbox" id="receiptUseRegular" style="accent-color: var(--accent);">
-        Use regular WhatsApp instead of WhatsApp Business
-      </label>
+    ${isAndroid ? `<div class="alt-link">
+      <a href="${escapeForHtml(waUrl)}" target="_blank" rel="noopener" onclick="closeModal()">Open in regular WhatsApp instead</a>
     </div>` : ''}
-  `;
-
-  showModal('Send payment receipt?', modalHtml, () => {}, 'Done', 'Close');
+  `, () => {
+    if (isAndroid) launchWhatsApp(waBusinessIntent);
+    else window.open(waUrl, '_blank');
+  }, isAndroid ? 'WhatsApp Business' : 'Open WhatsApp', 'Skip');
 }
 
 async function updateFeeOnCalendar(taskId, received, discount) {
