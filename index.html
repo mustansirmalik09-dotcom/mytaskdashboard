@@ -1861,17 +1861,28 @@ function render(listOnly) {
 // where possible); Islamic dates shift ~11 days earlier each year and will
 // need updating for 2027 onward.
 const FESTIVAL_THEMES = [
-  { name: 'Republic Day', start: '2026-01-25', end: '2026-01-26', vars: { coral:'#FF9933', teal:'#138808', violet:'#0B3D91', sky:'#138808', pink:'#FF9933', bg:'#FFF8ED' } },
-  { name: 'Holi', start: '2026-03-03', end: '2026-03-05', accent: '#6D2FD0', vars: { coral:'#FF3D71', teal:'#00C2A8', violet:'#9B4DFF', sky:'#1FC4FF', pink:'#FF61D2', yellow:'#FFD400', bg:'#FFF9F0' } },
-  { name: 'Eid al-Fitr', start: '2026-03-19', end: '2026-03-22', vars: { coral:'#0F9D6F', teal:'#0F9D6F', violet:'#0B6E4F', sky:'#0F9D6F', pink:'#C9A227', yellow:'#C9A227', bg:'#F5FBF7' } },
-  { name: 'Eid al-Adha', start: '2026-05-26', end: '2026-05-29', vars: { coral:'#0F9D6F', teal:'#0F9D6F', violet:'#0B6E4F', sky:'#0F9D6F', pink:'#C9A227', yellow:'#C9A227', bg:'#F5FBF7' } },
-  { name: 'Muharram (Ashara Mubaraka)', start: '2026-06-16', end: '2026-06-26', mourning: true, vars: { coral:'#3A3A3E', teal:'#4A4A4E', violet:'#2B2B2F', sky:'#5A5A5E', pink:'#3A3A3E', yellow:'#6A6A6E', bg:'#F2F1EF', ink:'#1C1C1E' } },
-  { name: 'Independence Day', start: '2026-08-14', end: '2026-08-16', vars: { coral:'#FF9933', teal:'#138808', violet:'#0B3D91', sky:'#138808', pink:'#FF9933', bg:'#FFF8ED' } },
-  { name: 'Mawlid al-Nabi', start: '2026-08-24', end: '2026-08-26', vars: { coral:'#0F9D6F', teal:'#0F9D6F', violet:'#0B6E4F', sky:'#0F9D6F', pink:'#C9A227', yellow:'#C9A227', bg:'#F5FBF7' } },
-  { name: 'Ganesh Chaturthi', start: '2026-09-13', end: '2026-09-15', vars: { coral:'#E8542A', teal:'#C9A227', violet:'#8B2E2E', sky:'#E8542A', pink:'#C9A227', yellow:'#F2B705', bg:'#FFF6EC' } },
-  { name: 'Dussehra', start: '2026-10-19', end: '2026-10-21', vars: { coral:'#E8542A', teal:'#0F9D6F', violet:'#8B2E2E', sky:'#1F9EFF', pink:'#FF3D9A', yellow:'#F2B705', bg:'#FFF8ED' } },
-  { name: 'Diwali', start: '2026-11-06', end: '2026-11-10', vars: { coral:'#B8860B', teal:'#8B2E2E', violet:'#6B2020', sky:'#D4AF37', pink:'#B8860B', yellow:'#D4AF37', bg:'#FFF7E0' } },
-  { name: 'Christmas', start: '2026-12-24', end: '2026-12-26', vars: { coral:'#C41E3A', teal:'#0F7A3D', violet:'#0F7A3D', sky:'#C41E3A', pink:'#C41E3A', yellow:'#D4AF37', bg:'#F7FAF7' } },
+  // 2026 & recurring festivals
+  { name: 'Republic Day', start: '2026-01-25', end: '2026-01-27', greeting: '🇮🇳 Happy Republic Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
+  { name: 'Holi', start: '2026-03-03', end: '2026-03-06', greeting: '🎨 Happy Holi 🎨', accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#F5F3FF', accentBorder: '#DDD6FE', bg: '#FCF9FF', crestGrad: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)' },
+  { name: 'Eid al-Fitr', start: '2026-03-19', end: '2026-03-23', greeting: '🌙 Eid Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
+  { name: 'Eid al-Adha', start: '2026-05-26', end: '2026-05-30', greeting: '🌙 Eid al-Adha Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
+  { name: 'Muharram (Ashara Mubaraka)', start: '2026-06-16', end: '2026-06-26', mourning: true, greeting: '· Ashara Mubaraka ·', accent: '#334155', accentHover: '#1E293B', accentSoft: '#F1F5F9', accentBorder: '#CBD5E1', bg: '#F1F3F5', crestGrad: 'linear-gradient(135deg, #0F172A, #334155)' },
+  { name: 'Independence Day', start: '2026-08-14', end: '2026-08-16', greeting: '🇮🇳 Happy Independence Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
+  { name: 'Mawlid al-Nabi', start: '2026-08-24', end: '2026-08-27', greeting: '✨ Milad un-Nabi Mubarak ✨', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B, #047857)' },
+  { name: 'Ganesh Chaturthi', start: '2026-09-13', end: '2026-09-17', greeting: '🌸 Happy Ganesh Chaturthi 🌸', accent: '#C2410C', accentHover: '#EA580C', accentSoft: '#FFF7ED', accentBorder: '#FED7AA', bg: '#FFFBF7', crestGrad: 'linear-gradient(135deg, #9A3412, #EA580C)' },
+  { name: 'Dussehra', start: '2026-10-18', end: '2026-10-22', greeting: '🏹 Happy Dussehra 🏹', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F, #D97706)' },
+  // Active today (starts Nov 3, 2026 covering Dhanteras, Diwali & Saal Mubarak)
+  { name: 'Diwali', start: '2026-11-03', end: '2026-11-12', greeting: '🪔 Shubh Deepavali & Saal Mubarak 🪔', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%)' },
+  { name: 'Christmas & New Year', start: '2026-12-23', end: '2027-01-02', greeting: '🎄 Merry Christmas & Happy New Year 🎄', accent: '#BE123C', accentHover: '#E11D48', accentSoft: '#FFF1F2', accentBorder: '#FECDD3', bg: '#FCFAFA', crestGrad: 'linear-gradient(135deg, #9F1239 0%, #047857 100%)' },
+
+  // 2027 festivals
+  { name: 'Republic Day', start: '2027-01-25', end: '2027-01-27', greeting: '🇮🇳 Happy Republic Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
+  { name: 'Eid al-Fitr', start: '2027-03-08', end: '2027-03-12', greeting: '🌙 Eid Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
+  { name: 'Holi', start: '2027-03-22', end: '2027-03-24', greeting: '🎨 Happy Holi 🎨', accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#F5F3FF', accentBorder: '#DDD6FE', bg: '#FCF9FF', crestGrad: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)' },
+  { name: 'Eid al-Adha', start: '2027-05-15', end: '2027-05-19', greeting: '🌙 Eid al-Adha Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
+  { name: 'Muharram (Ashara Mubaraka)', start: '2027-06-05', end: '2027-06-15', mourning: true, greeting: '· Ashara Mubaraka ·', accent: '#334155', accentHover: '#1E293B', accentSoft: '#F1F5F9', accentBorder: '#CBD5E1', bg: '#F1F3F5', crestGrad: 'linear-gradient(135deg, #0F172A, #334155)' },
+  { name: 'Independence Day', start: '2027-08-14', end: '2027-08-16', greeting: '🇮🇳 Happy Independence Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
+  { name: 'Diwali', start: '2027-10-26', end: '2027-11-04', greeting: '🪔 Shubh Deepavali & Saal Mubarak 🪔', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%)' }
 ];
 
 function applyFestivalTheme() {
@@ -1879,17 +1890,27 @@ function applyFestivalTheme() {
   const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
   const active = FESTIVAL_THEMES.find(f => todayStr >= f.start && todayStr <= f.end);
   if (!active) return;
+
   const root = document.documentElement.style;
-  Object.entries(active.vars).forEach(([key, val]) => root.setProperty('--' + key, val));
-  const accent = active.accent || active.vars.violet;   // every theme's deep colour doubles as the accent
-  if (accent) root.setProperty('--accent', accent);
-  const themeMeta = document.querySelector('meta[name="theme-color"]');   // keep the phone's address bar in step with the page colour
-  if (themeMeta && active.vars.bg) themeMeta.setAttribute('content', active.vars.bg);
+  if (active.accent) root.setProperty('--accent', active.accent);
+  if (active.accentHover) root.setProperty('--accent-hover', active.accentHover);
+  if (active.accentSoft) root.setProperty('--accent-soft', active.accentSoft);
+  if (active.accentBorder) root.setProperty('--accent-border', active.accentBorder);
+  if (active.bg) root.setProperty('--bg', active.bg);
+
+  const crest = document.querySelector('.masthead-crest');
+  if (crest && active.crestGrad) crest.style.background = active.crestGrad;
+
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta && active.bg) themeMeta.setAttribute('content', active.bg);
+
   if (active.mourning) {
     document.body.style.setProperty('--confetti-disabled', 'true');
   }
+
+  // Add festive greeting banner at top of dashboard
   const banner = document.createElement('div');
-  banner.textContent = active.mourning ? '· ' + active.name + ' ·' : '✨ ' + active.name + ' ✨';
+  banner.textContent = active.greeting || (active.mourning ? '· ' + active.name + ' ·' : '✨ ' + active.name + ' ✨');
   banner.className = 'festival-banner';
   document.body.insertBefore(banner, document.body.firstChild);
 }
