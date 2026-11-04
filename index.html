@@ -1049,7 +1049,7 @@ async function sendWhatsAppReminder(taskId, balance) {
   let diagnosticNote = '';
   const url = getWebhook();
   try {
-    const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName });
+    const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName, id: taskId });
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000); // generous 25s - this call chains two external APIs
     const res = await fetch(url + '?' + params.toString(), { signal: controller.signal });
