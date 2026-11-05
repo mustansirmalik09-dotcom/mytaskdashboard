@@ -1654,26 +1654,48 @@ function setFilter(f) {
   render();
 }
 
+function openClockApp() {
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (!isAndroid) {
+    alert('Please open your Clock app on this device to set your alarm.');
+    return;
+  }
+  // Launch Google Clock, with fallback to Samsung Clock or generic alarm viewer
+  const clockIntent = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.android.deskclock;S.browser_fallback_url=intent%3A%23Intent%3Baction%3Dandroid.intent.action.MAIN%3Bcategory%3Dandroid.intent.category.LAUNCHER%3Bpackage%3Dcom.sec.android.app.clockpackage%3Bend;end';
+  window.location.href = clockIntent;
+}
+
 function setNamazAlarm(name, isoDate) {
   const dt = new Date(isoDate);
-  const hour = dt.getHours();
-  const minute = dt.getMinutes();
+  const formatted = dt.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
   const label = name.replace(/^\[PERSONAL\]\s*/i, '').trim();
-  const intentUri = 'intent://alarm#Intent;action=android.intent.action.SET_ALARM;' +
-    'i.android.intent.extra.alarm.HOUR=' + hour + ';' +
-    'i.android.intent.extra.alarm.MINUTES=' + minute + ';' +
-    'S.android.intent.extra.alarm.MESSAGE=' + encodeURIComponent(label) + ';' +
-    'B.android.intent.extra.alarm.VIBRATE=true;end';
+  const calLink = 'https://calendar.google.com/calendar/r';
 
-  if (/Android/i.test(navigator.userAgent)) {
-    window.location.href = intentUri;
-  } else {
-    const formatted = dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-    showModal('Set Alarm — ' + label, `
-      <div style="font-size:16px; font-weight:600; color:var(--ink); margin-bottom:8px;">${label} is at ${formatted}</div>
-      <div class="hint">On your Android phone, tapping this button automatically opens your Clock app with ${formatted} and "${label}" pre-filled so you just tap Save.<br><br>On this computer, set your alarm manually for <strong>${formatted}</strong>.</div>
-    `, () => {}, 'OK', 'Close');
-  }
+  const modalHtml = `
+    <div style="text-align:center; padding:8px 0 16px;">
+      <div style="font-size:38px; font-weight:700; font-family:var(--serif); color:var(--ink); margin-bottom:2px;">${formatted}</div>
+      <div style="font-size:14px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">${escapeForHtml(label)} &bull; Indore</div>
+      <div class="hint" style="margin-top:8px;">Fetched from mumineen.org. Your Google Calendar also has an advance notification popup set for this prayer.</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button type="button" class="btn btn-primary" style="width:100%; height:44px; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px;" onclick="openClockApp()">
+        <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Open Phone Clock App</span>
+      </button>
+
+      <a href="${calLink}" target="_blank" rel="noopener" class="btn btn-quiet" style="width:100%; height:44px; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
+        <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        <span>View on Google Calendar</span>
+      </a>
+    </div>
+
+    <div style="margin-top:14px; text-align:center; font-size:12.5px; color:var(--muted); line-height:1.4;">
+      You can also say: <em>"Hey Google, set alarm for ${formatted}"</em>.
+    </div>
+  `;
+
+  showModal('Namaz Alarm &bull; ' + label, modalHtml, () => {}, 'Done', 'Close');
 }
 
 function render(listOnly) {
