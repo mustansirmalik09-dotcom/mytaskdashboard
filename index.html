@@ -456,6 +456,134 @@
       .task:hover { border-color: #CBD5E1; transform: translateY(-2px); box-shadow: var(--shadow-md); }
     }
   }
+
+  /* ---- Executive Page Navigation (Tasks vs Financials) ---- */
+  .page-nav {
+    display: flex; gap: 10px; margin: 0 0 20px; padding: 4px;
+    background: #EEF2F6; border: 1px solid var(--rule); border-radius: 14px;
+    max-width: 480px;
+  }
+  .page-nav-btn {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 18px; border-radius: 10px; border: 0; background: transparent;
+    color: var(--muted); font: 600 13.5px var(--sans); cursor: pointer; transition: all 0.15s ease;
+  }
+  .page-nav-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.6); }
+  .page-nav-btn.active {
+    background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  }
+  .page-nav-btn .nav-badge {
+    background: var(--accent-soft); color: var(--accent);
+    padding: 2px 7px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  }
+  .page-nav-btn.active .nav-badge {
+    background: var(--accent); color: #FFFFFF;
+  }
+
+  /* Financials Page Layout */
+  #financialsView { display: none; }
+  .fin-hero-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px; margin-bottom: 22px;
+  }
+  .fin-card {
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px;
+    padding: 16px 18px; box-shadow: var(--shadow-sm); position: relative;
+  }
+  .fin-card.receivable { border-left: 4px solid var(--red); }
+  .fin-card.payable { border-left: 4px solid var(--amber); }
+  .fin-card.net { border-left: 4px solid var(--green); }
+  .fin-card .f-lbl {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+  }
+  .fin-card .f-val {
+    font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--ink); margin: 4px 0 2px;
+  }
+  .fin-card.receivable .f-val { color: var(--red); }
+  .fin-card.payable .f-val { color: var(--amber); }
+  .fin-card.net .f-val { color: var(--green); }
+  .fin-card .f-sub { font-size: 12px; color: var(--muted); font-weight: 500; }
+
+  .fin-section-title {
+    font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--ink);
+    margin: 24px 2px 12px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .fin-item-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px; margin-bottom: 24px;
+  }
+  .fin-item-card {
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px;
+    padding: 16px 18px; box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  @media (hover: hover) {
+    .fin-item-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  }
+  .fin-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .fin-item-name { font-weight: 700; font-size: 15px; color: var(--ink); }
+  .fin-pill { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
+  .fin-pill.rec { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-border); }
+  .fin-pill.pay { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-border); }
+  .fin-amount { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 4px 0 8px; }
+  .fin-amount.rec { color: var(--red); }
+  .fin-amount.pay { color: var(--amber); }
+  .fin-breakdown { background: #F8FAFC; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #475569; margin-bottom: 12px; line-height: 1.6; }
+  .fin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ---- Formal P&L and Balance Sheet Statements ---- */
+  .fin-mode-toggle {
+    display: inline-flex; gap: 4px; padding: 3px; background: #EEF2F6; border: 1px solid var(--rule);
+    border-radius: 10px; margin-bottom: 20px;
+  }
+  .fin-mode-btn {
+    border: 0; background: transparent; padding: 7px 14px; border-radius: 7px;
+    font: 600 12.5px var(--sans); color: var(--muted); cursor: pointer; transition: all 0.12s ease;
+  }
+  .fin-mode-btn:hover { color: var(--ink); }
+  .fin-mode-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); }
+
+  .statement-sheet {
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 16px;
+    box-shadow: var(--shadow-sm); margin-bottom: 24px; overflow: hidden;
+  }
+  .statement-header {
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); color: #FFFFFF;
+    padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  }
+  .statement-header h3 { font-family: var(--serif); font-size: 20px; font-weight: 600; margin: 0; }
+  .statement-header .stmt-sub { font-size: 12px; color: #94A3B8; font-weight: 500; margin-top: 2px; }
+  .stmt-badge {
+    background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px; padding: 4px 12px; font-size: 11.5px; font-weight: 600; color: #F8FAFC;
+  }
+
+  .statement-body { padding: 20px 24px; }
+  .stmt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .stmt-table th {
+    background: #F8FAFC; border-bottom: 1.5px solid var(--rule); padding: 10px 14px;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);
+  }
+  .stmt-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  .stmt-table tr.section-row td {
+    background: #F8FAFC; font-weight: 700; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--accent); padding-top: 14px; border-bottom: 1px solid var(--rule);
+  }
+  .stmt-table tr.total-row td {
+    border-top: 1.5px solid var(--rule); border-bottom: 3px double var(--rule);
+    font-weight: 700; font-size: 14.5px; background: #FAFCFE;
+  }
+  .stmt-table tr.grand-row td {
+    border-top: 2px solid var(--ink); border-bottom: 3px double var(--ink);
+    font-weight: 700; font-size: 15.5px; background: #F1F5F9;
+  }
+  .stmt-mono { font-family: var(--serif); font-weight: 600; font-size: 15.5px; font-variant-numeric: tabular-nums; }
+  .stmt-table td.indent { padding-left: 28px; }
+  .stmt-table td.indent-sub { padding-left: 44px; color: var(--muted); font-size: 12.5px; }
+
+  .bs-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 860px) {
+    .bs-grid { grid-template-columns: 1fr 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -472,6 +600,20 @@
     <button id="resetBtn" type="button" onclick="resetData()" title="Use this if the board is stuck on old tasks">Reset data</button>
   </div>
 </header>
+
+<nav class="page-nav" role="tablist" aria-label="Dashboard Pages">
+  <button type="button" id="tabTasks" class="page-nav-btn active" role="tab" aria-selected="true" onclick="switchPage('tasks')">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span>Tasks &amp; Operations</span>
+  </button>
+  <button type="button" id="tabFinancials" class="page-nav-btn" role="tab" aria-selected="false" onclick="switchPage('financials')">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span>Financials &amp; Ledgers</span>
+    <span class="nav-badge" id="finBadge">₹1.07L</span>
+  </button>
+</nav>
+
+<div id="tasksView">
 
 <div id="authGate">
   <div class="auth-card">
@@ -531,6 +673,9 @@
   <div class="loading">Loading tasks...</div>
 </div>
 
+</div><!-- /tasksView -->
+
+<div id="financialsView"></div>
 <button type="button" id="toTop" aria-label="Back to top" title="Back to top" onclick="scrollToTop()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 19V5"/></svg></button>
 
 <script>
@@ -647,12 +792,23 @@ async function pullFromCalendar() {
 
     events.forEach(ev => {
       if (existingIds.has(ev.id)) {
-        // Already on this device. The one thing the server can change behind this page's back
-        // is an invoice number (the 9am digest issues one for any pending fee that has a phone
-        // number), so keep just that in step - a payment receipt links to it.
-        if (ev.tag === 'FEES' && ev.invoice) {
-          const local = tasks.find(x => x.id === ev.id);
-          if (local && local.invoice !== ev.invoice) { local.invoice = ev.invoice; refreshed++; }
+        const local = tasks.find(x => x.id === ev.id);
+        if (local) {
+          let changed = false;
+          if (local.name !== ev.title) { local.name = ev.title; changed = true; }
+          if (local.done !== ev.done) { local.done = ev.done; changed = true; }
+          if (local.dueDate !== (ev.dueDate || null)) { local.dueDate = ev.dueDate || null; changed = true; }
+          if (local.remark !== (ev.remark || '')) { local.remark = ev.remark || ''; changed = true; }
+          if (ev.tag === 'FEES') {
+            if (local.payable !== (ev.payable || 0)) { local.payable = ev.payable || 0; changed = true; }
+            if (local.received !== (ev.received || 0)) { local.received = ev.received || 0; changed = true; }
+            if (local.discount !== (ev.discount || 0)) { local.discount = ev.discount || 0; changed = true; }
+            if (local.linked !== (ev.linked || '')) { local.linked = ev.linked || ''; changed = true; }
+            if (local.phone !== (ev.phone || '')) { local.phone = ev.phone || ''; changed = true; }
+            if (local.invoice !== (ev.invoice || '')) { local.invoice = ev.invoice || ''; changed = true; }
+            if (local.feeCat !== (ev.feeCat || '')) { local.feeCat = ev.feeCat || ''; changed = true; }
+          }
+          if (changed) refreshed++;
         }
         return;
       }
@@ -686,7 +842,88 @@ async function pullFromCalendar() {
   }
 }
 
-const seedTasks = [];
+const seedTasks = [
+  {
+    id: 'cal_lghida9k5kgvrvqamrebcdv18c',
+    name: 'Loan & Advances - Juzer Presswala',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'PERSONAL',
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    payable: 107690,
+    received: 0,
+    discount: 0,
+    linked: 'Juzer Presswala (Loan & Advances)',
+    phone: '7869282535',
+    invoice: '',
+    remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues 1,07,690'
+  },
+  {
+    id: 'cal_vcmcfguocnmhf6psqui072vnts',
+    name: 'Loan & Advances - Juzer Presswala (₹1,07,690)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Tracked in Google Sheet: Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190'
+  },
+  {
+    id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc',
+    name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T09:15:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Payable to Hatim Bhai (Mob: 9826768052). Tracked in Google Sheet'
+  },
+  {
+    id: 'cal_ed85ko32qqb708i2pvumghm51c',
+    name: 'Loan & Advance Taken - MHJ (₹86,000)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T10:00:00.000Z',
+    done: false,
+    urgent: true,
+    remark: 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet'
+  },
+  {
+    id: 'cal_njelbrg4plf1eqlj2mk8sp9m0s_20261101T040000Z',
+    name: 'Monthly Salary Receivable (₹24,000)',
+    type: 'professional',
+    cat: 'MHJ',
+    due: '',
+    dueDate: '2026-11-01T04:00:00.000Z',
+    done: false,
+    urgent: true,
+    remark: 'Recurring Monthly Salary from MHJ. Due on 1st of every month'
+  },
+  {
+    id: 'cal_81rbvi7lq0o4l0rki46o92fmns_20261101T040000Z',
+    name: 'Salary Receivable - Hakimi Vihar Society',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'OWN',
+    due: '',
+    dueDate: '2026-11-01T04:00:00.000Z',
+    done: false,
+    urgent: false,
+    payable: 4000,
+    received: 0,
+    discount: 0,
+    linked: 'Hakimi Vihar Society',
+    phone: '',
+    invoice: '',
+    remark: 'Recurring Monthly Accounting Salary from Hakimi Vihar Society (Due 1st)'
+  }
+];
 
 async function loadTasks() {
   let saved = [];
@@ -699,8 +936,34 @@ async function loadTasks() {
   const savedIds = new Set(saved.map(t => t.id));
   const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
   tasks = saved.concat(newFromSeed);
-  if (newFromSeed.length > 0 || saved.length === 0) saveTasks();
+
+  // Sync critical manual updates directly into local cache
+  const jpFee = tasks.find(x => x.id === 'cal_lghida9k5kgvrvqamrebcdv18c' || (x.type === 'fee' && /juzer presswala/i.test(x.name)));
+  if (jpFee) {
+    jpFee.payable = 107690;
+    jpFee.remark = 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues 1,07,690';
+  }
+  const jpPers = tasks.find(x => x.id === 'cal_vcmcfguocnmhf6psqui072vnts');
+  if (jpPers) {
+    jpPers.name = 'Loan & Advances - Juzer Presswala (₹1,07,690)';
+  }
+  const mhjPers = tasks.find(x => x.id === 'cal_ed85ko32qqb708i2pvumghm51c');
+  if (mhjPers) {
+    mhjPers.name = 'Loan & Advance Taken - MHJ (₹86,000)';
+    mhjPers.remark = 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet';
+  }
+
+  // Ensure monthly recurring salaries are present
+  if (!tasks.some(x => /Monthly Salary Receivable/i.test(x.name))) {
+    tasks.unshift(seedTasks[4]);
+  }
+  if (!tasks.some(x => /Hakimi Vihar Society/i.test(x.name))) {
+    tasks.unshift(seedTasks[5]);
+  }
+
+  saveTasks();
   render();
+  if (activePage === 'financials') renderFinancialsPage();
 }
 
 async function saveTasks() {
@@ -1698,6 +1961,470 @@ function setNamazAlarm(name, isoDate) {
   showModal('Namaz Alarm &bull; ' + label, modalHtml, () => {}, 'Done', 'Close');
 }
 
+// ---- Multi-Page Navigation: Tasks vs Dedicated Financials Page ----
+let activePage = (location.hash === '#financials') ? 'financials' : 'tasks';
+
+function switchPage(page) {
+  activePage = page;
+  const tasksView = document.getElementById('tasksView');
+  const finView = document.getElementById('financialsView');
+  const btnTasks = document.getElementById('tabTasks');
+  const btnFin = document.getElementById('tabFinancials');
+
+  if (page === 'financials') {
+    if (tasksView) tasksView.style.display = 'none';
+    if (finView) {
+      finView.style.display = 'block';
+      renderFinancialsPage();
+    }
+    if (btnTasks) { btnTasks.classList.remove('active'); btnTasks.setAttribute('aria-selected', 'false'); }
+    if (btnFin) { btnFin.classList.add('active'); btnFin.setAttribute('aria-selected', 'true'); }
+    try { history.replaceState(null, '', '#financials'); } catch (e) {}
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    if (tasksView) tasksView.style.display = 'block';
+    if (finView) finView.style.display = 'none';
+    if (btnTasks) { btnTasks.classList.add('active'); btnTasks.setAttribute('aria-selected', 'true'); }
+    if (btnFin) { btnFin.classList.remove('active'); btnFin.setAttribute('aria-selected', 'false'); }
+    try { history.replaceState(null, '', '#tasks'); } catch (e) {}
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+let finViewMode = 'all'; // 'all', 'pl', 'bs', 'portfolio'
+
+function setFinViewMode(mode) {
+  finViewMode = mode;
+  renderFinancialsPage();
+}
+
+function renderFinancialsPage() {
+  const finContainer = document.getElementById('financialsView');
+  if (!finContainer) return;
+
+  // Calculate fees & client billings
+  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !t.name.includes('Juzer Presswala'));
+  const totalGrossFeesBilled = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
+  const totalFeesReceivedCash = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
+  const totalDiscountAllowed = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
+  const totalDebtorsReceivable = totalGrossFeesBilled - totalFeesReceivedCash - totalDiscountAllowed;
+
+  // Monthly Recurring Salaries (Due on 1st of every month)
+  const salaryMHJ = 24000;
+  const salaryHakimi = 4000;
+  const totalMonthlySalaryReceivable = salaryMHJ + salaryHakimi; // 28,000
+
+  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + totalMonthlySalaryReceivable;
+
+  // Loans & Advances
+  const loanGivenJuzer = 107690; // Asset / Current Asset / Loans & Advances Given
+  const loanTakenMHJ = 86000;    // Liability / Current Liability / Loan from Principal
+  const loanTakenHatim = 5000;   // Liability / Current Liability / Advance from Associate
+  const totalLoansTaken = loanTakenMHJ + loanTakenHatim; // 91,000
+
+  // Balance sheet metrics
+  const totalCurrentAssets = totalDebtorsReceivable + totalMonthlySalaryReceivable + loanGivenJuzer + totalFeesReceivedCash;
+  const totalCurrentLiabilities = totalLoansTaken;
+  const netWorkingCapital = totalCurrentAssets - totalCurrentLiabilities;
+
+  // Update nav badge
+  const badgeEl = document.getElementById('finBadge');
+  if (badgeEl) badgeEl.textContent = inr(totalDebtorsReceivable + loanGivenJuzer);
+
+  let html = `
+    <!-- Financial Mode Selector -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+      <div class="fin-mode-toggle" role="tablist">
+        <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Financial Suite</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'portfolio' ? 'active' : ''}" onclick="setFinViewMode('portfolio')">Loans &amp; Advances</button>
+      </div>
+      <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px;" onclick="window.print()">
+        ${ICON.doc} <span>Print Statements</span>
+      </button>
+    </div>
+
+    <!-- Executive KPI Grid -->
+    <div class="fin-hero-grid">
+      <div class="fin-card">
+        <div class="f-lbl">Net Professional Income (P&amp;L)</div>
+        <div class="f-val" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</div>
+        <div class="f-sub">Billed ${inr(totalGrossFeesBilled)} &minus; Discounts ${inr(totalDiscountAllowed)}</div>
+      </div>
+      <div class="fin-card receivable">
+        <div class="f-lbl">Sundry Debtors (Fees Due)</div>
+        <div class="f-val">${inr(totalDebtorsReceivable)}</div>
+        <div class="f-sub">${inr(totalFeesReceivedCash)} realized in cash</div>
+      </div>
+      <div class="fin-card receivable">
+        <div class="f-lbl">Loans &amp; Advances (Asset)</div>
+        <div class="f-val">${inr(loanGivenJuzer)}</div>
+        <div class="f-sub">Juzer Presswala &bull; Medical &amp; Cash</div>
+      </div>
+      <div class="fin-card payable">
+        <div class="f-lbl">Current Liabilities (Loans Taken)</div>
+        <div class="f-val">${inr(totalLoansTaken)}</div>
+        <div class="f-sub">MHJ (${inr(86000)}) + Hatim Bhai (${inr(5000)})</div>
+      </div>
+    </div>
+  `;
+
+  // === 1. PROFIT & LOSS STATEMENT ===
+  if (finViewMode === 'all' || finViewMode === 'pl') {
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header">
+          <div>
+            <h3>Profit &amp; Loss Statement</h3>
+            <div class="stmt-sub">Mustannsirr Mallik &bull; Tax &amp; Accounts Practice &bull; FY 2026-27 (Accrual &amp; Cash Basis)</div>
+          </div>
+          <span class="stmt-badge">Statement of Income &amp; Expenditure</span>
+        </div>
+        <div class="statement-body">
+          <table class="stmt-table">
+            <thead>
+              <tr>
+                <th style="width:65%;">Particulars / Heads of Account</th>
+                <th class="text-right" style="width:17%;">Sub-Total (₹)</th>
+                <th class="text-right" style="width:18%;">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Income Section -->
+              <tr class="section-row">
+                <td colspan="3">A. Professional Revenue &amp; Retainerships</td>
+              </tr>
+              <tr>
+                <td class="indent">Gross Professional Fees Billed (ITR, GST, Audit, DSC)</td>
+                <td class="text-right stmt-mono">${inr(totalGrossFeesBilled)}</td>
+                <td class="text-right stmt-mono"></td>
+              </tr>
+              <tr>
+                <td class="indent" style="color:var(--muted);">Less: Professional Discounts &amp; Concessions Allowed</td>
+                <td class="text-right stmt-mono" style="color:var(--muted);">&minus; ${inr(totalDiscountAllowed)}</td>
+                <td class="text-right stmt-mono"></td>
+              </tr>
+              <tr>
+                <td class="indent">Monthly Salary / Retainership &mdash; MHJ (Due 1st of month)</td>
+                <td class="text-right stmt-mono">${inr(salaryMHJ)}</td>
+                <td class="text-right stmt-mono"></td>
+              </tr>
+              <tr>
+                <td class="indent">Monthly Accounting Salary &mdash; Hakimi Vihar Society (Due 1st of month)</td>
+                <td class="text-right stmt-mono">${inr(salaryHakimi)}</td>
+                <td class="text-right stmt-mono"></td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total Net Revenue (Turnover) [A]</strong></td>
+                <td></td>
+                <td class="text-right stmt-mono" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</td>
+              </tr>
+
+              <!-- Expenditure Section -->
+              <tr class="section-row">
+                <td colspan="3">B. Direct Expenses &amp; Disallowances</td>
+              </tr>
+              <tr>
+                <td class="indent">Client Compliance &amp; Portal Filing Charges (Direct Outflow)</td>
+                <td class="text-right stmt-mono">0.00</td>
+                <td class="text-right stmt-mono"></td>
+              </tr>
+              <tr>
+                <td class="indent">Office Operating &amp; Documentation Expenses</td>
+                <td class="text-right stmt-mono">0.00</td>
+                <td class="text-right stmt-mono"></td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total Operating Expenses [B]</strong></td>
+                <td></td>
+                <td class="text-right stmt-mono">₹0</td>
+              </tr>
+
+              <!-- Net Profit -->
+              <tr class="grand-row">
+                <td><strong style="color:var(--accent);">NET PROFESSIONAL PROFIT (A &minus; B)</strong></td>
+                <td></td>
+                <td class="text-right stmt-mono" style="color:var(--green); font-size:17px;">${inr(netFeeRevenueAccrued)}</td>
+              </tr>
+
+              <!-- Revenue Realization Note -->
+              <tr>
+                <td class="indent-sub" colspan="3" style="padding-top:12px;">
+                  <em>Realization Note: Of the accrued net profit of ${inr(netFeeRevenueAccrued)}, <strong>${inr(totalFeesReceivedCash)}</strong> has been realized in cash/bank collections, and <strong>${inr(totalDebtorsReceivable)}</strong> remains as Sundry Debtors (Receivable).</em>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // === 2. BALANCE SHEET STATEMENT ===
+  if (finViewMode === 'all' || finViewMode === 'bs') {
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header" style="background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%);">
+          <div>
+            <h3>Balance Sheet Statement</h3>
+            <div class="stmt-sub">As at 05-Nov-2026 &bull; Position of Assets, Liabilities &amp; Capital</div>
+          </div>
+          <span class="stmt-badge">Financial Position Statement</span>
+        </div>
+        <div class="statement-body">
+          <div class="bs-grid">
+            <!-- Left: Capital & Liabilities -->
+            <div style="border:1px solid var(--rule); border-radius:12px; overflow:hidden;">
+              <table class="stmt-table">
+                <thead>
+                  <tr>
+                    <th>Capital &amp; Liabilities</th>
+                    <th class="text-right">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Capital Account -->
+                  <tr class="section-row">
+                    <td colspan="2">I. Capital Account &amp; Net Worth</td>
+                  </tr>
+                  <tr>
+                    <td class="indent">Owner's Capital / Accumulated Earnings</td>
+                    <td class="text-right stmt-mono">${inr(netWorkingCapital)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">Add: Net Profit Realized from Practice</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</td>
+                  </tr>
+
+                  <!-- Current Liabilities / Loans Taken -->
+                  <tr class="section-row">
+                    <td colspan="2">II. Current Liabilities &amp; Borrowings</td>
+                  </tr>
+                  <tr>
+                    <td class="indent"><strong>Loan from Principal &mdash; MHJ</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(loanTakenMHJ)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">Mob: 9425054543 &bull; Advance Taken (Pending)</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td class="indent"><strong>Loan from Associate &mdash; Hatim Bhai (Adv)</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(loanTakenHatim)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">Mob: 9826768052 &bull; Advance Taken (Pending)</td>
+                    <td></td>
+                  </tr>
+                  <tr class="total-row">
+                    <td>Total Current Liabilities</td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(totalCurrentLiabilities)}</td>
+                  </tr>
+
+                  <!-- Total Liabilities -->
+                  <tr class="grand-row">
+                    <td><strong>TOTAL LIABILITIES &amp; CAPITAL</strong></td>
+                    <td class="text-right stmt-mono">${inr(netWorkingCapital + totalCurrentLiabilities)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right: Assets -->
+            <div style="border:1px solid var(--rule); border-radius:12px; overflow:hidden;">
+              <table class="stmt-table">
+                <thead>
+                  <tr>
+                    <th>Assets &amp; Properties</th>
+                    <th class="text-right">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Current Assets -->
+                  <tr class="section-row">
+                    <td colspan="2">I. Current Assets, Loans &amp; Advances</td>
+                  </tr>
+                  <tr>
+                    <td class="indent"><strong>Loans &amp; Advances Given:</strong></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">&bull; Juzer Presswala (Mob: 7869282535)</td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(loanGivenJuzer)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub" style="font-size:11.5px;">(Op. 1L + XRay 700 + Plaster 1800 + Adv 5k + Med 190)</td>
+                    <td></td>
+                  </tr>
+
+                  <!-- Sundry Debtors & Salaries Receivable -->
+                  <tr>
+                    <td class="indent"><strong>Sundry Debtors (Clients Fees Receivable):</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalDebtorsReceivable)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">&bull; Active billable client receivables</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td class="indent"><strong>Monthly Salaries Receivable (Due 1st):</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalMonthlySalaryReceivable)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">&bull; MHJ: ${inr(salaryMHJ)} &bull; Hakimi Vihar: ${inr(salaryHakimi)}</td>
+                    <td></td>
+                  </tr>
+
+                  <!-- Cash & Bank -->
+                  <tr class="section-row">
+                    <td colspan="2">II. Cash &amp; Bank Balances</td>
+                  </tr>
+                  <tr>
+                    <td class="indent">Bank Account (slice Small Finance Bank) / Cash in hand</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(totalFeesReceivedCash)}</td>
+                  </tr>
+                  <tr>
+                    <td class="indent-sub">Realized professional collections</td>
+                    <td></td>
+                  </tr>
+                  <tr class="total-row">
+                    <td>Total Current Assets</td>
+                    <td class="text-right stmt-mono">${inr(totalCurrentAssets)}</td>
+                  </tr>
+
+                  <!-- Total Assets -->
+                  <tr class="grand-row">
+                    <td><strong>TOTAL ASSETS</strong></td>
+                    <td class="text-right stmt-mono">${inr(totalCurrentAssets)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // === 3. LOANS & ADVANCES SCHEDULE & ACTION PORTFOLIO ===
+  if (finViewMode === 'all' || finViewMode === 'portfolio') {
+    html += `
+      <div class="fin-section-title">
+        <span>Loans &amp; Advances Portfolio Schedule</span>
+        <span style="font-size:12.5px; font-weight:600; color:var(--muted); font-family:var(--sans);">3 Verified Ledgers</span>
+      </div>
+
+      <div class="fin-item-grid">
+        <!-- 1. Juzer Presswala -->
+        <div class="fin-item-card" style="border-left:4px solid var(--red);">
+          <div class="fin-item-top">
+            <div>
+              <div class="fin-item-name">Juzer Presswala</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">Mob: +91 7869282535 &bull; Shivalaya</div>
+            </div>
+            <span class="fin-pill rec">Current Asset (Loan Given)</span>
+          </div>
+          <div class="fin-amount rec">${inr(107690)}</div>
+          <div class="fin-breakdown">
+            <div>&bull; Opening Balance: <strong>${inr(100000)}</strong></div>
+            <div>&bull; 05-Nov-2026: X-Ray (${inr(700)}) + Plaster (${inr(1800)})</div>
+            <div>&bull; 05-Nov-2026: Cash Advance (${inr(5000)}) + Medicine (${inr(190)})</div>
+            <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--red);">
+              Total Balance Outstanding: ${inr(107690)}
+            </div>
+          </div>
+          <div class="fin-actions">
+            <a href="https://docs.google.com/spreadsheets/d/122rmY3KXjDTu-ZoyAjtJjzTXH9izDaT_S17YzWVlTaM/edit" target="_blank" rel="noopener" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+              ${ICON.doc} <span>Open Google Sheet</span>
+            </a>
+            <button type="button" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; display:inline-flex; align-items:center; gap:5px;" onclick="sendWhatsAppReminder('cal_lghida9k5kgvrvqamrebcdv18c', 107690)">
+              ${ICON.chat} <span>WhatsApp Reminder</span>
+            </button>
+            <button type="button" class="btn btn-primary" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="recordPayment('cal_lghida9k5kgvrvqamrebcdv18c')">
+              Record Repayment
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. MHJ (Loan Taken) -->
+        <div class="fin-item-card" style="border-left:4px solid var(--amber);">
+          <div class="fin-item-top">
+            <div>
+              <div class="fin-item-name">MHJ (M. H. Jawadwala)</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">Mob: +91 9425054543 &bull; Principal</div>
+            </div>
+            <span class="fin-pill pay">Current Liability (Loan Taken)</span>
+          </div>
+          <div class="fin-amount pay">${inr(86000)}</div>
+          <div class="fin-breakdown">
+            <div>&bull; Account: <strong>Loan &amp; Advance Taken</strong></div>
+            <div>&bull; Date: 05-Nov-2026</div>
+            <div>&bull; Status: <strong style="color:var(--amber);">Pending Clearance</strong></div>
+            <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--amber);">
+              Net Liability Payable: ${inr(86000)}
+            </div>
+          </div>
+          <div class="fin-actions">
+            <a href="https://docs.google.com/spreadsheets/d/1YvOEyxX7X0BC1p-1_Q5wIAmI_6DAqKsXmGzIHdymyy0/edit" target="_blank" rel="noopener" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+              ${ICON.doc} <span>Open Google Sheet</span>
+            </a>
+            <a href="https://api.whatsapp.com/send?phone=919425054543" target="_blank" rel="noopener" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+              ${ICON.chat} <span>WhatsApp MHJ</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 3. Hatim Bhai (Adv) -->
+        <div class="fin-item-card" style="border-left:4px solid var(--amber);">
+          <div class="fin-item-top">
+            <div>
+              <div class="fin-item-name">Hatim Bhai (Advocate)</div>
+              <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">Mob: +91 9826768052 &bull; Associate</div>
+            </div>
+            <span class="fin-pill pay">Current Liability (Advance Taken)</span>
+          </div>
+          <div class="fin-amount pay">${inr(5000)}</div>
+          <div class="fin-breakdown">
+            <div>&bull; Account: <strong>Loan &amp; Advance Taken</strong></div>
+            <div>&bull; Date: 05-Nov-2026</div>
+            <div>&bull; Status: <strong style="color:var(--amber);">Pending Clearance</strong></div>
+            <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--amber);">
+              Net Liability Payable: ${inr(5000)}
+            </div>
+          </div>
+          <div class="fin-actions">
+            <a href="https://docs.google.com/spreadsheets/d/1Qx4Q4C2jXVyXHB2Lj2ziPgfLN410EpgpvrIp1sk-4SA/edit" target="_blank" rel="noopener" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+              ${ICON.doc} <span>Open Google Sheet</span>
+            </a>
+            <a href="https://api.whatsapp.com/send?phone=919826768052" target="_blank" rel="noopener" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+              ${ICON.chat} <span>WhatsApp Hatim Bhai</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Bank Settlement Account Section
+  html += `
+    <div class="fin-section-title">
+      <span>Official Settlement Bank Account</span>
+    </div>
+    <div style="background:#FFFFFF; border:1.5px solid var(--rule); border-radius:14px; padding:18px 22px; box-shadow:var(--shadow-sm); margin-bottom:24px;">
+      <div style="font-weight:700; font-size:15px; color:var(--ink); margin-bottom:10px;">slice Small Finance Bank &bull; Koramangala, Bangalore branch</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:13px;">
+        <div><span style="color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase;">Account Holder</span><br><strong>Mustansir Malik</strong></div>
+        <div><span style="color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase;">Account Number</span><br><strong style="font-family:var(--serif); font-size:16px; color:var(--accent);">033311501064738</strong></div>
+        <div><span style="color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase;">IFSC Code</span><br><strong style="font-family:var(--serif); font-size:16px; color:var(--accent);">NESF0000333</strong></div>
+        <div><span style="color:var(--muted); font-size:11px; font-weight:700; text-transform:uppercase;">Customer ID</span><br><strong>380050119119</strong></div>
+      </div>
+    </div>
+  `;
+
+  finContainer.innerHTML = html;
+}
+
 function render(listOnly) {
   const summaryEl = document.getElementById('summaryArea');
   const app = document.getElementById('app');
@@ -1780,6 +2507,53 @@ function render(listOnly) {
       ${creditBalances.map(c => `<div class="credit-line">${c.name.replace('Advance Credit Balance', '').replace(/^[\s—\-–]+|[\s—\-–]+$/g, '') || c.name} — <strong>${inr(c.payable)}</strong> remaining</div>`).join('')}
       <div class="credit-hint">Check before charging again — this may already cover upcoming work.</div>
     </div>` : ''}
+        <div class="loan-banner" style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid #1E3A8A; border-radius:14px; padding:14px 18px; margin-bottom:16px; box-shadow:var(--shadow-xs);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="font-weight:700; font-size:13.5px; color:#1E3A8A; display:flex; align-items:center; gap:7px;">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Active Loans &amp; Advances</span>
+        </div>
+        <button type="button" onclick="switchPage('financials')" style="background:none; border:0; color:var(--accent); font-weight:700; font-size:12.5px; cursor:pointer; text-decoration:underline;">Open Full Financials Page &rarr;</button>
+      </div>
+      <div style="margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px;">
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted);">Advance Given</span>
+            <span style="font-size:11px; font-weight:600; color:var(--red); background:var(--red-soft); border:1px solid var(--red-border); padding:1px 6px; border-radius:4px;">Receivable</span>
+          </div>
+          <div style="font-weight:600; font-size:14px; color:var(--ink); margin-top:2px;">Juzer Presswala</div>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--red); margin:2px 0;">₹1,07,690</div>
+          <div style="font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--rule); padding-top:4px; margin-top:4px;">
+            <span>Mob: 7869282535</span>
+            <a href="https://docs.google.com/spreadsheets/d/122rmY3KXjDTu-ZoyAjtJjzTXH9izDaT_S17YzWVlTaM/edit" target="_blank" rel="noopener" style="color:var(--accent); font-weight:600; text-decoration:none;">Sheet &rarr;</a>
+          </div>
+        </div>
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted);">Advance Taken</span>
+            <span style="font-size:11px; font-weight:600; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; padding:1px 6px; border-radius:4px;">Payable</span>
+          </div>
+          <div style="font-weight:600; font-size:14px; color:var(--ink); margin-top:2px;">MHJ (Pending)</div>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#B45309; margin:2px 0;">₹86,000</div>
+          <div style="font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--rule); padding-top:4px; margin-top:4px;">
+            <span>Mob: 9425054543</span>
+            <a href="https://docs.google.com/spreadsheets/d/1YvOEyxX7X0BC1p-1_Q5wIAmI_6DAqKsXmGzIHdymyy0/edit" target="_blank" rel="noopener" style="color:var(--accent); font-weight:600; text-decoration:none;">Sheet &rarr;</a>
+          </div>
+        </div>
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted);">Advance Taken</span>
+            <span style="font-size:11px; font-weight:600; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; padding:1px 6px; border-radius:4px;">Payable</span>
+          </div>
+          <div style="font-weight:600; font-size:14px; color:var(--ink); margin-top:2px;">Hatim Bhai (Adv)</div>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#B45309; margin:2px 0;">₹5,000</div>
+          <div style="font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--rule); padding-top:4px; margin-top:4px;">
+            <span>Mob: 9826768052</span>
+            <a href="https://docs.google.com/spreadsheets/d/1Qx4Q4C2jXVyXHB2Lj2ziPgfLN410EpgpvrIp1sk-4SA/edit" target="_blank" rel="noopener" style="color:var(--accent); font-weight:600; text-decoration:none;">Sheet &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="filters seg" role="group" aria-label="Show">
       ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
     </div>
@@ -1973,6 +2747,10 @@ function checkAuth() {
     localStorage.setItem(AUTH_KEY, 'yes');
     document.getElementById('authGate').style.display = 'none';
     startDashboard();
+if (location.hash === '#financials') {
+  switchPage('financials');
+}
+
   } else {
     document.getElementById('authError').style.display = 'block';
     input.value = '';
