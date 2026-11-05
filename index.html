@@ -1654,6 +1654,28 @@ function setFilter(f) {
   render();
 }
 
+function setNamazAlarm(name, isoDate) {
+  const dt = new Date(isoDate);
+  const hour = dt.getHours();
+  const minute = dt.getMinutes();
+  const label = name.replace(/^\[PERSONAL\]\s*/i, '').trim();
+  const intentUri = 'intent://alarm#Intent;action=android.intent.action.SET_ALARM;' +
+    'i.android.intent.extra.alarm.HOUR=' + hour + ';' +
+    'i.android.intent.extra.alarm.MINUTES=' + minute + ';' +
+    'S.android.intent.extra.alarm.MESSAGE=' + encodeURIComponent(label) + ';' +
+    'B.android.intent.extra.alarm.VIBRATE=true;end';
+
+  if (/Android/i.test(navigator.userAgent)) {
+    window.location.href = intentUri;
+  } else {
+    const formatted = dt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    showModal('Set Alarm — ' + label, `
+      <div style="font-size:16px; font-weight:600; color:var(--ink); margin-bottom:8px;">${label} is at ${formatted}</div>
+      <div class="hint">On your Android phone, tapping this button automatically opens your Clock app with ${formatted} and "${label}" pre-filled so you just tap Save.<br><br>On this computer, set your alarm manually for <strong>${formatted}</strong>.</div>
+    `, () => {}, 'OK', 'Close');
+  }
+}
+
 function render(listOnly) {
   const summaryEl = document.getElementById('summaryArea');
   const app = document.getElementById('app');
@@ -1774,9 +1796,12 @@ function render(listOnly) {
     // different linked name and the invoice number.
     const renderCard = (t, idx, g) => {
         const isFee = t.type === 'fee';
+        const isNamaz = t.type === 'personal' && /namaz/i.test(t.name);
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
         const taskOverdue = isOverdue(t);
-        const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+        const dueDateLabel = t.dueDate ? (isNamaz
+          ? new Date(t.dueDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
+          : new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })) : '';
         const showLinked = !!t.linked && t.linked.trim().toLowerCase() !== t.name.replace(/^✅\s*/, '').trim().toLowerCase();
         const stateClass = (isFee ? ' fee' : '') + (t.done ? ' done' : (taskOverdue ? ' overdue' : (t.urgent ? ' urgent' : '')));
         const amount = !isFee ? '' : (balance > 0
@@ -1789,7 +1814,8 @@ function render(listOnly) {
           isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
           isFee && balance > 0 && t.phone ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : '',
           isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}')">${ICON.doc}Send receipt</button>` : '',
-          !t.done ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Change' : 'Set'} due date</button>` : '',
+          isNamaz && !t.done && t.dueDate ? `<button type="button" class="act" onclick="setNamazAlarm('${escapeForHtml(t.name)}', '${t.dueDate}')">⏰ Set alarm</button>` : '',
+          !t.done && !isNamaz ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Change' : 'Set'} due date</button>` : '',
           !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Edit' : 'Add'} remark</button>` : ''
         ].join('');
         const meta = (isFee ? '' : status) + actions;   // a fee keeps its status on the detail line; other tasks keep it beside their buttons
