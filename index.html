@@ -695,35 +695,32 @@ const ICON = {
   chev:   '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
 };
 const EXTRA_COLORS = ['#5B6B84', '#9A5B2E', '#2F8F6B', '#A04E9B', '#4D7FB8'];   // sections for client groups added later
+
 // Rupee amounts with Indian digit grouping, e.g. ₹14,50,000
 function inr(n) {
   const v = Math.round((Number(n) || 0) * 100) / 100;
   return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
 }
 
-// ---- Keeping the page short ----
-// Finished tasks and settled fees sit behind a "✓ N completed" bar under each section instead of
-// filling the page, sections can be folded (remembered), search jumps straight to a client, and a
-// round button takes you back to the top. Nothing is removed - it is all one tap away.
 const UI_KEY = 'dash-ui-v1';
-let uiState = { collapsed: {} };   // folded sections - remembered between visits
+let uiState = { collapsed: {} };
 try {
   const saved = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
   if (saved && saved.collapsed && typeof saved.collapsed === 'object') uiState.collapsed = saved.collapsed;
-} catch (e) { /* storage unavailable - sections simply start unfolded */ }
-let doneOpen = {};                 // "completed" bars opened during this visit (not remembered)
+} catch (e) { }
+let doneOpen = {};
 let searchQuery = '';
 let searchTimer = null;
 
 function saveUi() {
-  try { localStorage.setItem(UI_KEY, JSON.stringify(uiState)); } catch (e) { /* ignore */ }
+  try { localStorage.setItem(UI_KEY, JSON.stringify(uiState)); } catch (e) { }
 }
 function toggleGroup(key) {
   const keyboard = document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('cat-heading');
   if (uiState.collapsed[key]) delete uiState.collapsed[key]; else uiState.collapsed[key] = true;
   saveUi();
   render();
-  if (keyboard) { // keep keyboard focus on the same heading after the list is redrawn
+  if (keyboard) {
     const again = [...document.querySelectorAll('.cat-heading[data-key]')].find(el => el.dataset.key === key);
     if (again) again.focus();
   }
@@ -736,7 +733,7 @@ function onSearch(value) {
   searchQuery = value || '';
   document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => render(true), 120);   // list only, so the box keeps focus and the stats don't flicker
+  searchTimer = setTimeout(() => render(true), 120);
 }
 function clearSearch() {
   const box = document.getElementById('searchBox');
@@ -776,7 +773,7 @@ async function deleteFromCalendar(taskId) {
   try {
     const params = new URLSearchParams({ action: 'delete', id: taskId });
     await fetch(url + '?' + params.toString());
-  } catch (e) { /* fire and forget */ }
+  } catch (e) { }
 }
 
 async function pullFromCalendar() {
@@ -829,8 +826,6 @@ async function pullFromCalendar() {
       added++;
     });
 
-    // Remove tasks whose calendar event was deleted directly on Calendar
-    // (only affects tasks that originated from / are linked to a real calendar event)
     const beforeCount = tasks.length;
     tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
     const removed = beforeCount - tasks.length;
@@ -937,7 +932,6 @@ async function loadTasks() {
   const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
   tasks = saved.concat(newFromSeed);
 
-  // Sync critical manual updates directly into local cache
   const jpFee = tasks.find(x => x.id === 'cal_lghida9k5kgvrvqamrebcdv18c' || (x.type === 'fee' && /juzer presswala/i.test(x.name)));
   if (jpFee) {
     jpFee.payable = 107690;
@@ -953,7 +947,6 @@ async function loadTasks() {
     mhjPers.remark = 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet';
   }
 
-  // Ensure monthly recurring salaries are present
   if (!tasks.some(x => /Monthly Salary Receivable/i.test(x.name))) {
     tasks.unshift(seedTasks[4]);
   }
@@ -993,7 +986,7 @@ function closeModal() {
 }
 
 function inputStyle() {
-  return '';   // dialog inputs are styled in the stylesheet (#modalFields)
+  return '';
 }
 
 function fireConfetti() {
@@ -1025,10 +1018,7 @@ function toggleTask(id) {
     toggleOnCalendar(t.id, t.done);
   }
 
-  // When marking a professional (non-fee, non-personal) task complete, ask about fees
   if (t && t.done && t.type === 'professional') {
-    // For client groups billed through one principal contact, default the phone number
-    // so it doesn't need retyping every time - applies to any category other than OWN/MHJ.
     const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052' };
     const defaultPhone = (t.cat && t.cat !== 'OWN' && t.cat !== 'MHJ' && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
     showModal('Fee for "' + t.name + '"?', `
@@ -1062,19 +1052,14 @@ async function toggleOnCalendar(taskId, done) {
   try {
     const params = new URLSearchParams({ action: 'toggle', id: taskId, done: done ? 'true' : 'false' });
     await fetch(url + '?' + params.toString());
-  } catch (e) { /* fire and forget */ }
+  } catch (e) { }
 }
 
-// Draws the invoice as a real PNG image (client-side, via canvas) so it can be shared as an
-// actual attachment through the phone's native Share sheet — a plain link can never be
-// auto-attached to a WhatsApp message, only text can. Returns a Blob, or null on failure.
 async function generateInvoiceImage(data) {
   try {
     const W = 900;
-    // Height depends on how many optional line items actually appear (received/discount) -
-    // computed up front so the image is sized to its real content, not padded with blank space.
-    let bodyY = 466; // first "Professional Fees" row baseline
-    bodyY += 80; // its divider + gap
+    let bodyY = 466;
+    bodyY += 80;
     if (data.received > 0) bodyY += 80;
     if (data.discount > 0) bodyY += 80;
     const balanceDueY = bodyY + 10;
@@ -1087,8 +1072,6 @@ async function generateInvoiceImage(data) {
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // Make sure the webfonts are actually loaded before drawing text with them, so canvas
-    // doesn't silently fall back to the default sans-serif for the whole image.
     try {
       await Promise.all([
         document.fonts.load('800 40px "Baloo 2"'),
@@ -1098,7 +1081,7 @@ async function generateInvoiceImage(data) {
         document.fonts.load('700 20px "Karla"'),
         document.fonts.load('600 24px "IBM Plex Mono"')
       ]);
-    } catch (e) { /* draw with fallback fonts below if webfonts aren't ready in time */ }
+    } catch (e) { }
 
     const BALOO = "'Baloo 2', sans-serif", KARLA = "'Karla', sans-serif", MONO = "'IBM Plex Mono', monospace";
     const INK = '#22252B', INK_SOFT = '#8A8A85', LINE = '#ECEAE3';
@@ -1127,11 +1110,9 @@ async function generateInvoiceImage(data) {
       return yy;
     }
 
-    // Background
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, W, H);
 
-    // Header band
     const grad = ctx.createLinearGradient(0, 0, W, 220);
     grad.addColorStop(0, CORAL);
     grad.addColorStop(1, VIOLET);
@@ -1160,7 +1141,6 @@ async function generateInvoiceImage(data) {
     ctx.fillText(data.date, W - 46, 138);
     ctx.globalAlpha = 1;
 
-    // Status badge
     const settled = data.balance <= 0;
     const badgeText = settled ? 'PAID' : 'PENDING';
     ctx.font = `700 22px ${BALOO}`;
@@ -1173,7 +1153,6 @@ async function generateInvoiceImage(data) {
     ctx.textAlign = 'center';
     ctx.fillText(badgeText, W / 2, badgeY + 30);
 
-    // Billed To / For
     let y = 320;
     ctx.textAlign = 'left';
     ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
@@ -1186,7 +1165,6 @@ async function generateInvoiceImage(data) {
     ctx.fillStyle = INK; ctx.font = `700 20px ${BALOO}`;
     wrapText(data.desc, W / 2 + 20, y + 30, W / 2 - 66, 26);
 
-    // Table
     y += 100;
     hLine(y);
     ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
@@ -1221,7 +1199,6 @@ async function generateInvoiceImage(data) {
     ctx.textAlign = 'right'; ctx.fillStyle = settled ? TEAL : CORAL; ctx.font = `800 34px ${MONO}`;
     ctx.fillText(fmt(Math.max(data.balance, 0)), W - 46, y);
 
-    // Bank Details Section
     ctx.fillStyle = '#F8FAFC';
     roundRect(46, bankSectionY, W - 92, bankSectionH, 12);
     ctx.fill();
@@ -1230,7 +1207,6 @@ async function generateInvoiceImage(data) {
     roundRect(46, bankSectionY, W - 92, bankSectionH, 12);
     ctx.stroke();
 
-    // Header banner inside bank box
     ctx.fillStyle = '#EEF2F6';
     if (ctx.roundRect) {
       ctx.beginPath();
@@ -1244,7 +1220,6 @@ async function generateInvoiceImage(data) {
     ctx.textAlign = 'left';
     ctx.fillText('DIRECT BANK TRANSFER DETAILS (NEFT / RTGS / IMPS)', 66, bankSectionY + 22);
 
-    // Row 1
     const r1Y = bankSectionY + 62;
     ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
     ctx.fillText('ACCOUNT HOLDER', 66, r1Y);
@@ -1261,7 +1236,6 @@ async function generateInvoiceImage(data) {
     ctx.fillStyle = INK; ctx.font = `700 15px ${BALOO}`;
     ctx.fillText('slice Small Finance Bank', 620, r1Y + 20);
 
-    // Row 2
     const r2Y = r1Y + 48;
     ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
     ctx.fillText('ACCOUNT NUMBER', 66, r2Y);
@@ -1278,7 +1252,6 @@ async function generateInvoiceImage(data) {
     ctx.fillStyle = INK; ctx.font = `600 13px ${KARLA}`;
     ctx.fillText('Koramangala, Bangalore branch', 620, r2Y + 20);
 
-    // Footer
     y = footerTop;
     ctx.strokeStyle = LINE; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
     ctx.beginPath(); ctx.moveTo(46, y); ctx.lineTo(W - 46, y); ctx.stroke();
@@ -1292,7 +1265,7 @@ async function generateInvoiceImage(data) {
 
     return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png', 0.95));
   } catch (e) {
-    return null; // the image is a bonus on top of the link-based reminder — never throw from here
+    return null;
   }
 }
 
@@ -1303,7 +1276,6 @@ async function sendWhatsAppReminder(taskId, balance) {
   if (phone.length === 10) phone = '91' + phone;
   const clientName = t.linked || t.name;
 
-  // Open the window immediately (synchronously, within the click) so browsers don't block it as a popup
   const newWin = window.open('', '_blank');
   if (newWin) newWin.document.write('<body style="font-family:sans-serif; padding:40px; text-align:center; color:#666;">Generating your payment link and invoice — this can take a few seconds...</body>');
 
@@ -1314,12 +1286,12 @@ async function sendWhatsAppReminder(taskId, balance) {
   try {
     const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName, id: taskId });
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // generous 25s - this call chains two external APIs
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
     const res = await fetch(url + '?' + params.toString(), { signal: controller.signal });
     clearTimeout(timeoutId);
     const data = await res.json();
     if (data.status === 'ok' && data.shortUrl) {
-      payUrl = data.shortUrl; // real link already has the exact amount, no need to ask them to type it
+      payUrl = data.shortUrl;
     } else {
       diagnosticNote = 'Server said: ' + (data.message || JSON.stringify(data));
     }
@@ -1333,18 +1305,13 @@ async function sendWhatsAppReminder(taskId, balance) {
       const res2 = await fetch(url + '?action=fallbacklink');
       const data2 = await res2.json();
       if (data2.status === 'ok' && data2.shortUrl) payUrl = data2.shortUrl;
-    } catch (e) { /* absolute last resort below */ }
+    } catch (e) { }
   }
 
   if (!payUrl) {
-    // Straight to Razorpay's own page, no go.html hop - that page showed a visible
-    // "Redirecting..." step before forwarding, an extra page/domain flash on every click.
     payUrl = 'https://razorpay.me/@mustansirmalik';
   }
 
-  // Auto-generate (or reuse, if this fee was already invoiced before) an invoice to send alongside the reminder.
-  // The server splits the raw title into a client name ("Billed To") and a work description
-  // ("For") itself - see splitClientWork() in Apps Script - so it sends both back split.
   let invoiceUrl = null;
   let invoiceNumber = null;
   let invoiceClient = clientName;
@@ -1368,13 +1335,8 @@ async function sendWhatsAppReminder(taskId, balance) {
       if (invData.date) invoiceDate = invData.date;
       if (t.invoice !== invoiceNumber) { t.invoice = invoiceNumber; saveTasks(); render(); }
     }
-  } catch (e) { /* invoice is a nice-to-have on top of the reminder — never block sending it */ }
+  } catch (e) { }
 
-  // Draw the invoice as a real image so it can be shared as an actual WhatsApp attachment
-  // (a click-to-chat link can only ever pre-fill text, never a file — this is the only way).
-  // Uses the server's persisted invoice date (same one shown on the hosted invoice page)
-  // rather than today's date, so re-sending a reminder for an old invoice doesn't show two
-  // different dates for the same invoice number across the image and the web page.
   let invoiceFile = null;
   if (invoiceNumber) {
     const invBlob = await generateInvoiceImage({
@@ -1386,21 +1348,9 @@ async function sendWhatsAppReminder(taskId, balance) {
   let canShareFile = false;
   try { canShareFile = !!(invoiceFile && navigator.canShare && navigator.canShare({ files: [invoiceFile] })); } catch (e) { canShareFile = false; }
 
-  // Length was never actually the problem - two real screenshots proved that (a shorter message
-  // cut off *earlier* than a longer one, which a length limit could never do). The real causes
-  // were a literal "&" in the decoded text and a full URL embedded inside another URL's query
-  // string, both now fixed at the source (the invoice link itself has neither). So back to the
-  // full original message with both the invoice link and the payment link shown, plus the
-  // original greeting and signature. ".replace(/&/g, 'and')" stays on as a safety net - the
-  // signature has one ("Tax & Accounts Consultant") and a client name could too.
   const invoiceLine = invoiceUrl ? `\n\n📄 *Invoice ${invoiceNumber}:*\n${invoiceUrl}` : '';
   const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
-  // api.whatsapp.com (canonical) instead of the wa.me shortener - wa.me has a stronger OS-level
-  // preference toward the standard WhatsApp package and doesn't always fall back to Business cleanly
-  // even when only Business is installed.
   const waUrl = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(message);
-  // Explicitly target WhatsApp Business's exact app package, bypassing Android's generic link
-  // resolution (which seems to have a stale preference toward regular WhatsApp on this device)
   const waBusinessIntent = 'intent://send?phone=' + phone + '&text=' + encodeURIComponent(message) +
     '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
 
@@ -1428,7 +1378,7 @@ async function sendWhatsAppReminder(taskId, balance) {
       const shareBtn = newWin.document.getElementById('shareInvoiceBtn');
       if (shareBtn) {
         shareBtn.addEventListener('click', () => {
-          newWin.navigator.share({ files: [invoiceFile], text: message }).catch(() => { /* user cancelled the share sheet - the fallback buttons below still work */ });
+          newWin.navigator.share({ files: [invoiceFile], text: message }).catch(() => { });
         });
       }
     }
@@ -1452,7 +1402,6 @@ function onCategoryChange() {
       if (!raw) { select.value = 'PERSONAL'; return; }
       const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       if (!tag) { select.value = 'PERSONAL'; return; }
-      // avoid duplicating an existing option
       let exists = false;
       for (const opt of select.options) { if (opt.value === tag) { exists = true; break; } }
       if (!exists) {
@@ -1464,7 +1413,7 @@ function onCategoryChange() {
       select.value = tag;
       toggleFeeFields();
     }, 'Create', 'Cancel');
-    select.value = 'PERSONAL'; // revert selection until they confirm in the modal
+    select.value = 'PERSONAL';
   } else {
     toggleFeeFields();
   }
@@ -1515,10 +1464,9 @@ function addTask() {
   render();
   pushToCalendar(name, catVal, dueDateVal).then(calId => {
     if (calId) {
-      task.id = calId; // replace temp id with real calendar id for future delete/toggle
+      task.id = calId;
       saveTasks();
       if (task.done) {
-        // task was marked done while the calendar event was still being created — sync it now
         toggleOnCalendar(task.id, task.done);
       }
     }
@@ -1554,7 +1502,7 @@ function setRemark(id) {
     if (t.id.startsWith('cal_')) {
       const url = getWebhook();
       const params = new URLSearchParams({ action: 'setremark', id: t.id, remark: val });
-      try { await fetch(url + '?' + params.toString()); } catch (e) { /* fire and forget */ }
+      try { await fetch(url + '?' + params.toString()); } catch (e) { }
     }
   }, 'Save', 'Cancel');
 }
@@ -1575,7 +1523,7 @@ function setDueDate(id) {
     if (t.id.startsWith('cal_')) {
       const url = getWebhook();
       const params = new URLSearchParams({ action: 'setduedate', id: t.id, dueDate: val });
-      try { await fetch(url + '?' + params.toString()); } catch (e) { /* fire and forget */ }
+      try { await fetch(url + '?' + params.toString()); } catch (e) { }
     }
   });
 }
@@ -1597,7 +1545,7 @@ function recordPayment(id) {
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
-    const wantReceipt = document.getElementById('modalSendReceipt').checked; // read now - the receipt box below reuses this modal
+    const wantReceipt = document.getElementById('modalSendReceipt').checked;
     if (isNaN(amount)) return;
     const prevReceived = Number(t.received) || 0;
     t.received = amount;
@@ -1608,19 +1556,12 @@ function recordPayment(id) {
     if (t.id.startsWith('cal_')) {
       updateFeeOnCalendar(t.id, amount, discount);
     }
-    // Ticked and something has been received - offer the receipt. A new payment gets a receipt for
-    // that payment; saving with no new money (same total again, a correction, a discount) gets one
-    // for the total received so far, so a ticked box never just does nothing.
-    // showModal() calls closeModal() right after this callback returns, which would instantly
-    // hide a modal opened from in here, so the receipt prompt opens on the next tick instead.
     const paidNow = Math.round((amount - prevReceived) * 100) / 100;
     if (wantReceipt && amount > 0 && !t.name.includes('Advance Credit Balance')) {
       setTimeout(() => offerReceipt(t.id, paidNow > 0 ? paidNow : 0, true), 0);
     }
   });
 
-  // Small live line under the tick-box saying exactly what will be offered, so it is clear
-  // before pressing Save (and clear why when no new payment has been typed in).
   const amtEl = document.getElementById('modalReceivedAmt');
   const boxEl = document.getElementById('modalSendReceipt');
   const hintEl = document.getElementById('modalReceiptHint');
@@ -1638,10 +1579,6 @@ function recordPayment(id) {
   updateReceiptHint();
 }
 
-// ---- One-tap WhatsApp payment receipt ----
-// A normal WhatsApp number can't send messages by itself - a click-to-chat link can only pre-fill
-// one - so the final tap on Send is always yours. Everything before it is ready: the message is
-// written, the client's chat is open, and the invoice link is in it.
 const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
 
 function moneyText(n) {
@@ -1652,8 +1589,6 @@ function escapeForHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// paidNow = the payment just recorded. Left out when re-sending a receipt later, in which
-// case the message states the total received so far instead.
 function buildReceiptMessage(t, paidNow) {
   const label = t.linked || t.name;
   const payable = Number(t.payable) || 0;
@@ -1666,16 +1601,11 @@ function buildReceiptMessage(t, paidNow) {
   let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${moneyText(amount)}`;
   if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
   if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${moneyText(balance)}` : `\n✅ *Status:* Fully settled`;
-  // Only the invoice NUMBER goes in the link, same as the fee reminder - invoice.html looks the
-  // rest up itself, and shows PAID / the updated balance as of the moment the client opens it.
   if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
   msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
-  // Same safety net as the fee reminder: a literal "&" anywhere in a pre-filled WhatsApp text can
-  // cut off everything after it, and the signature above (or a client's name) can contain one.
   return msg.replace(/&/g, 'and');
 }
 
-// ---- Category phone mapping & persistence ----
 const CAT_PHONES_KEY = 'dash-cat-phones-v1';
 const DEFAULT_CATEGORY_PHONES = {
   SHK: '9425320184',
@@ -1724,7 +1654,6 @@ function getCatDisplayName(k) {
   return map[k] || k.replace(/_/g, ' ');
 }
 
-// Separate function so the actual hand-off to the phone's WhatsApp app is one replaceable line.
 function launchWhatsApp(url) {
   window.location.href = url;
 }
@@ -1805,8 +1734,6 @@ function onReceiptCatPhoneInput(taskId) {
   if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
 }
 
-// afterSave = opened straight after Record payment (so the first line can say what was saved);
-// the card's "Send receipt" link leaves it out.
 function offerReceipt(taskId, paidNow, afterSave) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
@@ -1817,7 +1744,6 @@ function offerReceipt(taskId, paidNow, afterSave) {
   const detectedCat = detectFeeCategory(t);
   const catPhones = getCategoryPhones();
 
-  const knownCats = ['SHK', 'MHJ', 'OWN'];
   const extraCats = [...new Set(tasks.filter(x => x.type === 'professional' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(x.cat)).map(x => x.cat))];
   const allCatKeys = [...new Set(['SHK', 'MHJ', 'OWN', ...extraCats])];
   let currentCatKey = detectedCat || 'SHK';
@@ -1888,7 +1814,7 @@ async function updateFeeOnCalendar(taskId, received, discount) {
   try {
     const params = new URLSearchParams({ action: 'updatefee', id: taskId, received, discount: discount || 0 });
     await fetch(url + '?' + params.toString());
-  } catch (e) { /* fire and forget */ }
+  } catch (e) { }
 }
 
 function deleteTask(id) {
@@ -1923,7 +1849,6 @@ function openClockApp() {
     alert('Please open your Clock app on this device to set your alarm.');
     return;
   }
-  // Launch Google Clock, with fallback to Samsung Clock or generic alarm viewer
   const clockIntent = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.google.android.deskclock;S.browser_fallback_url=intent%3A%23Intent%3Baction%3Dandroid.intent.action.MAIN%3Bcategory%3Dandroid.intent.category.LAUNCHER%3Bpackage%3Dcom.sec.android.app.clockpackage%3Bend;end';
   window.location.href = clockIntent;
 }
@@ -1961,7 +1886,6 @@ function setNamazAlarm(name, isoDate) {
   showModal('Namaz Alarm &bull; ' + label, modalHtml, () => {}, 'Done', 'Close');
 }
 
-// ---- Multi-Page Navigation: Tasks vs Dedicated Financials Page ----
 let activePage = (location.hash === '#financials') ? 'financials' : 'tasks';
 
 function switchPage(page) {
@@ -1991,7 +1915,184 @@ function switchPage(page) {
   }
 }
 
-let finViewMode = 'all'; // 'all', 'pl', 'bs', 'portfolio'
+function clearSalaryReceivable(entity, defaultAmount) {
+  const currentMonth = new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  const isMHJ = /mhj/i.test(entity);
+  const title = isMHJ ? 'Clear Monthly Salary — MHJ' : 'Clear Salary — Hakimi Vihar Society';
+
+  showModal(title, `
+    <div class="hint">Record receipt / settlement of ${isMHJ ? 'MHJ' : 'Hakimi Vihar'} salary for ${currentMonth}.</div>
+    <label>Amount Received (₹)</label>
+    <input type="number" id="modalSalaryAmt" value="${defaultAmount}">
+    <label>Date Received</label>
+    <input type="date" id="modalSalaryDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Payment Mode / Account</label>
+    <select id="modalSalaryMode">
+      <option value="Bank Transfer">Bank Transfer (slice Small Finance Bank)</option>
+      <option value="Cash">Cash in hand</option>
+      <option value="Cheque">Cheque</option>
+    </select>
+  `, () => {
+    const amt = parseFloat(document.getElementById('modalSalaryAmt').value) || defaultAmount;
+    const dateVal = document.getElementById('modalSalaryDate').value || new Date().toISOString().slice(0, 10);
+    const mode = document.getElementById('modalSalaryMode').value;
+
+    if (isMHJ) {
+      const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+      if (mhjTask) {
+        mhjTask.done = true;
+        mhjTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
+        if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
+      }
+    } else {
+      const hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+      if (hvTask) {
+        hvTask.done = true;
+        hvTask.received = amt;
+        hvTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
+        if (hvTask.id.startsWith('cal_')) updateFeeOnCalendar(hvTask.id, amt, 0);
+      }
+    }
+
+    saveTasks();
+    render();
+    if (activePage === 'financials') renderFinancialsPage();
+    fireConfetti();
+  }, 'Clear & Settle', 'Cancel');
+}
+
+function reopenSalaryReceivable(entity) {
+  const isMHJ = /mhj/i.test(entity);
+  if (isMHJ) {
+    const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+    if (mhjTask) {
+      mhjTask.done = false;
+      mhjTask.remark = 'Reopened pending clearance';
+      if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, false);
+    }
+  } else {
+    const hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+    if (hvTask) {
+      hvTask.done = false;
+      hvTask.received = 0;
+      hvTask.remark = 'Reopened pending clearance';
+      if (hvTask.id.startsWith('cal_')) updateFeeOnCalendar(hvTask.id, 0, 0);
+    }
+  }
+  saveTasks();
+  render();
+  if (activePage === 'financials') renderFinancialsPage();
+}
+
+// ---- Loan & Advance Contra / Cross Adjustments ----
+const LOAN_ADJUST_LOG_KEY = 'dash-loan-adjustments-v1';
+
+function getLoanAdjustments() {
+  try {
+    return JSON.parse(localStorage.getItem(LOAN_ADJUST_LOG_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveLoanAdjustmentRecord(rec) {
+  try {
+    const list = getLoanAdjustments();
+    list.unshift(rec);
+    localStorage.setItem(LOAN_ADJUST_LOG_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+
+function openLoanAdjustmentModal(presetTarget) {
+  const adjustments = getLoanAdjustments();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const modalHtml = `
+    <div class="hint">Offset or cross-adjust loans taken/given against fees, salaries, or direct cash/contra settlement.</div>
+    
+    <label>Select Loan Account to Adjust</label>
+    <select id="modalAdjAccount" style="width:100%; height:40px; margin-bottom:12px; border:1px solid var(--field); border-radius:8px; padding:0 10px; font-weight:600;">
+      <option value="JUZER" ${presetTarget === 'JUZER' ? 'selected' : ''}>Juzer Presswala (Given: ₹1,07,690 Receivable)</option>
+      <option value="MHJ" ${presetTarget === 'MHJ' ? 'selected' : ''}>MHJ (Taken: ₹86,000 Payable)</option>
+      <option value="HATIM" ${presetTarget === 'HATIM' ? 'selected' : ''}>Hatim Bhai Adv (Taken: ₹5,000 Payable)</option>
+    </select>
+
+    <label>Adjustment Type / Offset Against</label>
+    <select id="modalAdjType" style="width:100%; height:40px; margin-bottom:12px; border:1px solid var(--field); border-radius:8px; padding:0 10px;">
+      <option value="CONTRA_SALARY">Offset against MHJ Monthly Salary</option>
+      <option value="CONTRA_FEES">Offset against Client Fees / Billings</option>
+      <option value="DIRECT_CASH">Direct Cash / Bank Settlement</option>
+      <option value="MUTUAL_SETTLE">Mutual Ledger Set-off (Contra Entry)</option>
+    </select>
+
+    <label>Adjustment Amount (₹)</label>
+    <input type="number" id="modalAdjAmount" placeholder="e.g. 24000" style="width:100%; height:40px; margin-bottom:12px; border:1px solid var(--field); border-radius:8px; padding:0 10px; font-size:15px; font-weight:600;">
+
+    <label>Adjustment Date</label>
+    <input type="date" id="modalAdjDate" value="${today}" style="width:100%; height:40px; margin-bottom:12px; border:1px solid var(--field); border-radius:8px; padding:0 10px;">
+
+    <label>Particulars / Narration</label>
+    <input type="text" id="modalAdjRemark" placeholder="e.g. Set off against November salary" style="width:100%; height:40px; margin-bottom:6px; border:1px solid var(--field); border-radius:8px; padding:0 10px;">
+  `;
+
+  showModal('Adjust Loans & Advances', modalHtml, () => {
+    const acc = document.getElementById('modalAdjAccount').value;
+    const type = document.getElementById('modalAdjType').value;
+    const amt = parseFloat(document.getElementById('modalAdjAmount').value) || 0;
+    const date = document.getElementById('modalAdjDate').value || today;
+    const remark = (document.getElementById('modalAdjRemark').value || '').trim();
+
+    if (amt <= 0) return;
+
+    let targetTitle = '';
+    if (acc === 'JUZER') {
+      targetTitle = 'Juzer Presswala';
+      const jpFee = tasks.find(x => x.id === 'cal_lghida9k5kgvrvqamrebcdv18c' || (x.type === 'fee' && /juzer presswala/i.test(x.name)));
+      if (jpFee) {
+        jpFee.received = (Number(jpFee.received) || 0) + amt;
+        jpFee.remark = (jpFee.remark ? jpFee.remark + ' | ' : '') + 'Adjusted ₹' + amt.toLocaleString('en-IN') + ' on ' + date + (remark ? ' (' + remark + ')' : '');
+        if (jpFee.id.startsWith('cal_')) updateFeeOnCalendar(jpFee.id, jpFee.received, jpFee.discount || 0);
+      }
+    } else if (acc === 'MHJ') {
+      targetTitle = 'MHJ Loan Taken';
+      const mhjPers = tasks.find(x => x.id === 'cal_ed85ko32qqb708i2pvumghm51c' || (x.type === 'personal' && /MHJ/i.test(x.name)));
+      if (mhjPers) {
+        mhjPers.remark = (mhjPers.remark ? mhjPers.remark + ' | ' : '') + 'Adjusted ₹' + amt.toLocaleString('en-IN') + ' on ' + date + (remark ? ' (' + remark + ')' : '');
+        if (type === 'CONTRA_SALARY') {
+          const mhjSal = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+          if (mhjSal) {
+            mhjSal.done = true;
+            mhjSal.remark = 'Adjusted against MHJ Loan Taken on ' + date;
+            if (mhjSal.id.startsWith('cal_')) toggleOnCalendar(mhjSal.id, true);
+          }
+        }
+      }
+    } else if (acc === 'HATIM') {
+      targetTitle = 'Hatim Bhai Adv';
+      const hatimPers = tasks.find(x => x.id === 'cal_lnlsp24mf0ismnsd9qt95eo7pc' || (x.type === 'personal' && /Hatim/i.test(x.name)));
+      if (hatimPers) {
+        hatimPers.remark = (hatimPers.remark ? hatimPers.remark + ' | ' : '') + 'Adjusted ₹' + amt.toLocaleString('en-IN') + ' on ' + date + (remark ? ' (' + remark + ')' : '');
+      }
+    }
+
+    saveLoanAdjustmentRecord({
+      id: 'adj_' + Date.now(),
+      account: acc,
+      targetTitle,
+      type,
+      amount: amt,
+      date,
+      remark: remark || 'Ledger contra set-off'
+    });
+
+    saveTasks();
+    render();
+    if (activePage === 'financials') renderFinancialsPage();
+    fireConfetti();
+  }, 'Confirm Adjustment', 'Cancel');
+}
+
+let finViewMode = 'all'; // 'all', 'salaries', 'adjust', 'pl', 'bs', 'portfolio'
 
 function setFinViewMode(mode) {
   finViewMode = mode;
@@ -2009,18 +2110,35 @@ function renderFinancialsPage() {
   const totalDiscountAllowed = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
   const totalDebtorsReceivable = totalGrossFeesBilled - totalFeesReceivedCash - totalDiscountAllowed;
 
-  // Monthly Recurring Salaries (Due on 1st of every month)
+  // Monthly Recurring Salaries (Dynamic status & clearance)
+  const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+  const mhjCleared = mhjTask ? mhjTask.done : false;
+  const salaryMHJDues = mhjCleared ? 0 : 24000;
+  const salaryMHJReceived = mhjCleared ? 24000 : 0;
+
+  const hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+  const hvCleared = hvTask ? hvTask.done : false;
+  const salaryHVDues = hvCleared ? 0 : 4000;
+  const salaryHVReceived = hvCleared ? 4000 : 0;
+
   const salaryMHJ = 24000;
   const salaryHakimi = 4000;
-  const totalMonthlySalaryReceivable = salaryMHJ + salaryHakimi; // 28,000
 
-  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + totalMonthlySalaryReceivable;
+  const totalMonthlySalaryReceivable = salaryMHJDues + salaryHVDues;
+  const totalMonthlySalaryReceived = salaryMHJReceived + salaryHVReceived;
 
-  // Loans & Advances
-  const loanGivenJuzer = 107690; // Asset / Current Asset / Loans & Advances Given
-  const loanTakenMHJ = 86000;    // Liability / Current Liability / Loan from Principal
-  const loanTakenHatim = 5000;   // Liability / Current Liability / Advance from Associate
-  const totalLoansTaken = loanTakenMHJ + loanTakenHatim; // 91,000
+  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + (salaryMHJ + salaryHakimi);
+
+  // Dynamic loan balances considering adjustments
+  const adjustments = getLoanAdjustments();
+  const juzerAdjusted = adjustments.filter(a => a.account === 'JUZER').reduce((s, a) => s + a.amount, 0);
+  const mhjAdjusted = adjustments.filter(a => a.account === 'MHJ').reduce((s, a) => s + a.amount, 0);
+  const hatimAdjusted = adjustments.filter(a => a.account === 'HATIM').reduce((s, a) => s + a.amount, 0);
+
+  const loanGivenJuzer = Math.max(107690 - juzerAdjusted, 0);
+  const loanTakenMHJ = Math.max(86000 - mhjAdjusted, 0);
+  const loanTakenHatim = Math.max(5000 - hatimAdjusted, 0);
+  const totalLoansTaken = loanTakenMHJ + loanTakenHatim;
 
   // Balance sheet metrics
   const totalCurrentAssets = totalDebtorsReceivable + totalMonthlySalaryReceivable + loanGivenJuzer + totalFeesReceivedCash;
@@ -2036,13 +2154,20 @@ function renderFinancialsPage() {
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
       <div class="fin-mode-toggle" role="tablist">
         <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Financial Suite</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Loans &amp; Advances</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'salaries' ? 'active' : ''}" onclick="setFinViewMode('salaries')">Clear Salary Dues</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'portfolio' ? 'active' : ''}" onclick="setFinViewMode('portfolio')">Loans &amp; Advances</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'portfolio' ? 'active' : ''}" onclick="setFinViewMode('portfolio')">Loans Portfolio</button>
       </div>
-      <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px;" onclick="window.print()">
-        ${ICON.doc} <span>Print Statements</span>
-      </button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-primary" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="openLoanAdjustmentModal()">
+          <span>+ New Loan Adjustment</span>
+        </button>
+        <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px;" onclick="window.print()">
+          ${ICON.doc} <span>Print</span>
+        </button>
+      </div>
     </div>
 
     <!-- Executive KPI Grid -->
@@ -2058,17 +2183,128 @@ function renderFinancialsPage() {
         <div class="f-sub">${inr(totalFeesReceivedCash)} realized in cash</div>
       </div>
       <div class="fin-card receivable">
-        <div class="f-lbl">Loans &amp; Advances (Asset)</div>
+        <div class="f-lbl">Loans Given (Net Receivable)</div>
         <div class="f-val">${inr(loanGivenJuzer)}</div>
-        <div class="f-sub">Juzer Presswala &bull; Medical &amp; Cash</div>
+        <div class="f-sub">Juzer Presswala ${juzerAdjusted > 0 ? `(&minus;${inr(juzerAdjusted)} adj)` : ''}</div>
       </div>
       <div class="fin-card payable">
-        <div class="f-lbl">Current Liabilities (Loans Taken)</div>
+        <div class="f-lbl">Loans Taken (Net Payable)</div>
         <div class="f-val">${inr(totalLoansTaken)}</div>
-        <div class="f-sub">MHJ (${inr(86000)}) + Hatim Bhai (${inr(5000)})</div>
+        <div class="f-sub">MHJ (${inr(loanTakenMHJ)}) + Hatim (${inr(loanTakenHatim)})</div>
       </div>
     </div>
   `;
+
+  // === 0A. LOANS & ADVANCES ADJUSTMENT CONSOLE ===
+  if (finViewMode === 'all' || finViewMode === 'adjust') {
+    html += `
+      <div class="statement-sheet" style="border-left:4px solid #7C3AED; margin-bottom:24px;">
+        <div class="statement-header" style="background:linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%);">
+          <div>
+            <h3>⚖️ Loans &amp; Advances Adjustment &amp; Contra Console</h3>
+            <div class="stmt-sub">Cross-adjust, set off against salary or fees, and record mutual settlements</div>
+          </div>
+          <button type="button" class="btn" style="background:#FFFFFF; color:#6D28D9; height:34px; font-size:12px; font-weight:700; padding:0 14px; border:0;" onclick="openLoanAdjustmentModal()">
+            + Record Adjustment
+          </button>
+        </div>
+        <div class="statement-body">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:20px;">
+            <!-- Adjust Juzer Card -->
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:700; font-size:14.5px; color:var(--ink);">Juzer Presswala</div>
+                  <div style="font-size:12px; color:var(--muted);">Advance Given (Asset)</div>
+                </div>
+                <span class="fin-pill rec">Receivable</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--red); margin:8px 0 2px;">
+                ${inr(loanGivenJuzer)}
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-bottom:12px;">
+                Gross: ${inr(107690)} ${juzerAdjusted > 0 ? `&bull; Adjusted: ${inr(juzerAdjusted)}` : ''}
+              </div>
+              <button type="button" class="btn btn-quiet" style="width:100%; height:36px; font-size:12.5px; font-weight:600;" onclick="openLoanAdjustmentModal('JUZER')">
+                Adjust Against Fees / Cash &rarr;
+              </button>
+            </div>
+
+            <!-- Adjust MHJ Card -->
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:700; font-size:14.5px; color:var(--ink);">MHJ (Principal)</div>
+                  <div style="font-size:12px; color:var(--muted);">Loan Taken (Liability)</div>
+                </div>
+                <span class="fin-pill pay">Payable</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--amber); margin:8px 0 2px;">
+                ${inr(loanTakenMHJ)}
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-bottom:12px;">
+                Gross: ${inr(86000)} ${mhjAdjusted > 0 ? `&bull; Set off: ${inr(mhjAdjusted)}` : ''}
+              </div>
+              <button type="button" class="btn btn-quiet" style="width:100%; height:36px; font-size:12.5px; font-weight:600;" onclick="openLoanAdjustmentModal('MHJ')">
+                Offset Against Salary / Contra &rarr;
+              </button>
+            </div>
+
+            <!-- Adjust Hatim Card -->
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:700; font-size:14.5px; color:var(--ink);">Hatim Bhai (Adv)</div>
+                  <div style="font-size:12px; color:var(--muted);">Advance Taken (Liability)</div>
+                </div>
+                <span class="fin-pill pay">Payable</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--amber); margin:8px 0 2px;">
+                ${inr(loanTakenHatim)}
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-bottom:12px;">
+                Gross: ${inr(5000)} ${hatimAdjusted > 0 ? `&bull; Set off: ${inr(hatimAdjusted)}` : ''}
+              </div>
+              <button type="button" class="btn btn-quiet" style="width:100%; height:36px; font-size:12.5px; font-weight:600;" onclick="openLoanAdjustmentModal('HATIM')">
+                Set off / Settle Advance &rarr;
+              </button>
+            </div>
+          </div>
+
+          <!-- Audit Log of Adjustments -->
+          <div style="border-top:1px solid var(--rule); padding-top:16px;">
+            <div style="font-weight:700; font-size:13.5px; color:var(--ink); margin-bottom:10px;">Recent Adjustments &amp; Set-off Entries</div>
+            ${adjustments.length === 0 ? `
+              <div style="font-size:13px; color:var(--muted); font-style:italic; padding:8px 0;">No contra or loan adjustments recorded yet. Tap "+ Record Adjustment" above to log a set-off.</div>
+            ` : `
+              <table class="stmt-table" style="font-size:12.5px;">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Account Adjusted</th>
+                    <th>Offset Type</th>
+                    <th>Narration</th>
+                    <th class="text-right">Amount Adjusted</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${adjustments.map(a => `
+                    <tr>
+                      <td style="white-space:nowrap; color:var(--muted);">${a.date}</td>
+                      <td><strong>${escapeForHtml(a.targetTitle)}</strong></td>
+                      <td><span class="stmt-badge" style="background:#F1F5F9; color:#475569; border:1px solid var(--rule);">${escapeForHtml(a.type.replace(/_/g, ' '))}</span></td>
+                      <td>${escapeForHtml(a.remark)}</td>
+                      <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">&minus; ${inr(a.amount)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `}
+          </div>
+        </div>
+      </div>
+    `;
+  }
 
   // === 1. PROFIT & LOSS STATEMENT ===
   if (finViewMode === 'all' || finViewMode === 'pl') {
@@ -2091,7 +2327,6 @@ function renderFinancialsPage() {
               </tr>
             </thead>
             <tbody>
-              <!-- Income Section -->
               <tr class="section-row">
                 <td colspan="3">A. Professional Revenue &amp; Retainerships</td>
               </tr>
@@ -2121,7 +2356,6 @@ function renderFinancialsPage() {
                 <td class="text-right stmt-mono" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</td>
               </tr>
 
-              <!-- Expenditure Section -->
               <tr class="section-row">
                 <td colspan="3">B. Direct Expenses &amp; Disallowances</td>
               </tr>
@@ -2141,14 +2375,12 @@ function renderFinancialsPage() {
                 <td class="text-right stmt-mono">₹0</td>
               </tr>
 
-              <!-- Net Profit -->
               <tr class="grand-row">
                 <td><strong style="color:var(--accent);">NET PROFESSIONAL PROFIT (A &minus; B)</strong></td>
                 <td></td>
                 <td class="text-right stmt-mono" style="color:var(--green); font-size:17px;">${inr(netFeeRevenueAccrued)}</td>
               </tr>
 
-              <!-- Revenue Realization Note -->
               <tr>
                 <td class="indent-sub" colspan="3" style="padding-top:12px;">
                   <em>Realization Note: Of the accrued net profit of ${inr(netFeeRevenueAccrued)}, <strong>${inr(totalFeesReceivedCash)}</strong> has been realized in cash/bank collections, and <strong>${inr(totalDebtorsReceivable)}</strong> remains as Sundry Debtors (Receivable).</em>
@@ -2174,7 +2406,6 @@ function renderFinancialsPage() {
         </div>
         <div class="statement-body">
           <div class="bs-grid">
-            <!-- Left: Capital & Liabilities -->
             <div style="border:1px solid var(--rule); border-radius:12px; overflow:hidden;">
               <table class="stmt-table">
                 <thead>
@@ -2184,7 +2415,6 @@ function renderFinancialsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <!-- Capital Account -->
                   <tr class="section-row">
                     <td colspan="2">I. Capital Account &amp; Net Worth</td>
                   </tr>
@@ -2197,7 +2427,6 @@ function renderFinancialsPage() {
                     <td class="text-right stmt-mono" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</td>
                   </tr>
 
-                  <!-- Current Liabilities / Loans Taken -->
                   <tr class="section-row">
                     <td colspan="2">II. Current Liabilities &amp; Borrowings</td>
                   </tr>
@@ -2222,7 +2451,6 @@ function renderFinancialsPage() {
                     <td class="text-right stmt-mono" style="color:var(--amber);">${inr(totalCurrentLiabilities)}</td>
                   </tr>
 
-                  <!-- Total Liabilities -->
                   <tr class="grand-row">
                     <td><strong>TOTAL LIABILITIES &amp; CAPITAL</strong></td>
                     <td class="text-right stmt-mono">${inr(netWorkingCapital + totalCurrentLiabilities)}</td>
@@ -2231,7 +2459,6 @@ function renderFinancialsPage() {
               </table>
             </div>
 
-            <!-- Right: Assets -->
             <div style="border:1px solid var(--rule); border-radius:12px; overflow:hidden;">
               <table class="stmt-table">
                 <thead>
@@ -2241,7 +2468,6 @@ function renderFinancialsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <!-- Current Assets -->
                   <tr class="section-row">
                     <td colspan="2">I. Current Assets, Loans &amp; Advances</td>
                   </tr>
@@ -2258,7 +2484,6 @@ function renderFinancialsPage() {
                     <td></td>
                   </tr>
 
-                  <!-- Sundry Debtors & Salaries Receivable -->
                   <tr>
                     <td class="indent"><strong>Sundry Debtors (Clients Fees Receivable):</strong></td>
                     <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalDebtorsReceivable)}</td>
@@ -2276,7 +2501,6 @@ function renderFinancialsPage() {
                     <td></td>
                   </tr>
 
-                  <!-- Cash & Bank -->
                   <tr class="section-row">
                     <td colspan="2">II. Cash &amp; Bank Balances</td>
                   </tr>
@@ -2293,7 +2517,6 @@ function renderFinancialsPage() {
                     <td class="text-right stmt-mono">${inr(totalCurrentAssets)}</td>
                   </tr>
 
-                  <!-- Total Assets -->
                   <tr class="grand-row">
                     <td><strong>TOTAL ASSETS</strong></td>
                     <td class="text-right stmt-mono">${inr(totalCurrentAssets)}</td>
@@ -2406,7 +2629,6 @@ function renderFinancialsPage() {
     `;
   }
 
-  // Bank Settlement Account Section
   html += `
     <div class="fin-section-title">
       <span>Official Settlement Bank Account</span>
@@ -2457,8 +2679,6 @@ function render(listOnly) {
   else if (filter === 'done') filtered = tasks.filter(t => t.done);
   else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
 
-  // Search runs on top of whichever filter is chosen. Every word must match somewhere in the
-  // task's name, linked client, invoice number, remark, phone or category.
   const q = searchQuery.trim().toLowerCase();
   const searchActive = q.length > 0;
   if (searchActive) {
@@ -2473,8 +2693,6 @@ function render(listOnly) {
     if (a.done !== b.done) return a.done ? 1 : -1;
     if (!a.done && !b.done) {
       if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
-      // Timeline order: tasks with a real due date come first (earliest/most overdue
-      // first), tasks with no due date follow, keeping their existing relative order.
       const aHas = !!a.dueDate, bHas = !!b.dueDate;
       if (aHas !== bHas) return aHas ? -1 : 1;
       if (aHas && bHas) return new Date(a.dueDate) - new Date(b.dueDate);
@@ -2507,7 +2725,7 @@ function render(listOnly) {
       ${creditBalances.map(c => `<div class="credit-line">${c.name.replace('Advance Credit Balance', '').replace(/^[\s—\-–]+|[\s—\-–]+$/g, '') || c.name} — <strong>${inr(c.payable)}</strong> remaining</div>`).join('')}
       <div class="credit-hint">Check before charging again — this may already cover upcoming work.</div>
     </div>` : ''}
-        <div class="loan-banner" style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid #1E3A8A; border-radius:14px; padding:14px 18px; margin-bottom:16px; box-shadow:var(--shadow-xs);">
+    <div class="loan-banner" style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid #1E3A8A; border-radius:14px; padding:14px 18px; margin-bottom:16px; box-shadow:var(--shadow-xs);">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <div style="font-weight:700; font-size:13.5px; color:#1E3A8A; display:flex; align-items:center; gap:7px;">
           <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -2564,7 +2782,7 @@ function render(listOnly) {
   `;
 
   let html = '';
-  const forceOpen = filter !== 'all' || searchActive; // an explicit filter or search always beats a folded section
+  const forceOpen = filter !== 'all' || searchActive;
   let shownCount = 0;
   if (filtered.length === 0) {
     html += searchActive
@@ -2574,8 +2792,6 @@ function render(listOnly) {
     const groupDefs = [
       { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' },
     ];
-    // Any category beyond the fixed set (e.g. a newly created employer/client group)
-    // gets its own section here, right after MHJ, so nothing ever becomes invisible.
     const extraColors = EXTRA_COLORS;
     extraCats.forEach((cat, i) => {
       groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: extraColors[i % extraColors.length], match: t => t.cat === cat });
@@ -2587,9 +2803,6 @@ function render(listOnly) {
       { key: 'FEES', label: 'Fees', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
     );
 
-    // One row. A fee shows what is still due at the right (red) or "Settled" (green); the small line
-    // under the name keeps the received / payable figures, the overdue and due-date status, any
-    // different linked name and the invoice number.
     const renderCard = (t, idx, g) => {
         const isFee = t.type === 'fee';
         const isNamaz = t.type === 'personal' && /namaz/i.test(t.name);
@@ -2614,7 +2827,7 @@ function render(listOnly) {
           !t.done && !isNamaz ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Change' : 'Set'} due date</button>` : '',
           !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Edit' : 'Add'} remark</button>` : ''
         ].join('');
-        const meta = (isFee ? '' : status) + actions;   // a fee keeps its status on the detail line; other tasks keep it beside their buttons
+        const meta = (isFee ? '' : status) + actions;
         return `
           <div class="task${stateClass}" style="--catcolor:${g.color}">
             <span class="num">${idx + 1}.</span>
@@ -2632,8 +2845,6 @@ function render(listOnly) {
         `;
     };
 
-    // Finished tasks and fully settled fees are tucked behind a "✓ N completed" bar. Anything that
-    // still needs attention stays in the list, including a fee marked done while money is still due.
     const feeBalance = t => (t.type === 'fee' && !t.name.includes('Advance Credit Balance')) ? (t.payable - t.received - (t.discount || 0)) : 0;
     const isFinished = t => t.done && feeBalance(t) <= 0;
 
@@ -2643,7 +2854,7 @@ function render(listOnly) {
       shownCount += groupTasks.length;
       const open = groupTasks.filter(t => !isFinished(t));
       const closed = groupTasks.filter(isFinished);
-      const ordered = open.concat(closed);   // card numbers run 1..n through the open cards, then carry on through the completed ones
+      const ordered = open.concat(closed);
       const collapsed = !forceOpen && !!uiState.collapsed[g.key];
       const key = escapeForHtml(g.key);
       const countHtml = '<b>' + open.length + ' pending</b>' + (closed.length ? ' · ' + closed.length + ' done' : '');
@@ -2656,7 +2867,7 @@ function render(listOnly) {
         html += '<div class="task-grid">';
         open.forEach(t => { html += renderCard(t, ordered.indexOf(t), g); });
         if (closed.length) {
-          const showAll = filter === 'done' || searchActive;   // asked for explicitly, so no bar is needed
+          const showAll = filter === 'done' || searchActive;
           const expanded = showAll || !!doneOpen[g.key];
           if (!showAll) {
             html += `<button class="done-toggle" data-key="${key}" aria-expanded="${expanded}" onclick="toggleDone(this.dataset.key)">${expanded ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>`;
@@ -2670,20 +2881,13 @@ function render(listOnly) {
   }
 
   if (!listOnly) summaryEl.innerHTML = summaryHtml;
-  app.classList.toggle('no-anim', !!listOnly);   // no fade-in while typing in the search box
+  app.classList.toggle('no-anim', !!listOnly);
   app.innerHTML = html;
   const info = document.getElementById('searchInfo');
   if (info) info.textContent = searchActive ? shownCount + ' of ' + tasks.length + ' tasks' : '';
 }
 
-// Festival theming: overrides the base color palette for a few days around
-// major festivals. Muharram/Ashura is treated as a mourning period, not a
-// celebration, so it gets a deliberately muted, sombre palette instead of
-// bright festive colors. Dates are for 2026 (confirmed from multiple sources
-// where possible); Islamic dates shift ~11 days earlier each year and will
-// need updating for 2027 onward.
 const FESTIVAL_THEMES = [
-  // 2026 & recurring festivals
   { name: 'Republic Day', start: '2026-01-25', end: '2026-01-27', greeting: '🇮🇳 Happy Republic Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
   { name: 'Holi', start: '2026-03-03', end: '2026-03-06', greeting: '🎨 Happy Holi 🎨', accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#F5F3FF', accentBorder: '#DDD6FE', bg: '#FCF9FF', crestGrad: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)' },
   { name: 'Eid al-Fitr', start: '2026-03-19', end: '2026-03-23', greeting: '🌙 Eid Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
@@ -2693,11 +2897,8 @@ const FESTIVAL_THEMES = [
   { name: 'Mawlid al-Nabi', start: '2026-08-24', end: '2026-08-27', greeting: '✨ Milad un-Nabi Mubarak ✨', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B, #047857)' },
   { name: 'Ganesh Chaturthi', start: '2026-09-13', end: '2026-09-17', greeting: '🌸 Happy Ganesh Chaturthi 🌸', accent: '#C2410C', accentHover: '#EA580C', accentSoft: '#FFF7ED', accentBorder: '#FED7AA', bg: '#FFFBF7', crestGrad: 'linear-gradient(135deg, #9A3412, #EA580C)' },
   { name: 'Dussehra', start: '2026-10-18', end: '2026-10-22', greeting: '🏹 Happy Dussehra 🏹', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F, #D97706)' },
-  // Active today (starts Nov 3, 2026 covering Dhanteras, Diwali & Saal Mubarak)
   { name: 'Diwali', start: '2026-11-03', end: '2026-11-12', greeting: '🪔 Shubh Deepavali & Saal Mubarak 🪔', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%)' },
   { name: 'Christmas & New Year', start: '2026-12-23', end: '2027-01-02', greeting: '🎄 Merry Christmas & Happy New Year 🎄', accent: '#BE123C', accentHover: '#E11D48', accentSoft: '#FFF1F2', accentBorder: '#FECDD3', bg: '#FCFAFA', crestGrad: 'linear-gradient(135deg, #9F1239 0%, #047857 100%)' },
-
-  // 2027 festivals
   { name: 'Republic Day', start: '2027-01-25', end: '2027-01-27', greeting: '🇮🇳 Happy Republic Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
   { name: 'Eid al-Fitr', start: '2027-03-08', end: '2027-03-12', greeting: '🌙 Eid Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
   { name: 'Holi', start: '2027-03-22', end: '2027-03-24', greeting: '🎨 Happy Holi 🎨', accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#F5F3FF', accentBorder: '#DDD6FE', bg: '#FCF9FF', crestGrad: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)' },
@@ -2730,7 +2931,6 @@ function applyFestivalTheme() {
     document.body.style.setProperty('--confetti-disabled', 'true');
   }
 
-  // Add festive greeting banner at top of dashboard
   const banner = document.createElement('div');
   banner.textContent = active.greeting || (active.mourning ? '· ' + active.name + ' ·' : '✨ ' + active.name + ' ✨');
   banner.className = 'festival-banner';
@@ -2747,10 +2947,9 @@ function checkAuth() {
     localStorage.setItem(AUTH_KEY, 'yes');
     document.getElementById('authGate').style.display = 'none';
     startDashboard();
-if (location.hash === '#financials') {
-  switchPage('financials');
-}
-
+    if (location.hash === '#financials') {
+      switchPage('financials');
+    }
   } else {
     document.getElementById('authError').style.display = 'block';
     input.value = '';
@@ -2771,11 +2970,9 @@ if (localStorage.getItem(AUTH_KEY) === 'yes') {
 }
 </script>
 <script>
-// Makes the dashboard installable as an app on Android (Chrome menu > Install app) and lets it open with no signal.
-// Only the page and fonts are kept; Calendar sync and everything live is never touched. See sw.js.
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* the dashboard works exactly the same without it */ });
+    navigator.serviceWorker.register('sw.js').catch(function () { });
   });
 }
 </script>
