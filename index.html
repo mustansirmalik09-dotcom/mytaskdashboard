@@ -611,6 +611,10 @@
     <span>Financials &amp; Ledgers</span>
     <span class="nav-badge" id="finBadge">₹1.07L</span>
   </button>
+  <button type="button" id="tabSalariesDirect" class="page-nav-btn" role="tab" aria-selected="false" onclick="openSalaryClearanceDirect()">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span>Clear Salary</span>
+  </button>
 </nav>
 
 <div id="tasksView">
@@ -1894,6 +1898,7 @@ function switchPage(page) {
   const finView = document.getElementById('financialsView');
   const btnTasks = document.getElementById('tabTasks');
   const btnFin = document.getElementById('tabFinancials');
+  const btnSalDirect = document.getElementById('tabSalariesDirect');
 
   if (page === 'financials') {
     if (tasksView) tasksView.style.display = 'none';
@@ -1903,6 +1908,7 @@ function switchPage(page) {
     }
     if (btnTasks) { btnTasks.classList.remove('active'); btnTasks.setAttribute('aria-selected', 'false'); }
     if (btnFin) { btnFin.classList.add('active'); btnFin.setAttribute('aria-selected', 'true'); }
+    if (btnSalDirect) { btnSalDirect.classList.remove('active'); btnSalDirect.setAttribute('aria-selected', 'false'); }
     try { history.replaceState(null, '', '#financials'); } catch (e) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } else {
@@ -1910,9 +1916,15 @@ function switchPage(page) {
     if (finView) finView.style.display = 'none';
     if (btnTasks) { btnTasks.classList.add('active'); btnTasks.setAttribute('aria-selected', 'true'); }
     if (btnFin) { btnFin.classList.remove('active'); btnFin.setAttribute('aria-selected', 'false'); }
+    if (btnSalDirect) { btnSalDirect.classList.remove('active'); btnSalDirect.setAttribute('aria-selected', 'false'); }
     try { history.replaceState(null, '', '#tasks'); } catch (e) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+}
+
+function openSalaryClearanceDirect() {
+  switchPage('financials');
+  setFinViewMode('salaries');
 }
 
 function clearSalaryReceivable(entity, defaultAmount) {
@@ -1921,32 +1933,61 @@ function clearSalaryReceivable(entity, defaultAmount) {
   const title = isMHJ ? 'Clear Monthly Salary — MHJ' : 'Clear Salary — Hakimi Vihar Society';
 
   showModal(title, `
-    <div class="hint">Record receipt / settlement of ${isMHJ ? 'MHJ' : 'Hakimi Vihar'} salary for ${currentMonth}.</div>
-    <label>Amount Received (₹)</label>
-    <input type="number" id="modalSalaryAmt" value="${defaultAmount}">
-    <label>Date Received</label>
-    <input type="date" id="modalSalaryDate" value="${new Date().toISOString().slice(0, 10)}">
-    <label>Payment Mode / Account</label>
-    <select id="modalSalaryMode">
-      <option value="Bank Transfer">Bank Transfer (slice Small Finance Bank)</option>
-      <option value="Cash">Cash in hand</option>
-      <option value="Cheque">Cheque</option>
-    </select>
+    <div class="hint" style="color:var(--ink); font-weight:500;">Record receipt / settlement of <strong>${isMHJ ? 'MHJ' : 'Hakimi Vihar'}</strong> salary for ${currentMonth}.</div>
+    <div style="margin:12px 0;">
+      <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">AMOUNT RECEIVED (₹)</label>
+      <input type="number" id="modalSalaryAmt" value="${defaultAmount}" style="width:100%; height:44px; font-size:16px; font-weight:700; border:1px solid var(--field); border-radius:10px; padding:0 12px; color:var(--green);">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">DATE RECEIVED</label>
+      <input type="date" id="modalSalaryDate" value="${new Date().toISOString().slice(0, 10)}" style="width:100%; height:42px; border:1px solid var(--field); border-radius:10px; padding:0 12px;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">PAYMENT MODE / DEPOSITED TO</label>
+      <select id="modalSalaryMode" style="width:100%; height:42px; border:1px solid var(--field); border-radius:10px; padding:0 12px; font-weight:500;">
+        <option value="Bank Transfer (slice SFB)">Bank Transfer (slice Small Finance Bank)</option>
+        <option value="Cash in Hand">Cash in hand</option>
+        <option value="Cheque">Cheque</option>
+      </select>
+    </div>
   `, () => {
     const amt = parseFloat(document.getElementById('modalSalaryAmt').value) || defaultAmount;
     const dateVal = document.getElementById('modalSalaryDate').value || new Date().toISOString().slice(0, 10);
     const mode = document.getElementById('modalSalaryMode').value;
 
     if (isMHJ) {
-      const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
-      if (mhjTask) {
+      let mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+      if (!mhjTask) {
+        mhjTask = {
+          id: 'u_sal_mhj_' + Date.now(),
+          name: 'Monthly Salary Receivable (₹24,000)',
+          type: 'professional',
+          cat: 'MHJ',
+          done: true,
+          remark: 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode
+        };
+        tasks.unshift(mhjTask);
+      } else {
         mhjTask.done = true;
         mhjTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
         if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
       }
     } else {
-      const hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
-      if (hvTask) {
+      let hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+      if (!hvTask) {
+        hvTask = {
+          id: 'u_sal_hv_' + Date.now(),
+          name: 'Salary Receivable - Hakimi Vihar Society',
+          type: 'fee',
+          cat: 'FEES',
+          feeCat: 'OWN',
+          payable: 4000,
+          received: amt,
+          done: true,
+          remark: 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode
+        };
+        tasks.unshift(hvTask);
+      } else {
         hvTask.done = true;
         hvTask.received = amt;
         hvTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
@@ -1956,9 +1997,9 @@ function clearSalaryReceivable(entity, defaultAmount) {
 
     saveTasks();
     render();
-    if (activePage === 'financials') renderFinancialsPage();
+    renderFinancialsPage();
     fireConfetti();
-  }, 'Clear & Settle', 'Cancel');
+  }, 'Confirm & Clear Settle', 'Cancel');
 }
 
 function reopenSalaryReceivable(entity) {
@@ -2127,7 +2168,7 @@ function renderFinancialsPage() {
   const totalMonthlySalaryReceivable = salaryMHJDues + salaryHVDues;
   const totalMonthlySalaryReceived = salaryMHJReceived + salaryHVReceived;
 
-  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + 28000; // total monthly retainership earned
+  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + 28000;
 
   // Dynamic loan balances considering adjustments
   const adjustments = getLoanAdjustments();
@@ -2150,22 +2191,22 @@ function renderFinancialsPage() {
   if (badgeEl) badgeEl.textContent = inr(totalDebtorsReceivable + loanGivenJuzer);
 
   let html = `
-    <!-- Financial Mode Selector -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-      <div class="fin-mode-toggle" role="tablist">
+    <!-- Top-level Action & Mode Bar -->
+    <div style="background:#FFFFFF; border:1px solid var(--rule); border-radius:14px; padding:12px 16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:var(--shadow-xs);">
+      <div class="fin-mode-toggle" style="margin:0;" role="tablist">
         <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Financial Suite</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'salaries' ? 'active' : ''}" onclick="setFinViewMode('salaries')">Clear Salary Dues</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Loans &amp; Advances</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'salaries' ? 'active' : ''}" onclick="setFinViewMode('salaries')">✓ Clear Salary Dues</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Loans</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'portfolio' ? 'active' : ''}" onclick="setFinViewMode('portfolio')">Loans &amp; Advances</button>
       </div>
+
       <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-primary" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="openLoanAdjustmentModal()">
-          <span>+ Adjust Loans</span>
+        <button type="button" class="btn btn-wa" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="clearSalaryReceivable('MHJ', 24000)">
+          <span>✓ Settle MHJ Salary</span>
         </button>
-        <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px;" onclick="window.print()">
-          ${ICON.doc} <span>Print</span>
+        <button type="button" class="btn btn-primary" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="openLoanAdjustmentModal()">
+          <span>⚖️ Adjust Loans</span>
         </button>
       </div>
     </div>
@@ -2579,13 +2620,12 @@ function renderFinancialsPage() {
             </div>
             <span class="fin-pill pay">Current Liability (Loan Taken)</span>
           </div>
-          <div class="fin-amount pay">${inr(86000)}</div>
+          <div class="fin-amount pay">${inr(loanTakenMHJ)}</div>
           <div class="fin-breakdown">
             <div>&bull; Account: <strong>Loan &amp; Advance Taken</strong></div>
-            <div>&bull; Date: 05-Nov-2026</div>
             <div>&bull; Status: <strong style="color:var(--amber);">Pending Clearance</strong></div>
             <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--amber);">
-              Net Liability Payable: ${inr(86000)}
+              Net Liability Payable: ${inr(loanTakenMHJ)}
             </div>
           </div>
           <div class="fin-actions">
@@ -2595,6 +2635,9 @@ function renderFinancialsPage() {
             <a href="https://api.whatsapp.com/send?phone=919425054543" target="_blank" rel="noopener" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
               ${ICON.chat} <span>WhatsApp MHJ</span>
             </a>
+            <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="openLoanAdjustmentModal('MHJ')">
+              Adjust / Set off
+            </button>
           </div>
         </div>
 
@@ -2607,13 +2650,12 @@ function renderFinancialsPage() {
             </div>
             <span class="fin-pill pay">Current Liability (Advance Taken)</span>
           </div>
-          <div class="fin-amount pay">${inr(5000)}</div>
+          <div class="fin-amount pay">${inr(loanTakenHatim)}</div>
           <div class="fin-breakdown">
             <div>&bull; Account: <strong>Loan &amp; Advance Taken</strong></div>
-            <div>&bull; Date: 05-Nov-2026</div>
             <div>&bull; Status: <strong style="color:var(--amber);">Pending Clearance</strong></div>
             <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--amber);">
-              Net Liability Payable: ${inr(5000)}
+              Net Liability Payable: ${inr(loanTakenHatim)}
             </div>
           </div>
           <div class="fin-actions">
@@ -2623,12 +2665,16 @@ function renderFinancialsPage() {
             <a href="https://api.whatsapp.com/send?phone=919826768052" target="_blank" rel="noopener" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
               ${ICON.chat} <span>WhatsApp Hatim Bhai</span>
             </a>
+            <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="openLoanAdjustmentModal('HATIM')">
+              Adjust / Set off
+            </button>
           </div>
         </div>
       </div>
     `;
   }
 
+  // Bank Settlement Account Section
   html += `
     <div class="fin-section-title">
       <span>Official Settlement Bank Account</span>
