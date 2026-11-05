@@ -2127,7 +2127,7 @@ function renderFinancialsPage() {
   const totalMonthlySalaryReceivable = salaryMHJDues + salaryHVDues;
   const totalMonthlySalaryReceived = salaryMHJReceived + salaryHVReceived;
 
-  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + (salaryMHJ + salaryHakimi);
+  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + 28000; // total monthly retainership earned
 
   // Dynamic loan balances considering adjustments
   const adjustments = getLoanAdjustments();
@@ -2154,15 +2154,15 @@ function renderFinancialsPage() {
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
       <div class="fin-mode-toggle" role="tablist">
         <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Financial Suite</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Loans &amp; Advances</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'salaries' ? 'active' : ''}" onclick="setFinViewMode('salaries')">Clear Salary Dues</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Loans &amp; Advances</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'portfolio' ? 'active' : ''}" onclick="setFinViewMode('portfolio')">Loans Portfolio</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'portfolio' ? 'active' : ''}" onclick="setFinViewMode('portfolio')">Loans &amp; Advances</button>
       </div>
       <div style="display:flex; gap:8px;">
         <button type="button" class="btn btn-primary" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="openLoanAdjustmentModal()">
-          <span>+ New Loan Adjustment</span>
+          <span>+ Adjust Loans</span>
         </button>
         <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12px; display:inline-flex; align-items:center; gap:6px;" onclick="window.print()">
           ${ICON.doc} <span>Print</span>
@@ -2183,12 +2183,12 @@ function renderFinancialsPage() {
         <div class="f-sub">${inr(totalFeesReceivedCash)} realized in cash</div>
       </div>
       <div class="fin-card receivable">
-        <div class="f-lbl">Loans Given (Net Receivable)</div>
+        <div class="f-lbl">Loans &amp; Advances (Asset)</div>
         <div class="f-val">${inr(loanGivenJuzer)}</div>
         <div class="f-sub">Juzer Presswala ${juzerAdjusted > 0 ? `(&minus;${inr(juzerAdjusted)} adj)` : ''}</div>
       </div>
       <div class="fin-card payable">
-        <div class="f-lbl">Loans Taken (Net Payable)</div>
+        <div class="f-lbl">Current Liabilities (Loans Taken)</div>
         <div class="f-val">${inr(totalLoansTaken)}</div>
         <div class="f-sub">MHJ (${inr(loanTakenMHJ)}) + Hatim (${inr(loanTakenHatim)})</div>
       </div>
@@ -2819,8 +2819,15 @@ function render(listOnly) {
         const status = (taskOverdue ? '<span class="badge over">Overdue</span>' : (t.urgent && !t.done ? '<span class="badge urgent">Urgent</span>' : ''))
           + (dueDateLabel && !t.done ? `<span class="due${taskOverdue ? ' over' : ''}">Due ${dueDateLabel}</span>` : '');
         const sub = !isFee ? '' : `<div class="task-sub"><span>${inr(t.received)} of ${inr(t.payable)} received${t.discount ? ' + ' + inr(t.discount) + ' discount' : ''}</span>${status ? '<span class="state">' + status + '</span>' : ''}${showLinked ? '<span>linked: ' + t.linked + '</span>' : ''}${t.invoice ? '<span>' + ICON.doc + t.invoice + '</span>' : ''}</div>`;
+        const isMHJSalary = /Monthly Salary Receivable/i.test(t.name);
+        const isHVSalary = /Hakimi Vihar Society/i.test(t.name);
+        const isJuzerLoan = /Juzer Presswala/i.test(t.name);
         const actions = [
-          isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
+          isFee && !isHVSalary ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
+          isMHJSalary && !t.done ? `<button type="button" class="act pay" style="color:var(--green); border-color:var(--green-border); background:var(--green-soft);" onclick="clearSalaryReceivable('MHJ', 24000)">✓ Settle Salary (₹24k)</button>` : '',
+          isMHJSalary && !t.done ? `<button type="button" class="act" style="color:#6D28D9;" onclick="openLoanAdjustmentModal('MHJ')">⚖️ Adjust vs Loan</button>` : '',
+          isHVSalary && !t.done ? `<button type="button" class="act pay" style="color:var(--green); border-color:var(--green-border); background:var(--green-soft);" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">✓ Settle Salary (₹4k)</button>` : '',
+          isJuzerLoan ? `<button type="button" class="act" style="color:#6D28D9;" onclick="openLoanAdjustmentModal('JUZER')">⚖️ Adjust Loan</button>` : '',
           isFee && balance > 0 && t.phone ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : '',
           isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}')">${ICON.doc}Send receipt</button>` : '',
           isNamaz && !t.done && t.dueDate ? `<button type="button" class="act" onclick="setNamazAlarm('${escapeForHtml(t.name)}', '${t.dueDate}')">⏰ Set alarm</button>` : '',
