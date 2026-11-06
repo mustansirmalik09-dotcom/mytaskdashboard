@@ -348,7 +348,7 @@
     z-index: 3000; align-items: center; justify-content: center; padding: 16px;
   }
   .modal {
-    background: #FFFFFF; border-radius: 18px; padding: 24px; width: 100%; max-width: 420px;
+    background: #FFFFFF; border-radius: 18px; padding: 24px; width: 100%; max-width: 440px;
     max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto;
     box-shadow: var(--shadow-modal); border: 1px solid var(--rule);
   }
@@ -679,7 +679,6 @@ const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLyd
 let tasks = [];
 let filter = 'all';
 
-// HTML Sanitizer function defined globally
 function escapeForHtml(s) {
   if (s === null || s === undefined) return '';
   return String(s)
@@ -1237,28 +1236,135 @@ function setDueDate(id) {
   });
 }
 
+// Universal Payment & Shortfall Settlement for all Fee Transactions
 function recordPayment(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  showModal('Record payment — ' + t.name, `
-    <div class="hint">Currently ${inr(t.received)} of ${inr(t.payable)} received</div>
-    <label>Total amount received so far</label>
-    <input type="number" id="modalReceivedAmt" style="${inputStyle()}" value="${t.received}">
-    <label>Discount to write off (optional)</label>
-    <input type="number" id="modalDiscountAmt" style="${inputStyle()}" placeholder="₹ Discount" value="${t.discount || 0}">
+  const payable = Number(t.payable) || 0;
+  const curReceived = Number(t.received) || 0;
+  const curDiscount = Number(t.discount) || 0;
+  const curBalance = Math.max(payable - curReceived - curDiscount, 0);
+
+  showModal('Record Payment — ' + t.name, `
+    <div class="hint">Total Payable: <strong>${inr(payable)}</strong> &bull; Already Received: <strong>${inr(curReceived)}</strong></div>
+    
+    <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">TOTAL AMOUNT RECEIVED (₹)</label>
+    <input type="number" id="modalReceivedAmt" value="${curReceived}" oninput="updatePaymentShortfallOptions(${payable})" style="width:100%; height:44px; font-size:16px; font-weight:700; border:1px solid var(--field); border-radius:10px; padding:0 12px; color:var(--green);">
+
+    <!-- Universal Shortfall Handling Box -->
+    <div id="paymentShortfallBox" style="display:none; background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:12px; padding:12px 14px; margin-bottom:14px;">
+      <div style="font-weight:700; font-size:13px; color:#B45309; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="paymentShortfallTitle">Partial Payment Entered</span>
+      </div>
+      <div id="paymentShortfallDesc" style="font-size:12px; color:#92400E; margin-bottom:10px; line-height:1.4;"></div>
+      
+      <label style="display:block; font-size:11.5px; font-weight:700; color:#B45309; margin-bottom:6px;">HOW DO YOU WANT TO HANDLE THE REMAINING DUES?</label>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:12.5px;">
+        <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; color:var(--ink); font-weight:600;">
+          <input type="radio" name="feeShortfallAction" value="KEEP_PENDING" checked style="margin-top:2px; accent-color:#BE123C;">
+          <span>Keep in Pending (Leave unpaid amount as active dues in Sundry Debtors &amp; Dashboard)</span>
+        </label>
+        <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; color:var(--ink); font-weight:600;">
+          <input type="radio" name="feeShortfallAction" value="ADJUST_LOAN" style="margin-top:2px; accent-color:#7C3AED;">
+          <span>Adjust remaining with Loans &amp; Advances (Deduct from Loan Taken / Add to Loan Advance)</span>
+        </label>
+        <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; color:var(--ink); font-weight:600;">
+          <input type="radio" name="feeShortfallAction" value="DISCOUNT" style="margin-top:2px; accent-color:#D97706;">
+          <span>Write off as Discount / Concession (Marks fee 100% settled)</span>
+        </label>
+      </div>
+
+      <div id="loanTargetSelectRow" style="display:none; margin-top:10px; border-top:1px dashed #FDE68A; padding-top:8px;">
+        <label style="font-size:11px; font-weight:700; color:#B45309;">SELECT LOAN ACCOUNT TO OFFSET AGAINST:</label>
+        <select id="modalFeeAdjLoanTarget" style="width:100%; height:38px; border:1px solid var(--field); border-radius:8px; font-size:12.5px; font-weight:600; margin-top:4px;">
+          <option value="MHJ">MHJ (Mufazzal Husain Johar) Loan Taken (₹86,000)</option>
+          <option value="HATIM">Hatim Bhai (Adv) Loan Taken (₹5,000)</option>
+          <option value="JUZER">Juzer Presswala Loan Given (₹1,07,690)</option>
+        </select>
+      </div>
+    </div>
+
+    <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">DISCOUNT ALLOWED (OPTIONAL)</label>
+    <input type="number" id="modalDiscountAmt" style="${inputStyle()}" placeholder="₹ Discount" value="${curDiscount}">
   `, () => {
-    const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
-    const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
-    if (isNaN(amount)) return;
+    const amount = parseFloat(document.getElementById('modalReceivedAmt').value) || 0;
+    let discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+    const isShortfall = (amount + discount) < payable;
+    const shortfallAmt = Math.max(payable - amount - discount, 0);
+
+    const radioAction = isShortfall ? (document.querySelector('input[name="feeShortfallAction"]:checked') ? document.querySelector('input[name="feeShortfallAction"]:checked').value : 'KEEP_PENDING') : null;
+
+    if (isShortfall && radioAction === 'ADJUST_LOAN') {
+      const loanTarget = document.getElementById('modalFeeAdjLoanTarget').value;
+      const targetLabel = loanTarget === 'MHJ' ? 'MHJ (Mufazzal Husain Johar) Loan' : (loanTarget === 'HATIM' ? 'Hatim Bhai (Adv) Loan' : 'Juzer Presswala Loan');
+      
+      saveLoanAdjustmentRecord({
+        id: 'adj_fee_' + Date.now(),
+        account: loanTarget,
+        targetTitle: targetLabel,
+        type: 'CONTRA_FEES',
+        amount: shortfallAmt,
+        date: new Date().toISOString().slice(0, 10),
+        remark: 'Remaining balance of ₹' + shortfallAmt.toLocaleString('en-IN') + ' for "' + t.name + '" adjusted against ' + targetLabel
+      });
+
+      discount += shortfallAmt;
+      t.done = true;
+      t.remark = (t.remark ? t.remark + ' | ' : '') + '₹' + amount.toLocaleString('en-IN') + ' recd + ₹' + shortfallAmt.toLocaleString('en-IN') + ' adjusted with ' + targetLabel;
+    } else if (isShortfall && radioAction === 'DISCOUNT') {
+      discount += shortfallAmt;
+      t.done = true;
+      t.remark = (t.remark ? t.remark + ' | ' : '') + '₹' + amount.toLocaleString('en-IN') + ' recd + ₹' + shortfallAmt.toLocaleString('en-IN') + ' written off as discount';
+    } else if (isShortfall && radioAction === 'KEEP_PENDING') {
+      t.done = false;
+      t.remark = (t.remark ? t.remark + ' | ' : '') + 'Part payment: ₹' + amount.toLocaleString('en-IN') + ' recd. ₹' + shortfallAmt.toLocaleString('en-IN') + ' PENDING';
+    } else {
+      t.done = (amount + discount) >= payable && payable > 0;
+    }
+
     t.received = amount;
     t.discount = discount;
-    t.done = (amount + discount) >= t.payable && t.payable > 0;
     saveTasks();
     render();
+    if (activePage === 'financials') renderFinancialsPage();
     if (t.id.startsWith('cal_')) {
       updateFeeOnCalendar(t.id, amount, discount);
     }
   });
+
+  const amtInput = document.getElementById('modalReceivedAmt');
+  if (amtInput) {
+    amtInput.addEventListener('input', () => updatePaymentShortfallOptions(payable));
+    updatePaymentShortfallOptions(payable);
+  }
+
+  // Radio toggle for loan target row
+  setTimeout(() => {
+    const radios = document.querySelectorAll('input[name="feeShortfallAction"]');
+    const loanRow = document.getElementById('loanTargetSelectRow');
+    radios.forEach(r => {
+      r.addEventListener('change', () => {
+        if (loanRow) loanRow.style.display = (r.value === 'ADJUST_LOAN' && r.checked) ? 'block' : 'none';
+      });
+    });
+  }, 50);
+}
+
+function updatePaymentShortfallOptions(totalPayable) {
+  const entered = parseFloat(document.getElementById('modalReceivedAmt').value) || 0;
+  const disc = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+  const box = document.getElementById('paymentShortfallBox');
+  if (!box) return;
+
+  if ((entered + disc) < totalPayable) {
+    box.style.display = 'block';
+    const diff = totalPayable - (entered + disc);
+    document.getElementById('paymentShortfallTitle').textContent = 'Shortfall of ₹' + diff.toLocaleString('en-IN');
+    document.getElementById('paymentShortfallDesc').innerHTML = `Amount entered: <strong>₹${entered.toLocaleString('en-IN')}</strong> of total <strong>₹${totalPayable.toLocaleString('en-IN')}</strong>. There is an unsettled remainder of <strong>₹${diff.toLocaleString('en-IN')}</strong>.`;
+  } else {
+    box.style.display = 'none';
+  }
 }
 
 async function updateFeeOnCalendar(taskId, received, discount) {
@@ -1353,7 +1459,7 @@ function switchPage(page) {
   }
 }
 
-// ---- Salary Clearance & Settlement (MHJ & Hakimi Vihar) ----
+// Salary Clearance & Settlement
 function clearSalaryReceivable(entity, defaultAmount) {
   const currentMonth = new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
   const isMHJ = /mhj/i.test(entity);
@@ -1362,9 +1468,32 @@ function clearSalaryReceivable(entity, defaultAmount) {
   showModal(title, `
     <div class="hint">Record receipt / settlement of <strong>${isMHJ ? 'MHJ (Mufazzal Husain Johar)' : 'Hakimi Vihar Society'}</strong> salary for ${currentMonth}.</div>
     <div style="margin:12px 0;">
-      <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">AMOUNT RECEIVED (₹)</label>
-      <input type="number" id="modalSalaryAmt" value="${defaultAmount}" style="width:100%; height:44px; font-size:16px; font-weight:700; border:1px solid var(--field); border-radius:10px; padding:0 12px; color:var(--green);">
+      <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">AMOUNT RECEIVED NOW (₹)</label>
+      <input type="number" id="modalSalaryAmt" value="${defaultAmount}" oninput="updateSalarySettleOptions(${defaultAmount}, ${isMHJ})" style="width:100%; height:44px; font-size:16px; font-weight:700; border:1px solid var(--field); border-radius:10px; padding:0 12px; color:var(--green);">
     </div>
+
+    <div id="salaryShortfallBox" style="display:none; background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:12px; padding:12px 14px; margin-bottom:14px;">
+      <div style="font-weight:700; font-size:13px; color:#B45309; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+        <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="salaryShortfallTitle">Partial Amount Entered</span>
+      </div>
+      <div id="salaryShortfallDesc" style="font-size:12px; color:#92400E; margin-bottom:10px; line-height:1.4;"></div>
+      
+      <label style="display:block; font-size:11.5px; font-weight:700; color:#B45309; margin-bottom:6px;">HOW TO HANDLE THE REMAINING BALANCE?</label>
+      <div style="display:flex; flex-direction:column; gap:6px; font-size:12.5px;">
+        ${isMHJ ? `
+          <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; color:var(--ink); font-weight:600;">
+            <input type="radio" name="shortfallHandling" id="optAdjustLoan" value="ADJUST_LOAN" checked style="margin-top:2px; accent-color:#7C3AED;">
+            <span>Adjust remaining with MHJ Loan Taken (Deducts balance from ₹86,000 Loan &amp; marks salary cleared)</span>
+          </label>
+        ` : ''}
+        <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; color:var(--ink); font-weight:600;">
+          <input type="radio" name="shortfallHandling" id="optKeepPending" value="KEEP_PENDING" ${!isMHJ ? 'checked' : ''} style="margin-top:2px; accent-color:#BE123C;">
+          <span>Keep remaining in Pending (Salary stays partially due on dashboard &amp; balance sheet)</span>
+        </label>
+      </div>
+    </div>
+
     <div style="margin-bottom:12px;">
       <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">DATE RECEIVED</label>
       <input type="date" id="modalSalaryDate" value="${new Date().toISOString().slice(0, 10)}" style="width:100%; height:42px; border:1px solid var(--field); border-radius:10px; padding:0 12px;">
@@ -1378,29 +1507,84 @@ function clearSalaryReceivable(entity, defaultAmount) {
       </select>
     </div>
   `, () => {
-    const amt = parseFloat(document.getElementById('modalSalaryAmt').value) || defaultAmount;
+    const amt = parseFloat(document.getElementById('modalSalaryAmt').value) || 0;
     const dateVal = document.getElementById('modalSalaryDate').value || new Date().toISOString().slice(0, 10);
     const mode = document.getElementById('modalSalaryMode').value;
+    const isShortfall = amt < defaultAmount;
+    const optAdjust = isShortfall && document.getElementById('optAdjustLoan') && document.getElementById('optAdjustLoan').checked;
+    const optPending = isShortfall && (!optAdjust || (document.getElementById('optKeepPending') && document.getElementById('optKeepPending').checked));
+    const remainder = Math.max(defaultAmount - amt, 0);
 
     if (isMHJ) {
       let mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
-      if (!mhjTask) {
-        mhjTask = {
-          id: 'u_sal_mhj_' + Date.now(),
-          name: 'Monthly Salary Receivable - MHJ (Mufazzal Husain Johar) (₹24,000)',
-          type: 'professional',
-          cat: 'MHJ',
-          done: true,
-          remark: 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode
-        };
-        tasks.unshift(mhjTask);
+      
+      if (isShortfall && optAdjust) {
+        saveLoanAdjustmentRecord({
+          id: 'adj_sal_' + Date.now(),
+          account: 'MHJ',
+          targetTitle: 'MHJ (Mufazzal Husain Johar) Loan Taken',
+          type: 'CONTRA_SALARY',
+          amount: remainder,
+          date: dateVal,
+          remark: 'Remaining salary of ₹' + remainder.toLocaleString('en-IN') + ' set off against MHJ Loan Taken'
+        });
+
+        if (!mhjTask) {
+          mhjTask = {
+            id: 'u_sal_mhj_' + Date.now(),
+            name: 'Monthly Salary Receivable - MHJ (Mufazzal Husain Johar) (₹24,000)',
+            type: 'professional',
+            cat: 'MHJ',
+            done: true,
+            remark: 'Settled: ₹' + amt.toLocaleString('en-IN') + ' recd via ' + mode + ' + ₹' + remainder.toLocaleString('en-IN') + ' adjusted with MHJ Loan on ' + dateVal
+          };
+          tasks.unshift(mhjTask);
+        } else {
+          mhjTask.done = true;
+          mhjTask.remark = 'Settled: ₹' + amt.toLocaleString('en-IN') + ' recd via ' + mode + ' + ₹' + remainder.toLocaleString('en-IN') + ' adjusted with MHJ Loan on ' + dateVal;
+          if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
+        }
+      } else if (isShortfall && optPending) {
+        if (!mhjTask) {
+          mhjTask = {
+            id: 'u_sal_mhj_' + Date.now(),
+            name: 'Monthly Salary Receivable - MHJ (Mufazzal Husain Johar) (₹' + remainder.toLocaleString('en-IN') + ' Pending)',
+            type: 'professional',
+            cat: 'MHJ',
+            done: false,
+            partialReceived: amt,
+            pendingRemainder: remainder,
+            remark: 'Part payment: ₹' + amt.toLocaleString('en-IN') + ' recd on ' + dateVal + ' via ' + mode + '. ₹' + remainder.toLocaleString('en-IN') + ' remains PENDING.'
+          };
+          tasks.unshift(mhjTask);
+        } else {
+          mhjTask.done = false;
+          mhjTask.partialReceived = amt;
+          mhjTask.pendingRemainder = remainder;
+          mhjTask.remark = 'Part payment: ₹' + amt.toLocaleString('en-IN') + ' recd on ' + dateVal + ' via ' + mode + '. ₹' + remainder.toLocaleString('en-IN') + ' remains PENDING.';
+          if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, false);
+        }
       } else {
-        mhjTask.done = true;
-        mhjTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
-        if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
+        if (!mhjTask) {
+          mhjTask = {
+            id: 'u_sal_mhj_' + Date.now(),
+            name: 'Monthly Salary Receivable - MHJ (Mufazzal Husain Johar) (₹24,000)',
+            type: 'professional',
+            cat: 'MHJ',
+            done: true,
+            remark: 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode
+          };
+          tasks.unshift(mhjTask);
+        } else {
+          mhjTask.done = true;
+          delete mhjTask.pendingRemainder;
+          mhjTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
+          if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
+        }
       }
     } else {
       let hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
+      const isPaidFull = !isShortfall || amt >= defaultAmount;
       if (!hvTask) {
         hvTask = {
           id: 'u_sal_hv_' + Date.now(),
@@ -1410,14 +1594,14 @@ function clearSalaryReceivable(entity, defaultAmount) {
           feeCat: 'OWN',
           payable: 4000,
           received: amt,
-          done: true,
-          remark: 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode
+          done: isPaidFull,
+          remark: (isPaidFull ? 'Cleared ₹' : 'Partially received ₹') + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode + (isShortfall ? ' (₹' + remainder.toLocaleString('en-IN') + ' pending)' : '')
         };
         tasks.unshift(hvTask);
       } else {
-        hvTask.done = true;
+        hvTask.done = isPaidFull;
         hvTask.received = amt;
-        hvTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
+        hvTask.remark = (isPaidFull ? 'Cleared ₹' : 'Partially received ₹') + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode + (isShortfall ? ' (₹' + remainder.toLocaleString('en-IN') + ' pending)' : '');
         if (hvTask.id.startsWith('cal_')) updateFeeOnCalendar(hvTask.id, amt, 0);
       }
     }
@@ -1429,7 +1613,22 @@ function clearSalaryReceivable(entity, defaultAmount) {
       render();
     }
     fireConfetti();
-  }, 'Confirm & Settle', 'Cancel');
+  }, 'Confirm Settlement', 'Cancel');
+}
+
+function updateSalarySettleOptions(totalAmt, isMHJ) {
+  const entered = parseFloat(document.getElementById('modalSalaryAmt').value) || 0;
+  const box = document.getElementById('salaryShortfallBox');
+  if (!box) return;
+
+  if (entered < totalAmt) {
+    box.style.display = 'block';
+    const diff = totalAmt - entered;
+    document.getElementById('salaryShortfallTitle').textContent = 'Shortfall of ₹' + diff.toLocaleString('en-IN');
+    document.getElementById('salaryShortfallDesc').innerHTML = `You entered <strong>₹${entered.toLocaleString('en-IN')}</strong> out of total <strong>₹${totalAmt.toLocaleString('en-IN')}</strong>. There is a remaining balance of <strong>₹${diff.toLocaleString('en-IN')}</strong>.`;
+  } else {
+    box.style.display = 'none';
+  }
 }
 
 function reopenSalaryReceivable(entity) {
@@ -1438,6 +1637,8 @@ function reopenSalaryReceivable(entity) {
     const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
     if (mhjTask) {
       mhjTask.done = false;
+      delete mhjTask.pendingRemainder;
+      delete mhjTask.partialReceived;
       mhjTask.remark = 'Reopened pending clearance';
       if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, false);
     }
@@ -1455,7 +1656,7 @@ function reopenSalaryReceivable(entity) {
   if (activePage === 'financials') renderFinancialsPage();
 }
 
-// ---- Loan Adjustments ----
+// Loan Adjustments
 const LOAN_ADJUST_LOG_KEY = 'dash-loan-adjustments-v1';
 
 function getLoanAdjustments() {
@@ -1581,13 +1782,13 @@ function renderFinancialsPage() {
 
   const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
   const mhjCleared = mhjTask ? mhjTask.done : false;
-  const salaryMHJDues = mhjCleared ? 0 : 24000;
-  const salaryMHJReceived = mhjCleared ? 24000 : 0;
+  const salaryMHJDues = mhjCleared ? 0 : (mhjTask && mhjTask.pendingRemainder !== undefined ? mhjTask.pendingRemainder : 24000);
+  const salaryMHJReceived = 24000 - salaryMHJDues;
 
   const hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
   const hvCleared = hvTask ? hvTask.done : false;
-  const salaryHVDues = hvCleared ? 0 : 4000;
-  const salaryHVReceived = hvCleared ? 4000 : 0;
+  const salaryHVDues = hvCleared ? 0 : (hvTask && hvTask.payable ? Math.max(hvTask.payable - (hvTask.received || 0), 0) : 4000);
+  const salaryHVReceived = 4000 - salaryHVDues;
 
   const totalMonthlySalaryReceivable = salaryMHJDues + salaryHVDues;
   const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + 28000;
@@ -1665,55 +1866,53 @@ function renderFinancialsPage() {
         </div>
         <div class="statement-body">
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
-            <!-- 1. MHJ Salary Card -->
             <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px 18px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
                   <div style="font-weight:700; font-size:15px; color:var(--ink);">MHJ (Mufazzal Husain Johar)</div>
                   <div style="font-size:12px; color:var(--muted); margin-top:2px;">Monthly Professional Retainership &bull; ₹24,000 / month</div>
                 </div>
-                <span class="fin-pill ${mhjCleared ? 'pay' : 'rec'}" style="${mhjCleared ? 'background:var(--green-soft); color:var(--green); border:1px solid var(--green-border);' : ''}">${mhjCleared ? 'Cleared ✓' : 'Due ₹24,000'}</span>
+                <span class="fin-pill ${mhjCleared ? 'pay' : 'rec'}" style="${mhjCleared ? 'background:var(--green-soft); color:var(--green); border:1px solid var(--green-border);' : ''}">${mhjCleared ? 'Cleared ✓' : (salaryMHJDues < 24000 ? 'Part Due ' + inr(salaryMHJDues) : 'Due ₹24,000')}</span>
               </div>
               <div style="font-family:var(--serif); font-size:24px; font-weight:700; color:${mhjCleared ? 'var(--green)' : 'var(--red)'}; margin:10px 0 6px;">
-                ${mhjCleared ? '₹0 <small style="font-size:13px; font-weight:500; color:var(--green);">(₹24,000 Received)</small>' : inr(24000)}
+                ${mhjCleared ? '₹0 <small style="font-size:13px; font-weight:500; color:var(--green);">(₹24,000 Cleared)</small>' : inr(salaryMHJDues)}
               </div>
               <div style="font-size:12px; color:var(--muted); margin-bottom:14px; min-height:18px;">
                 ${mhjTask && mhjTask.remark ? mhjTask.remark : 'Recurring salary from Mufazzal Husain Johar office.'}
               </div>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-wa" style="flex:1; height:38px; font-size:13px; font-weight:600;" onclick="clearSalaryReceivable('MHJ', 24000)">
-                  ✓ Settle MHJ (₹24,000)
+                <button type="button" class="btn btn-wa" style="flex:1; height:38px; font-size:13px; font-weight:600;" onclick="clearSalaryReceivable('MHJ', ${salaryMHJDues || 24000})">
+                  ${salaryMHJDues < 24000 && !mhjCleared ? `✓ Settle Remaining ${inr(salaryMHJDues)}` : '✓ Settle MHJ Salary'}
                 </button>
-                ${mhjCleared ? `
+                ${mhjCleared || salaryMHJDues < 24000 ? `
                   <button type="button" class="btn btn-quiet" style="height:38px; font-size:12px;" onclick="reopenSalaryReceivable('MHJ')">
-                    Reopen
+                    Reset
                   </button>
                 ` : ''}
               </div>
             </div>
 
-            <!-- 2. Hakimi Vihar Society Salary Card -->
             <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px 18px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
                   <div style="font-weight:700; font-size:15px; color:var(--ink);">Hakimi Vihar Society</div>
                   <div style="font-size:12px; color:var(--muted); margin-top:2px;">Society Accounting / Maintenance Salary &bull; ₹4,000 / month</div>
                 </div>
-                <span class="fin-pill ${hvCleared ? 'pay' : 'rec'}" style="${hvCleared ? 'background:var(--green-soft); color:var(--green); border:1px solid var(--green-border);' : ''}">${hvCleared ? 'Cleared ✓' : 'Due ₹4,000'}</span>
+                <span class="fin-pill ${hvCleared ? 'pay' : 'rec'}" style="${hvCleared ? 'background:var(--green-soft); color:var(--green); border:1px solid var(--green-border);' : ''}">${hvCleared ? 'Cleared ✓' : (salaryHVDues < 4000 ? 'Part Due ' + inr(salaryHVDues) : 'Due ₹4,000')}</span>
               </div>
               <div style="font-family:var(--serif); font-size:24px; font-weight:700; color:${hvCleared ? 'var(--green)' : 'var(--red)'}; margin:10px 0 6px;">
-                ${hvCleared ? '₹0 <small style="font-size:13px; font-weight:500; color:var(--green);">(₹4,000 Received)</small>' : inr(4000)}
+                ${hvCleared ? '₹0 <small style="font-size:13px; font-weight:500; color:var(--green);">(₹4,000 Received)</small>' : inr(salaryHVDues)}
               </div>
               <div style="font-size:12px; color:var(--muted); margin-bottom:14px; min-height:18px;">
                 ${hvTask && hvTask.remark ? hvTask.remark : 'Recurring monthly accounting salary from Hakimi Vihar Society.'}
               </div>
               <div style="display:flex; gap:8px;">
-                <button type="button" class="btn btn-wa" style="flex:1; height:38px; font-size:13px; font-weight:600;" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">
-                  ✓ Settle Hakimi Vihar (₹4,000)
+                <button type="button" class="btn btn-wa" style="flex:1; height:38px; font-size:13px; font-weight:600;" onclick="clearSalaryReceivable('Hakimi Vihar', ${salaryHVDues || 4000})">
+                  ${salaryHVDues < 4000 && !hvCleared ? `✓ Settle Remaining ${inr(salaryHVDues)}` : '✓ Settle Hakimi Vihar'}
                 </button>
-                ${hvCleared ? `
+                ${hvCleared || salaryHVDues < 4000 ? `
                   <button type="button" class="btn btn-quiet" style="height:38px; font-size:12px;" onclick="reopenSalaryReceivable('Hakimi Vihar')">
-                    Reopen
+                    Reset
                   </button>
                 ` : ''}
               </div>
@@ -2241,9 +2440,10 @@ function render(listOnly) {
         const sub = !isFee ? '' : `<div class="task-sub"><span>${inr(t.received)} of ${inr(t.payable)} received${t.discount ? ' + ' + inr(t.discount) + ' discount' : ''}</span>${status ? '<span class="state">' + status + '</span>' : ''}${showLinked ? '<span>linked: ' + t.linked + '</span>' : ''}${t.invoice ? '<span>' + ICON.doc + t.invoice + '</span>' : ''}</div>`;
         const isJuzerLoan = /Juzer Presswala/i.test(t.name);
         
+        const mhjPendingAmt = t.pendingRemainder !== undefined ? t.pendingRemainder : 24000;
         const actions = [
-          isMHJSalary ? `<button type="button" class="act" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('MHJ', 24000)">✓ Settle Salary (₹24k)</button>` : '',
-          isHVSalary ? `<button type="button" class="act" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">✓ Settle Salary (₹4k)</button>` : '',
+          isMHJSalary && !t.done ? `<button type="button" class="act" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('MHJ', ${mhjPendingAmt})">✓ Settle Salary (${inr(mhjPendingAmt)})</button>` : '',
+          isHVSalary && !t.done ? `<button type="button" class="act" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">✓ Settle Salary (₹4k)</button>` : '',
           isFee && !isHVSalary ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
           isJuzerLoan ? `<button type="button" class="act" style="color:#6D28D9;" onclick="openLoanAdjustmentModal('JUZER')">⚖️ Adjust Loan</button>` : '',
           isFee && balance > 0 && t.phone ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : '',
