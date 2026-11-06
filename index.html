@@ -74,7 +74,7 @@
   }
   .ic { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* Compact Masthead */
+  /* Masthead */
   .masthead {
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
     gap: 8px 14px; margin-bottom: 12px; padding: 10px 16px;
@@ -117,7 +117,7 @@
     padding: 5px 12px; margin: 0 0 10px; border-radius: 8px; border: 1px solid var(--accent-border);
   }
 
-  /* Compact Primary Tab Navigation */
+  /* Navigation */
   .page-nav {
     display: flex; gap: 6px; margin: 0 0 12px; padding: 3px;
     background: #EEF2F6; border: 1px solid var(--rule); border-radius: 10px;
@@ -140,7 +140,7 @@
     background: var(--accent); color: #FFFFFF;
   }
 
-  /* Compact KPI Bar & Financial strip */
+  /* KPI Summary */
   .summary-sheet {
     background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px;
     margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-xs);
@@ -151,7 +151,6 @@
   .hero-card .l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; color: var(--muted); margin-top: 2px; }
   .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
   .hero-card.alert .n { color: var(--red); }
-  .hero-card.highlight .n { color: #2563EB; }
 
   .totals { border-top: 1px solid var(--rule-soft); padding: 5px 0 4px; background: #FAFCFE; }
   .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; padding: 3px 14px; }
@@ -243,7 +242,7 @@
   .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 32px 14px; background: #FFFFFF; border: 1px dashed var(--rule); border-radius: 10px; }
   .loading { text-align: center; padding: 32px; color: var(--muted); font-weight: 500; }
 
-  /* Section & Task Card Layout */
+  /* Sections & Cards */
   .cat-section { margin-bottom: 16px; }
   .cat-heading { display: flex; align-items: center; gap: 8px; margin: 0 2px 7px; min-height: 26px; }
   .cat-heading .dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
@@ -571,7 +570,16 @@ const defaultFinLedger = {
       adjustments: 0
     }
   },
-  expenses: [],
+  expenses: [
+    {
+      id: 'exp_rzp_royal',
+      date: '2026-11-04',
+      payee: 'Razorpay Payment Gateway',
+      amount: 18.18,
+      category: 'Gateway / Merchant Fee',
+      note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application (Net credited ₹681.82)'
+    }
+  ],
   adjustmentsLog: []
 };
 
@@ -580,9 +588,21 @@ function getFinLedger() {
     const raw = localStorage.getItem(FIN_LEDGER_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Ensure cash & bank values exist and default properly
       if (parsed.cashInHand === undefined) parsed.cashInHand = 4000.00;
       if (parsed.bankSlice === undefined) parsed.bankSlice = 17440.83;
+      
+      // Ensure Razorpay gateway fee is present in expenses if missing
+      if (!parsed.expenses) parsed.expenses = [];
+      if (!parsed.expenses.some(e => e.id === 'exp_rzp_royal' || /Royal consultancy/i.test(e.note || ''))) {
+        parsed.expenses.unshift({
+          id: 'exp_rzp_royal',
+          date: '2026-11-04',
+          payee: 'Razorpay Payment Gateway',
+          amount: 18.18,
+          category: 'Gateway / Merchant Fee',
+          note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application (Net credited ₹681.82)'
+        });
+      }
       return Object.assign({}, defaultFinLedger, parsed);
     }
   } catch (e) {}
@@ -646,7 +666,6 @@ function recordManualExpense(payee, amount, category, note) {
     });
   }
 
-  // Deduct from bank balance by default for tracked UPI/expenses
   if (ledger.bankSlice >= amt) {
     ledger.bankSlice -= amt;
   }
@@ -681,11 +700,12 @@ function openAddExpenseModal() {
       }
     "></textarea>
     <label>Paid To (Person / Vendor)</label>
-    <input type="text" id="expPayee" placeholder="e.g. MHJ, Stationery, Electricity, DSC">
+    <input type="text" id="expPayee" placeholder="e.g. Razorpay Charges, Stationery, Electricity, DSC">
     <label>Amount Paid (₹)</label>
-    <input type="number" id="expAmount" placeholder="Amount (₹)">
+    <input type="number" step="0.01" id="expAmount" placeholder="Amount (₹)">
     <label>Classification / Ledger</label>
     <select id="expCategory">
+      <option value="Gateway / Merchant Fee">Payment Gateway / Merchant Charges (Razorpay etc.)</option>
       <option value="Office Expense">Office Operating Expense (Deducts from P&amp;L Profit)</option>
       <option value="Portal Filing">Client Compliance / Portal Filing Charges</option>
       <option value="Loan Repayment - MHJ">Repayment to MHJ (Reduces ₹86k Loan Taken)</option>
@@ -694,7 +714,7 @@ function openAddExpenseModal() {
       <option value="Personal Drawings">Personal Drawings</option>
     </select>
     <label>Remarks / Notes</label>
-    <input type="text" id="expNote" placeholder="e.g. Paid via slice UPI">
+    <input type="text" id="expNote" placeholder="e.g. Settled via Razorpay deduction">
   `, () => {
     const payee = document.getElementById('expPayee').value.trim() || 'Paid';
     const amount = parseFloat(document.getElementById('expAmount').value) || 0;
@@ -835,6 +855,24 @@ const seedTasks = [
     done: false,
     urgent: false,
     remark: 'Payable to Hatim Bhai (Mob: 9826768052). Pending clearance'
+  },
+  {
+    id: 'cal_royal_gumasta_settled',
+    name: 'Royal consultancy services gumasta application',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'SHK',
+    due: '',
+    dueDate: '2026-11-04T08:53:00.000Z',
+    done: true,
+    urgent: false,
+    payable: 700,
+    received: 700,
+    discount: 0,
+    linked: 'Royal consultancy services',
+    phone: '9425320184',
+    invoice: 'INV-2026-11-001',
+    remark: 'Fully settled ₹700 via Razorpay link. Bank credited ₹681.82. Gateway fee ₹18.18 booked in expenses.'
   }
 ];
 
@@ -849,6 +887,16 @@ async function loadTasks() {
   const savedIds = new Set(saved.map(t => t.id));
   const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
   tasks = saved.concat(newFromSeed);
+
+  // Synchronize Royal consultancy status if present in existing storage
+  const royalTask = tasks.find(t => /Royal consultancy/i.test(t.name) || /Royal consultancy/i.test(t.linked || ''));
+  if (royalTask) {
+    royalTask.payable = 700;
+    royalTask.received = 700;
+    royalTask.discount = 0;
+    royalTask.done = true;
+    royalTask.remark = 'Fully settled ₹700 via Razorpay link. Bank credited ₹681.82. Gateway fee ₹18.18 booked in expenses.';
+  }
 
   tasks = tasks.filter(t => !/Monthly Salary Receivable/i.test(t.name) && !/Salary Receivable - Hakimi Vihar/i.test(t.name));
 
@@ -1336,7 +1384,7 @@ function render(listOnly) {
     const sub = !isFee ? '' : `<div class="task-sub"><span>${inr(t.received)} of ${inr(t.payable)} recd${t.discount ? ' + ' + inr(t.discount) + ' disc' : ''}</span>${showLinked ? '<span>&bull; ' + escapeForHtml(t.linked) + '</span>' : ''}</div>`;
     
     const actions = [
-      isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
+      isFee && !t.done ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
       !t.done && !isNamaz ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Due' : 'Set due'}</button>` : '',
       !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Note' : '+ Note'}</button>` : ''
     ].join('');
@@ -1353,7 +1401,7 @@ function render(listOnly) {
             <button type="button" class="act del" onclick="deleteTask('${t.id}')" title="Remove">${ICON.x}</button>
           </div>
           ${sub}
-          ${t.remark && !t.done ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
+          ${t.remark ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
           ${meta ? `<div class="task-meta">${meta}</div>` : ''}
         </div>
       </div>
@@ -1474,7 +1522,6 @@ function renderFinancialsPage() {
 
   const netProfit = (grossFeesBilled - discountsAllowed) - totalOperatingExpenses;
 
-  // Real liquid balances
   const cashInHand = Number(ledger.cashInHand || 4000.00);
   const bankSlice = Number(ledger.bankSlice || 17440.83);
   const totalLiquidCashBank = cashInHand + bankSlice;
@@ -1574,6 +1621,10 @@ function renderFinancialsPage() {
               <tr style="font-weight:700; background:#FAFCFE;">
                 <td><strong>B. Less: Direct Operating Expenses</strong></td>
                 <td class="text-right stmt-mono" style="color:var(--red);">&minus; ${inr(totalOperatingExpenses)}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted); padding-left:24px;">&bull; Payment Gateway &amp; Merchant Charges (Razorpay: ₹18.18)</td>
+                <td class="text-right stmt-mono" style="color:var(--muted);">&minus; ${inr(18.18)}</td>
               </tr>
               <tr style="font-weight:700; background:#F1F5F9;">
                 <td><strong>NET PROFESSIONAL PROFIT (A &minus; B)</strong></td>
