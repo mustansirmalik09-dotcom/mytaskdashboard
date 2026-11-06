@@ -1598,6 +1598,7 @@ function startDashboard() {
 if (localStorage.getItem(AUTH_KEY) === 'yes') {
   document.getElementById('authGate').style.display = 'none';
   startDashboard();
+  applyFestivalTheme();
 } else {
   document.getElementById('authInput').focus();
 }
