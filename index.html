@@ -679,6 +679,17 @@ const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLyd
 let tasks = [];
 let filter = 'all';
 
+// HTML Sanitizer function defined globally
+function escapeForHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const ICON = {
   chat:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
   doc:    '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
@@ -940,7 +951,6 @@ async function loadTasks() {
     mhjPers.remark = 'Payable to MHJ (Mufazzal Husain Johar &bull; Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet';
   }
 
-  // Ensure both recurring salaries exist in local tasks
   if (!tasks.some(x => /Monthly Salary Receivable/i.test(x.name))) {
     tasks.unshift(seedTasks[4]);
   }
@@ -1304,7 +1314,7 @@ function setNamazAlarm(name, isoDate) {
   const modalHtml = `
     <div style="text-align:center; padding:8px 0 16px;">
       <div style="font-size:38px; font-weight:700; font-family:var(--serif); color:var(--ink); margin-bottom:2px;">${formatted}</div>
-      <div style="font-size:14px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">${label} &bull; Indore</div>
+      <div style="font-size:14px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">${escapeForHtml(label)} &bull; Indore</div>
       <div class="hint" style="margin-top:8px;">Fetched from mumineen.org.</div>
     </div>
     <button type="button" class="btn btn-primary" style="width:100%; height:44px; font-size:14px;" onclick="openClockApp()">
