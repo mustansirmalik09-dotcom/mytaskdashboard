@@ -546,6 +546,8 @@ let activePage = (location.hash === '#financials') ? 'financials' : 'tasks';
 const FIN_LEDGER_KEY = 'MM_FINANCIAL_LEDGER_V1';
 
 const defaultFinLedger = {
+  cashInHand: 4000.00,
+  bankSlice: 17440.83,
   loansGiven: {
     juzer: {
       name: 'Juzer Presswala',
@@ -576,7 +578,13 @@ const defaultFinLedger = {
 function getFinLedger() {
   try {
     const raw = localStorage.getItem(FIN_LEDGER_KEY);
-    if (raw) return Object.assign({}, defaultFinLedger, JSON.parse(raw));
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Ensure cash & bank values exist and default properly
+      if (parsed.cashInHand === undefined) parsed.cashInHand = 4000.00;
+      if (parsed.bankSlice === undefined) parsed.bankSlice = 17440.83;
+      return Object.assign({}, defaultFinLedger, parsed);
+    }
   } catch (e) {}
   return Object.assign({}, defaultFinLedger);
 }
@@ -585,6 +593,25 @@ function saveFinLedger(ledger) {
   try {
     localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(ledger));
   } catch (e) {}
+}
+
+function openEditBalancesModal() {
+  const ledger = getFinLedger();
+  showModal('Update Cash & Bank Balances', `
+    <div class="hint">Adjust your current physical cash in hand and slice Small Finance Bank liquid funds.</div>
+    <label>Cash in Hand Balance (₹)</label>
+    <input type="number" step="0.01" id="modalCashBal" value="${ledger.cashInHand || 4000.00}">
+    <label>Bank Balance — slice SFB (₹)</label>
+    <input type="number" step="0.01" id="modalBankBal" value="${ledger.bankSlice || 17440.83}">
+  `, () => {
+    const cashVal = parseFloat(document.getElementById('modalCashBal').value);
+    const bankVal = parseFloat(document.getElementById('modalBankBal').value);
+    if (!isNaN(cashVal)) ledger.cashInHand = cashVal;
+    if (!isNaN(bankVal)) ledger.bankSlice = bankVal;
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Update Balances', 'Cancel');
 }
 
 function recordManualExpense(payee, amount, category, note) {
@@ -617,6 +644,11 @@ function recordManualExpense(payee, amount, category, note) {
       desc: `Auto-adjusted payment of ${inr(amt)} to Hatim Bhai against ₹5,000 Loan Taken`,
       amount: amt
     });
+  }
+
+  // Deduct from bank balance by default for tracked UPI/expenses
+  if (ledger.bankSlice >= amt) {
+    ledger.bankSlice -= amt;
   }
 
   ledger.expenses.unshift(item);
@@ -693,7 +725,7 @@ const EXTRA_COLORS = ['#2563EB', '#6D28D9', '#0F766E', '#B45309', '#BE185D', '#4
 
 function inr(n) {
   const v = Math.round((Number(n) || 0) * 100) / 100;
-  return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
+  return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: (v % 1 !== 0 ? 2 : 0), maximumFractionDigits: 2 });
 }
 
 function escapeForHtml(s) {
@@ -905,7 +937,7 @@ async function pullFromCalendar() {
 
 function resetTasksOnly() {
   showModal('Reset task views?', `
-    <div class="hint">This clears the local task display and pulls fresh events from Google Calendar. Your financial ledgers, loan balances, and adjustments remain safe.</div>
+    <div class="hint">This clears the local task display and pulls fresh events from Google Calendar. Your financial ledgers, cash balance, and loan records remain safe.</div>
   `, () => {
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
@@ -1012,6 +1044,11 @@ function recordPayment(id) {
     <div class="hint">Total Payable: <strong>${inr(payable)}</strong> &bull; Received so far: <strong>${inr(currentRec)}</strong></div>
     <label>Amount Received Now (₹)</label>
     <input type="number" id="modalReceivedAmt" value="${currentRec}" oninput="checkShortfall(${payable})">
+    <label>Deposit To Account</label>
+    <select id="modalPayMode">
+      <option value="bank">slice Small Finance Bank</option>
+      <option value="cash">Cash in hand</option>
+    </select>
     <label>Discount / Concession (₹)</label>
     <input type="number" id="modalDiscountAmt" placeholder="0" value="${t.discount || 0}" oninput="checkShortfall(${payable})">
     
@@ -1030,13 +1067,23 @@ function recordPayment(id) {
   `, () => {
     const entered = parseFloat(document.getElementById('modalReceivedAmt').value) || 0;
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+    const payMode = document.getElementById('modalPayMode').value;
     const shortfallActionEl = document.getElementById('shortfallAction');
     const shortfallAction = shortfallActionEl ? shortfallActionEl.value : 'pending';
+
+    const diff = entered - currentRec;
+    const ledger = getFinLedger();
+    if (diff > 0) {
+      if (payMode === 'cash') {
+        ledger.cashInHand = (ledger.cashInHand || 0) + diff;
+      } else {
+        ledger.bankSlice = (ledger.bankSlice || 0) + diff;
+      }
+    }
 
     const remaining = payable - entered - discount;
 
     if (remaining > 0 && shortfallAction.startsWith('adjust_')) {
-      const ledger = getFinLedger();
       let targetName = 'MHJ';
       if (shortfallAction === 'adjust_mhj') {
         ledger.loansTaken.mhj.adjustments += remaining;
@@ -1053,7 +1100,6 @@ function recordPayment(id) {
         desc: `Offset ${inr(remaining)} shortfall on ${t.name} against ${targetName}`,
         amount: remaining
       });
-      saveFinLedger(ledger);
 
       t.received = entered;
       t.discount = discount;
@@ -1073,6 +1119,7 @@ function recordPayment(id) {
       }
     }
 
+    saveFinLedger(ledger);
     saveTasks();
     render();
     if (activePage === 'financials') renderFinancialsPage();
@@ -1426,9 +1473,13 @@ function renderFinancialsPage() {
     .reduce((s, e) => s + (e.amount || 0), 0);
 
   const netProfit = (grossFeesBilled - discountsAllowed) - totalOperatingExpenses;
-  const netCashBankRealized = Math.max(feesReceivedCash - expensesList.reduce((s, e) => s + (e.amount || 0), 0), 0);
 
-  const totalAssets = juzerNet + netDebtorsDue + netCashBankRealized;
+  // Real liquid balances
+  const cashInHand = Number(ledger.cashInHand || 4000.00);
+  const bankSlice = Number(ledger.bankSlice || 17440.83);
+  const totalLiquidCashBank = cashInHand + bankSlice;
+
+  const totalAssets = juzerNet + netDebtorsDue + totalLiquidCashBank;
   const totalLiabilities = totalLoansTaken;
   const netPracticeWorth = totalAssets - totalLiabilities;
 
@@ -1444,21 +1495,41 @@ function renderFinancialsPage() {
         <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Contra</button>
       </div>
       <div style="display:flex; gap:6px;">
+        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Update Cash &amp; Bank</button>
         <button type="button" class="btn btn-primary" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddExpenseModal()">+ Record / Parse Expense</button>
         <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="window.print()">Print</button>
       </div>
     </div>
 
+    <!-- Liquid Cash & Bank Position Strip -->
+    <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid var(--green); border-radius:10px; padding:10px 14px; margin-bottom:14px; box-shadow:var(--shadow-xs); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div>
+          <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">Cash in Hand</span>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--green);">${inr(cashInHand)}</div>
+        </div>
+        <div style="border-left:1px solid var(--rule); padding-left:16px;">
+          <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">slice Small Finance Bank</span>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#1E3A8A;">${inr(bankSlice)}</div>
+        </div>
+        <div style="border-left:1px solid var(--rule); padding-left:16px;">
+          <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">Total Liquid Funds</span>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--ink);">${inr(totalLiquidCashBank)}</div>
+        </div>
+      </div>
+      <button type="button" onclick="openEditBalancesModal()" style="background:#F8FAFC; border:1px solid var(--rule); border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:600; color:var(--muted); cursor:pointer;">Edit Balances</button>
+    </div>
+
     <div class="fin-hero-grid">
       <div class="fin-card">
-        <div class="f-lbl">Net Professional Profit</div>
-        <div class="f-val" style="color:var(--green);">${inr(netProfit)}</div>
-        <div class="f-sub">Gross: ${inr(grossFeesBilled)} &minus; Exp: ${inr(totalOperatingExpenses)}</div>
+        <div class="f-lbl">Net Practice Worth (Capital)</div>
+        <div class="f-val" style="color:var(--green);">${inr(netPracticeWorth)}</div>
+        <div class="f-sub">Total Assets &minus; Liabilities</div>
       </div>
       <div class="fin-card">
         <div class="f-lbl">Sundry Debtors (Fees Due)</div>
         <div class="f-val" style="color:var(--red);">${inr(netDebtorsDue)}</div>
-        <div class="f-sub">Pending collection</div>
+        <div class="f-sub">Pending client collection</div>
       </div>
       <div class="fin-card">
         <div class="f-lbl">Loans &amp; Advances (Asset)</div>
@@ -1548,8 +1619,9 @@ function renderFinancialsPage() {
                 </thead>
                 <tbody>
                   <tr><td><strong>Juzer Presswala</strong> (Loan Advance Given)</td><td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td></tr>
-                  <tr><td>Sundry Debtors (Active Client Fees)</td><td class="text-right stmt-mono" style="color:var(--red);">${inr(netDebtorsDue)}</td></tr>
-                  <tr><td>Cash &amp; Bank Balance (slice Bank / Cash)</td><td class="text-right stmt-mono" style="color:var(--green);">${inr(netCashBankRealized)}</td></tr>
+                  <tr><td>Sundry Debtors (Active Client Fees Due)</td><td class="text-right stmt-mono" style="color:var(--red);">${inr(netDebtorsDue)}</td></tr>
+                  <tr><td><strong>Cash in Hand</strong></td><td class="text-right stmt-mono" style="color:var(--green);">${inr(cashInHand)}</td></tr>
+                  <tr><td><strong>slice Small Finance Bank</strong> (A/C: 033311501064738)</td><td class="text-right stmt-mono" style="color:var(--green);">${inr(bankSlice)}</td></tr>
                   <tr style="font-weight:700; background:#FAFCFE;"><td>TOTAL ASSETS</td><td class="text-right stmt-mono">${inr(totalAssets)}</td></tr>
                 </tbody>
               </table>
