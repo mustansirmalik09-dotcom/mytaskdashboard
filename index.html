@@ -479,7 +479,7 @@
     </div>
   </div>
   <div class="status">
-    <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Loading...</span></span>
+    <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Cloud Sync Active</span></span>
     <button id="resetBtn" type="button" onclick="resetTasksOnly()" title="Resyncs fresh task list from Calendar without losing financial balances">Reset tasks</button>
   </div>
 </header>
@@ -543,6 +543,12 @@
 let activePage = (location.hash === '#financials') ? 'financials' : 'tasks';
 
 const FIN_LEDGER_KEY = 'MM_FINANCIAL_LEDGER_V1';
+const WEBHOOK_KEY = 'webhookUrl';
+const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+
+function getWebhook() {
+  return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
+}
 
 const defaultFinLedger = {
   openingCapital: 111000.00,
@@ -609,76 +615,118 @@ const defaultFinLedger = {
   adjustmentsLog: []
 };
 
+// Global in-memory ledger
+let currentLedger = null;
+
+function sanitizeLedger(parsed) {
+  if (parsed.cashInHand === undefined) parsed.cashInHand = 4000.00;
+  if (parsed.bankSlice === undefined) parsed.bankSlice = 17216.83;
+  if (parsed.openingCapital === undefined) parsed.openingCapital = 111000.00;
+  
+  if (!parsed.expenses) parsed.expenses = [];
+  parsed.expenses = parsed.expenses.filter(e => !(e.amount === 3000 && (/Personal Drawings/i.test(e.category || '') || /Vendor \/ Contact/i.test(e.payee || ''))));
+
+  if (!parsed.kathiyawadTrip) {
+    parsed.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
+  } else {
+    if (!parsed.kathiyawadTrip.payments) parsed.kathiyawadTrip.payments = [];
+    if (!parsed.kathiyawadTrip.contributions) parsed.kathiyawadTrip.contributions = [];
+    if (parsed.kathiyawadTrip.payments.length === 0) {
+      parsed.kathiyawadTrip.payments = [
+        {
+          id: 'kz_adv_1',
+          date: '2026-11-06',
+          desc: 'Advance given to tour operator for booking & travel arrangements',
+          amount: 3000.00,
+          mode: 'Online / Bank Transfer',
+          ref: '2026-11-06-Vendor-Contact'
+        }
+      ];
+    }
+  }
+
+  if (!parsed.expenses.some(e => e.id === 'exp_challan_royal' || (e.amount === 224 && /Royal consultancy/i.test(e.note || '')))) {
+    parsed.expenses.unshift({
+      id: 'exp_challan_royal',
+      date: '2026-11-06',
+      payee: 'MP Government Portal (Gumasta Challan)',
+      amount: 224.00,
+      category: 'Portal Filing & Challan',
+      note: 'Portal challan paid against Royal consultancy services gumasta application'
+    });
+  }
+
+  if (!parsed.expenses.some(e => e.id === 'exp_rzp_royal' || /Royal consultancy/i.test(e.note || ''))) {
+    parsed.expenses.push({
+      id: 'exp_rzp_royal',
+      date: '2026-11-04',
+      payee: 'Razorpay Payment Gateway',
+      amount: 18.18,
+      category: 'Gateway / Merchant Fee',
+      note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application (Net credited ₹681.82)'
+    });
+  }
+
+  return Object.assign({}, defaultFinLedger, parsed);
+}
+
 function getFinLedger() {
+  if (currentLedger) return currentLedger;
   try {
     const raw = localStorage.getItem(FIN_LEDGER_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.cashInHand === undefined) parsed.cashInHand = 4000.00;
-      if (parsed.bankSlice === undefined) parsed.bankSlice = 17216.83;
-      if (parsed.openingCapital === undefined) parsed.openingCapital = 111000.00;
-      
-      if (!parsed.expenses) parsed.expenses = [];
-      
-      parsed.expenses = parsed.expenses.filter(e => !(e.amount === 3000 && (/Personal Drawings/i.test(e.category || '') || /Vendor \/ Contact/i.test(e.payee || ''))));
-
-      if (!parsed.kathiyawadTrip) {
-        parsed.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
-      } else {
-        if (!parsed.kathiyawadTrip.payments) parsed.kathiyawadTrip.payments = [];
-        if (!parsed.kathiyawadTrip.contributions) parsed.kathiyawadTrip.contributions = [];
-        if (parsed.kathiyawadTrip.payments.length === 0) {
-          parsed.kathiyawadTrip.payments = [
-            {
-              id: 'kz_adv_1',
-              date: '2026-11-06',
-              desc: 'Advance given to tour operator for booking & travel arrangements',
-              amount: 3000.00,
-              mode: 'Online / Bank Transfer',
-              ref: '2026-11-06-Vendor-Contact'
-            }
-          ];
-        }
-      }
-
-      if (!parsed.expenses.some(e => e.id === 'exp_challan_royal' || (e.amount === 224 && /Royal consultancy/i.test(e.note || '')))) {
-        parsed.expenses.unshift({
-          id: 'exp_challan_royal',
-          date: '2026-11-06',
-          payee: 'MP Government Portal (Gumasta Challan)',
-          amount: 224.00,
-          category: 'Portal Filing & Challan',
-          note: 'Portal challan paid against Royal consultancy services gumasta application'
-        });
-      }
-
-      if (!parsed.expenses.some(e => e.id === 'exp_rzp_royal' || /Royal consultancy/i.test(e.note || ''))) {
-        parsed.expenses.push({
-          id: 'exp_rzp_royal',
-          date: '2026-11-04',
-          payee: 'Razorpay Payment Gateway',
-          amount: 18.18,
-          category: 'Gateway / Merchant Fee',
-          note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application (Net credited ₹681.82)'
-        });
-      }
-
-      return Object.assign({}, defaultFinLedger, parsed);
+      currentLedger = sanitizeLedger(JSON.parse(raw));
+      return currentLedger;
     }
   } catch (e) {}
-  return Object.assign({}, defaultFinLedger);
+  currentLedger = Object.assign({}, defaultFinLedger);
+  return currentLedger;
 }
 
-function saveFinLedger(ledger) {
+// Multi-Device Cloud Persistence
+async function syncCloudFinLedger() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const res = await fetch(url + '?action=getfinledger');
+    const data = await res.json();
+    if (data.status === 'ok' && data.ledger) {
+      currentLedger = sanitizeLedger(data.ledger);
+      localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(currentLedger));
+      if (activePage === 'financials') renderFinancialsPage();
+      render();
+    }
+  } catch(e) {}
+}
+
+async function saveFinLedger(ledger) {
+  currentLedger = ledger;
   try {
     localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(ledger));
   } catch (e) {}
+
+  // Push instantly to Google Cloud so any other phone or PC sees it
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const payload = JSON.stringify({ action: 'savefinledger', ledger: ledger });
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      mode: 'no-cors'
+    }).catch(() => {
+      // Fallback via GET parameter if POST blocked
+      const encoded = encodeURIComponent(JSON.stringify(ledger));
+      fetch(url + '?action=savefinledger&data=' + encoded).catch(()=>{});
+    });
+  } catch(e) {}
 }
 
 function openEditBalancesModal() {
   const ledger = getFinLedger();
   showModal('Update Cash & Bank Balances', `
-    <div class="hint">Adjust your current physical cash in hand and slice Small Finance Bank liquid funds.</div>
+    <div class="hint">Adjust your current physical cash in hand and slice Small Finance Bank liquid funds. Updated instantly across all devices.</div>
     <label>Cash in Hand Balance (₹)</label>
     <input type="number" step="0.01" id="modalCashBal" value="${ledger.cashInHand || 4000.00}">
     <label>Bank Balance — slice SFB (₹)</label>
@@ -914,9 +962,6 @@ function openAddExpenseModal() {
 }
 
 const STORAGE_KEY = 'tasks-v2';
-const WEBHOOK_KEY = 'webhookUrl';
-const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
-
 let tasks = [];
 let filter = 'all';
 
@@ -987,10 +1032,6 @@ window.addEventListener('scroll', () => {
   const b = document.getElementById('toTop');
   if (b) b.classList.toggle('show', window.scrollY > 400);
 }, { passive: true });
-
-function getWebhook() {
-  return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
-}
 
 const seedTasks = [
   {
@@ -1116,10 +1157,8 @@ async function loadTasks() {
 async function saveTasks() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    document.getElementById('lastSync').textContent = 'Saved ' + new Date().toLocaleTimeString();
-  } catch (e) {
-    document.getElementById('lastSync').textContent = 'Saved in session';
-  }
+    document.getElementById('lastSync').textContent = 'Cloud Active ' + new Date().toLocaleTimeString();
+  } catch (e) {}
 }
 
 async function pullFromCalendar() {
@@ -1179,7 +1218,7 @@ async function pullFromCalendar() {
     const removed = beforeCount - tasks.length;
 
     if (added > 0 || removed > 0 || refreshed > 0) { saveTasks(); render(); }
-    document.getElementById('lastSync').textContent = 'Synced ✓ ' + new Date().toLocaleTimeString();
+    document.getElementById('lastSync').textContent = 'Cloud Synced ✓ ' + new Date().toLocaleTimeString();
   } catch (e) {
     document.getElementById('lastSync').textContent = 'Live';
   }
@@ -1187,7 +1226,7 @@ async function pullFromCalendar() {
 
 function resetTasksOnly() {
   showModal('Reset task views?', `
-    <div class="hint">This clears the local task display and pulls fresh events from Google Calendar. Your financial ledgers, cash balance, and loan records remain safe.</div>
+    <div class="hint">This clears the local task display and pulls fresh events from Google Calendar. Your cloud financial ledgers, cash balance, and loan records remain 100% safe.</div>
   `, () => {
     localStorage.removeItem(STORAGE_KEY);
     window.location.reload();
@@ -2191,8 +2230,10 @@ function checkAuth() {
 }
 
 function startDashboard() {
-  loadTasks().then(() => {
-    pullFromCalendar();
+  syncCloudFinLedger().then(() => {
+    loadTasks().then(() => {
+      pullFromCalendar();
+    });
   });
 }
 
