@@ -11,11 +11,6 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
-  /* ------------------------------------------------------------------
-     Executive Financial Suite Design System
-     Deep navy & sapphire accents, warm slate canvas, editorial serif
-     numbers & headers, crisp geometric sans interface.
-     ------------------------------------------------------------------ */
   :root {
     --bg: #F8FAFC;
     --sheet: #FFFFFF;
@@ -29,13 +24,11 @@
     --rule: #E2E8F0;
     --rule-soft: #F1F5F9;
 
-    /* Executive Navy & Sapphire */
     --accent: #1E3A8A;
     --accent-hover: #1D4ED8;
     --accent-soft: #EFF6FF;
     --accent-border: #BFDBFE;
 
-    /* Financial Indicators */
     --red: #BE123C;
     --red-soft: #FFF1F2;
     --red-border: #FECDD3;
@@ -48,7 +41,6 @@
     --amber-soft: #FFFBEB;
     --amber-border: #FDE68A;
 
-    /* Jewel-toned Category Accents */
     --c-mhj: #2563EB;
     --c-shk: #6D28D9;
     --c-own: #0F766E;
@@ -58,7 +50,6 @@
     --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
     --sans: 'Plus Jakarta Sans', 'Public Sans', system-ui, -apple-system, sans-serif;
 
-    /* Shadow Hierarchy */
     --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
     --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
     --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
@@ -88,7 +79,7 @@
   }
   .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* ---- Executive Masthead ---- */
+  /* Masthead */
   .masthead {
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
     gap: 12px 20px; margin-bottom: 20px; padding: 18px 22px;
@@ -131,7 +122,7 @@
     padding: 8px 16px; margin: 0 0 16px; border-radius: 10px; border: 1px solid var(--accent-border);
   }
 
-  /* ---- KPI Summary Sheet ---- */
+  /* Summary Sheet */
   .summary-sheet {
     background: var(--sheet); border: 1px solid var(--rule); border-radius: 16px;
     margin-bottom: 16px; overflow: hidden; box-shadow: var(--shadow-sm);
@@ -144,7 +135,6 @@
   .hero-card.alert .n { color: var(--red); }
   @media (max-width: 400px) { .hero-card { padding: 12px 10px 10px; } .hero-card .n { font-size: 24px; } }
 
-  /* Financial Ledger */
   .totals { border-top: 1px solid var(--rule-soft); padding: 8px 0 6px; background: #FAFCFE; }
   .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; padding: 5px 18px; }
   .totals .l { font-size: 13.5px; font-weight: 500; color: var(--muted); }
@@ -163,7 +153,7 @@
   .credit-line { margin-top: 3px; color: #164E63; }
   .credit-hint { margin-top: 4px; font-size: 12px; color: var(--muted); }
 
-  /* ---- Refined Navigation Filters ---- */
+  /* Filters */
   .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .filters.seg {
     gap: 3px; flex-wrap: nowrap; padding: 4px; background: #EEF2F6;
@@ -192,7 +182,7 @@
   .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; flex: none; }
   @media (max-width: 400px) { .filters.seg .filter-btn { padding: 7px 8px; font-size: 12.5px; } }
 
-  /* ---- Search & Task Creator Bar ---- */
+  /* Search & Task Inputs */
   #searchRow { margin: 0 0 12px; }
   #searchWrap { position: relative; }
   #searchWrap .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 17px; height: 17px; }
@@ -239,7 +229,7 @@
   .empty { color: var(--muted); font-size: 15px; text-align: center; padding: 44px 16px; background: #FFFFFF; border: 1px dashed var(--rule); border-radius: 14px; }
   .loading { text-align: center; padding: 48px; color: var(--muted); font-weight: 500; }
 
-  /* ---- Sections & Cards ---- */
+  /* Sections & Cards */
   .cat-section { margin-bottom: 24px; }
   .cat-heading { display: flex; align-items: center; gap: 9px; margin: 0 2px 10px; min-height: 30px; }
   .cat-heading .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; box-shadow: 0 0 0 2px rgba(0,0,0,0.04); }
@@ -257,7 +247,6 @@
   .cat-section.collapsed .cat-heading { margin-bottom: 0; }
   .cat-section.collapsed .cat-heading .chev { transform: rotate(-90deg); }
 
-  /* Card Grid Layout */
   .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-sm); }
   .task {
     display: flex; align-items: flex-start; gap: 10px; padding: 13px 16px 11px;
@@ -296,7 +285,7 @@
   }
   .note .ic { margin-top: 2px; width: 13px; height: 13px; color: var(--amber); }
 
-  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; margin-top: 4px; font-size: 13px; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 6px; font-size: 13px; }
   .badge { font-size: 11.5px; font-weight: 600; line-height: 1.5; padding: 1px 7px; border-radius: 6px; }
   .badge.over { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-border); }
   .badge.urgent { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-border); }
@@ -344,7 +333,7 @@
   #toTop.show { opacity: 0.95; pointer-events: auto; transform: none; }
   #toTop:hover { transform: translateY(-2px); }
 
-  /* ---- Buttons & Modal Dialogs ---- */
+  /* Buttons & Modal Dialogs */
   .btn { height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent; font: 600 14px var(--sans); cursor: pointer; transition: all 0.15s ease; }
   .btn-primary { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #fff; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2); }
   .btn-wa { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff; box-shadow: 0 2px 5px rgba(5, 150, 105, 0.2); }
@@ -356,7 +345,7 @@
 
   #modalOverlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(8px);
-    z-index: 1000; align-items: center; justify-content: center; padding: 16px;
+    z-index: 3000; align-items: center; justify-content: center; padding: 16px;
   }
   .modal {
     background: #FFFFFF; border-radius: 18px; padding: 24px; width: 100%; max-width: 420px;
@@ -382,7 +371,7 @@
   .alt-link { margin-top: 10px; font-size: 13px; }
   .alt-link a { color: var(--green); font-weight: 600; }
 
-  /* ---- Executive Auth Gate (Lock Screen) ---- */
+  /* Auth Gate */
   #authGate {
     position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;
     background: radial-gradient(circle at 50% 35%, #1E293B 0%, #0F172A 100%);
@@ -423,7 +412,6 @@
     100% { transform: translateY(100vh) rotate(540deg); opacity: 0; }
   }
 
-  /* ---- Wider Screens: Grid of Modern Cards ---- */
   @media (min-width: 720px) {
     body { padding: 36px 32px 84px; }
     h1 { font-size: 30px; }
@@ -457,16 +445,17 @@
     }
   }
 
-  /* ---- Executive Page Navigation (Tasks vs Financials) ---- */
+  /* Page Navigation */
   .page-nav {
-    display: flex; gap: 10px; margin: 0 0 20px; padding: 4px;
+    display: flex; gap: 8px; margin: 0 0 20px; padding: 4px;
     background: #EEF2F6; border: 1px solid var(--rule); border-radius: 14px;
-    max-width: 480px;
+    max-width: 600px; overflow-x: auto; scrollbar-width: none;
   }
+  .page-nav::-webkit-scrollbar { display: none; }
   .page-nav-btn {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 10px 18px; border-radius: 10px; border: 0; background: transparent;
-    color: var(--muted); font: 600 13.5px var(--sans); cursor: pointer; transition: all 0.15s ease;
+    flex: 1 1 auto; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 14px; border-radius: 10px; border: 0; background: transparent;
+    color: var(--muted); font: 600 13px var(--sans); cursor: pointer; transition: all 0.15s ease; white-space: nowrap;
   }
   .page-nav-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.6); }
   .page-nav-btn.active {
@@ -480,7 +469,7 @@
     background: var(--accent); color: #FFFFFF;
   }
 
-  /* Financials Page Layout */
+  /* Financials Page */
   #financialsView { display: none; }
   .fin-hero-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -530,7 +519,6 @@
   .fin-breakdown { background: #F8FAFC; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #475569; margin-bottom: 12px; line-height: 1.6; }
   .fin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* ---- Formal P&L and Balance Sheet Statements ---- */
   .fin-mode-toggle {
     display: inline-flex; gap: 4px; padding: 3px; background: #EEF2F6; border: 1px solid var(--rule);
     border-radius: 10px; margin-bottom: 20px;
@@ -587,6 +575,17 @@
 </style>
 </head>
 <body>
+<div id="modalOverlay" style="display:none;">
+  <div class="modal" role="dialog" aria-labelledby="modalTitle">
+    <div id="modalTitle"></div>
+    <div id="modalFields"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-quiet" onclick="closeModal()">Skip</button>
+      <button type="button" id="modalConfirmBtn" class="btn btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
 <header class="masthead">
   <div class="masthead-brand">
     <div class="masthead-crest">MM</div>
@@ -604,16 +603,18 @@
 <nav class="page-nav" role="tablist" aria-label="Dashboard Pages">
   <button type="button" id="tabTasks" class="page-nav-btn active" role="tab" aria-selected="true" onclick="switchPage('tasks')">
     <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    <span>Tasks &amp; Operations</span>
+    <span>Tasks</span>
   </button>
   <button type="button" id="tabFinancials" class="page-nav-btn" role="tab" aria-selected="false" onclick="switchPage('financials')">
     <svg class="ic" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    <span>Financials &amp; Ledgers</span>
+    <span>Financials</span>
     <span class="nav-badge" id="finBadge">₹1.07L</span>
   </button>
-  <button type="button" id="tabSalariesDirect" class="page-nav-btn" role="tab" aria-selected="false" onclick="openSalaryClearanceDirect()">
-    <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    <span>Clear Salary</span>
+  <button type="button" class="page-nav-btn" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('MHJ', 24000)">
+    <span>✓ Settle MHJ (₹24k)</span>
+  </button>
+  <button type="button" class="page-nav-btn" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">
+    <span>✓ Settle Hakimi Vihar (₹4k)</span>
   </button>
 </nav>
 
@@ -628,17 +629,6 @@
     <input type="password" id="authInput" placeholder="Enter password" aria-label="Password" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
     <button type="button" class="btn btn-primary" onclick="checkAuth()">Unlock</button>
     <div id="authError">Incorrect password — try again.</div>
-  </div>
-</div>
-
-<div id="modalOverlay" style="display:none;">
-  <div class="modal" role="dialog" aria-labelledby="modalTitle">
-    <div id="modalTitle"></div>
-    <div id="modalFields"></div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-quiet" onclick="closeModal()">Skip</button>
-      <button type="button" id="modalConfirmBtn" class="btn btn-primary">Save</button>
-    </div>
   </div>
 </div>
 
@@ -657,7 +647,7 @@
   <select id="newCat" onchange="onCategoryChange()">
     <option value="PERSONAL">Personal</option>
     <option value="OWN">Professional — OWN</option>
-    <option value="MHJ">Professional — MHJ</option>
+    <option value="MHJ">Professional — MHJ (Mufazzal Husain Johar)</option>
     <option value="SHK">Professional — SHK Husain Arif</option>
     <option value="FEES">Fees</option>
     <option value="__NEW__">+ Add new category…</option>
@@ -687,9 +677,8 @@ const STORAGE_KEY = 'tasks-v2';
 const WEBHOOK_KEY = 'webhookUrl';
 const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
 let tasks = [];
-let filter = 'all'; // all, own, mhj, pending, done
+let filter = 'all';
 
-// ---- Look: small line icons, section colours and rupee formatting ----
 const ICON = {
   chat:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
   doc:    '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
@@ -698,9 +687,8 @@ const ICON = {
   x:      '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   chev:   '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
 };
-const EXTRA_COLORS = ['#5B6B84', '#9A5B2E', '#2F8F6B', '#A04E9B', '#4D7FB8'];   // sections for client groups added later
+const EXTRA_COLORS = ['#5B6B84', '#9A5B2E', '#2F8F6B', '#A04E9B', '#4D7FB8'];
 
-// Rupee amounts with Indian digit grouping, e.g. ₹14,50,000
 function inr(n) {
   const v = Math.round((Number(n) || 0) * 100) / 100;
   return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
@@ -884,29 +872,29 @@ const seedTasks = [
   },
   {
     id: 'cal_ed85ko32qqb708i2pvumghm51c',
-    name: 'Loan & Advance Taken - MHJ (₹86,000)',
+    name: 'Loan & Advance Taken - MHJ (Mufazzal Husain Johar) (₹86,000)',
     type: 'personal',
     cat: null,
     due: '',
     dueDate: '2026-11-05T10:00:00.000Z',
     done: false,
     urgent: true,
-    remark: 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet'
+    remark: 'Payable to MHJ (Mufazzal Husain Johar &bull; Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet'
   },
   {
-    id: 'cal_njelbrg4plf1eqlj2mk8sp9m0s_20261101T040000Z',
-    name: 'Monthly Salary Receivable (₹24,000)',
+    id: 'cal_sal_mhj_recurring',
+    name: 'Monthly Salary Receivable - MHJ (Mufazzal Husain Johar) (₹24,000)',
     type: 'professional',
     cat: 'MHJ',
     due: '',
     dueDate: '2026-11-01T04:00:00.000Z',
     done: false,
     urgent: true,
-    remark: 'Recurring Monthly Salary from MHJ. Due on 1st of every month'
+    remark: 'Monthly Retainership from Mufazzal Husain Johar. Due 1st of month'
   },
   {
-    id: 'cal_81rbvi7lq0o4l0rki46o92fmns_20261101T040000Z',
-    name: 'Salary Receivable - Hakimi Vihar Society',
+    id: 'cal_sal_hv_recurring',
+    name: 'Salary Receivable - Hakimi Vihar Society (₹4,000)',
     type: 'fee',
     cat: 'FEES',
     feeCat: 'OWN',
@@ -920,7 +908,7 @@ const seedTasks = [
     linked: 'Hakimi Vihar Society',
     phone: '',
     invoice: '',
-    remark: 'Recurring Monthly Accounting Salary from Hakimi Vihar Society (Due 1st)'
+    remark: 'Recurring monthly accounting salary from Hakimi Vihar Society (Due 1st)'
   }
 ];
 
@@ -932,6 +920,7 @@ async function loadTasks() {
   } catch (e) {
     saved = [];
   }
+
   const savedIds = new Set(saved.map(t => t.id));
   const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
   tasks = saved.concat(newFromSeed);
@@ -945,12 +934,13 @@ async function loadTasks() {
   if (jpPers) {
     jpPers.name = 'Loan & Advances - Juzer Presswala (₹1,07,690)';
   }
-  const mhjPers = tasks.find(x => x.id === 'cal_ed85ko32qqb708i2pvumghm51c');
+  const mhjPers = tasks.find(x => x.id === 'cal_ed85ko32qqb708i2pvumghm51c' || (x.type === 'personal' && /MHJ/i.test(x.name)));
   if (mhjPers) {
-    mhjPers.name = 'Loan & Advance Taken - MHJ (₹86,000)';
-    mhjPers.remark = 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet';
+    mhjPers.name = 'Loan & Advance Taken - MHJ (Mufazzal Husain Johar) (₹86,000)';
+    mhjPers.remark = 'Payable to MHJ (Mufazzal Husain Johar &bull; Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet';
   }
 
+  // Ensure both recurring salaries exist in local tasks
   if (!tasks.some(x => /Monthly Salary Receivable/i.test(x.name))) {
     tasks.unshift(seedTasks[4]);
   }
@@ -1023,8 +1013,8 @@ function toggleTask(id) {
   }
 
   if (t && t.done && t.type === 'professional') {
-    const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052' };
-    const defaultPhone = (t.cat && t.cat !== 'OWN' && t.cat !== 'MHJ' && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
+    const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052', MHJ: '9425054543' };
+    const defaultPhone = (t.cat && t.cat !== 'OWN' && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
     showModal('Fee for "' + t.name + '"?', `
       <label>Payable amount (leave blank to skip)</label>
       <input type="number" id="modalPayable" style="${inputStyle()}" placeholder="₹ Payable">
@@ -1059,220 +1049,6 @@ async function toggleOnCalendar(taskId, done) {
   } catch (e) { }
 }
 
-async function generateInvoiceImage(data) {
-  try {
-    const W = 900;
-    let bodyY = 466;
-    bodyY += 80;
-    if (data.received > 0) bodyY += 80;
-    if (data.discount > 0) bodyY += 80;
-    const balanceDueY = bodyY + 10;
-    const bankSectionY = balanceDueY + 48;
-    const bankSectionH = 158;
-    const footerTop = bankSectionY + bankSectionH + 34;
-    const H = Math.round(footerTop + 160);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-
-    try {
-      await Promise.all([
-        document.fonts.load('800 40px "Baloo 2"'),
-        document.fonts.load('700 28px "Baloo 2"'),
-        document.fonts.load('700 22px "Baloo 2"'),
-        document.fonts.load('600 20px "Karla"'),
-        document.fonts.load('700 20px "Karla"'),
-        document.fonts.load('600 24px "IBM Plex Mono"')
-      ]);
-    } catch (e) { }
-
-    const BALOO = "'Baloo 2', sans-serif", KARLA = "'Karla', sans-serif", MONO = "'IBM Plex Mono', monospace";
-    const INK = '#22252B', INK_SOFT = '#8A8A85', LINE = '#ECEAE3';
-    const CORAL = '#FF4E6A', TEAL = '#00BFA6', VIOLET = '#7C5CFC';
-    const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
-
-    function roundRect(x, y, w, h, r) {
-      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
-      ctx.beginPath();
-      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-    }
-    function hLine(yy) {
-      ctx.strokeStyle = LINE; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(46, yy); ctx.lineTo(W - 46, yy); ctx.stroke();
-    }
-    function wrapText(text, x, startY, maxWidth, lineHeight) {
-      const words = text.split(' ');
-      let line = '', yy = startY;
-      for (let n = 0; n < words.length; n++) {
-        const test = line + words[n] + ' ';
-        if (ctx.measureText(test).width > maxWidth && line) { ctx.fillText(line, x, yy); line = words[n] + ' '; yy += lineHeight; }
-        else line = test;
-      }
-      ctx.fillText(line, x, yy);
-      return yy;
-    }
-
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, W, H);
-
-    const grad = ctx.createLinearGradient(0, 0, W, 220);
-    grad.addColorStop(0, CORAL);
-    grad.addColorStop(1, VIOLET);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, 230);
-
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'left';
-    ctx.font = `800 40px ${BALOO}`;
-    ctx.fillText('Mustannsirr Mallik', 46, 78);
-    ctx.font = `700 20px ${KARLA}`;
-    ctx.globalAlpha = 0.92;
-    ctx.fillText('Tax & Accounts Consultant, Indore', 46, 108);
-    ctx.globalAlpha = 0.8;
-    ctx.font = `600 17px ${KARLA}`;
-    ctx.fillText('175, Ali Township, Bijalpur,', 46, 140);
-    ctx.fillText('Indore 452012', 46, 162);
-    ctx.globalAlpha = 1;
-
-    ctx.textAlign = 'right';
-    ctx.font = `800 38px ${BALOO}`;
-    ctx.fillText('INVOICE', W - 46, 78);
-    ctx.font = `600 20px ${MONO}`;
-    ctx.globalAlpha = 0.92;
-    ctx.fillText(data.invoiceNumber, W - 46, 112);
-    ctx.fillText(data.date, W - 46, 138);
-    ctx.globalAlpha = 1;
-
-    const settled = data.balance <= 0;
-    const badgeText = settled ? 'PAID' : 'PENDING';
-    ctx.font = `700 22px ${BALOO}`;
-    const badgeW = ctx.measureText(badgeText).width + 70, badgeH = 46;
-    const badgeX = W / 2 - badgeW / 2, badgeY = 230 - badgeH / 2;
-    ctx.fillStyle = settled ? TEAL : CORAL;
-    roundRect(badgeX, badgeY, badgeW, badgeH, 23);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.fillText(badgeText, W / 2, badgeY + 30);
-
-    let y = 320;
-    ctx.textAlign = 'left';
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
-    ctx.fillText('BILLED TO', 46, y);
-    ctx.fillStyle = INK; ctx.font = `700 26px ${BALOO}`;
-    ctx.fillText(data.client, 46, y + 34);
-
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
-    ctx.fillText('FOR', W / 2 + 20, y);
-    ctx.fillStyle = INK; ctx.font = `700 20px ${BALOO}`;
-    wrapText(data.desc, W / 2 + 20, y + 30, W / 2 - 66, 26);
-
-    y += 100;
-    hLine(y);
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 15px ${KARLA}`;
-    ctx.textAlign = 'left'; ctx.fillText('DESCRIPTION', 46, y - 14);
-    ctx.textAlign = 'right'; ctx.fillText('AMOUNT', W - 46, y - 14);
-
-    y += 46;
-    ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = `600 22px ${KARLA}`;
-    ctx.fillText('Professional Fees — ' + data.desc, 46, y);
-    ctx.textAlign = 'right'; ctx.font = `600 22px ${MONO}`;
-    ctx.fillText(fmt(data.payable), W - 46, y);
-    y += 20; hLine(y + 20); y += 60;
-
-    if (data.received > 0) {
-      ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 20px ${KARLA}`;
-      ctx.fillText('Less: Amount Received', 46, y);
-      ctx.textAlign = 'right'; ctx.font = `600 20px ${MONO}`;
-      ctx.fillText('− ' + fmt(data.received), W - 46, y);
-      y += 20; hLine(y + 20); y += 60;
-    }
-    if (data.discount > 0) {
-      ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 20px ${KARLA}`;
-      ctx.fillText('Less: Discount', 46, y);
-      ctx.textAlign = 'right'; ctx.font = `600 20px ${MONO}`;
-      ctx.fillText('− ' + fmt(data.discount), W - 46, y);
-      y += 20; hLine(y + 20); y += 60;
-    }
-
-    y += 10;
-    ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.font = `800 28px ${BALOO}`;
-    ctx.fillText(settled ? 'Balance Settled' : 'Balance Due', 46, y);
-    ctx.textAlign = 'right'; ctx.fillStyle = settled ? TEAL : CORAL; ctx.font = `800 34px ${MONO}`;
-    ctx.fillText(fmt(Math.max(data.balance, 0)), W - 46, y);
-
-    ctx.fillStyle = '#F8FAFC';
-    roundRect(46, bankSectionY, W - 92, bankSectionH, 12);
-    ctx.fill();
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 1.5;
-    roundRect(46, bankSectionY, W - 92, bankSectionH, 12);
-    ctx.stroke();
-
-    ctx.fillStyle = '#EEF2F6';
-    if (ctx.roundRect) {
-      ctx.beginPath();
-      ctx.roundRect(46, bankSectionY, W - 92, 34, [12, 12, 0, 0]);
-      ctx.fill();
-    } else {
-      ctx.fillRect(46, bankSectionY, W - 92, 34);
-    }
-    ctx.fillStyle = '#1E3A8A';
-    ctx.font = `800 13px ${KARLA}`;
-    ctx.textAlign = 'left';
-    ctx.fillText('DIRECT BANK TRANSFER DETAILS (NEFT / RTGS / IMPS)', 66, bankSectionY + 22);
-
-    const r1Y = bankSectionY + 62;
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
-    ctx.fillText('ACCOUNT HOLDER', 66, r1Y);
-    ctx.fillStyle = INK; ctx.font = `700 16px ${BALOO}`;
-    ctx.fillText('Mustansir Malik', 66, r1Y + 20);
-
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
-    ctx.fillText('IFSC CODE', 360, r1Y);
-    ctx.fillStyle = '#1E3A8A'; ctx.font = `700 18px ${MONO}`;
-    ctx.fillText('NESF0000333', 360, r1Y + 20);
-
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
-    ctx.fillText('BANK NAME', 620, r1Y);
-    ctx.fillStyle = INK; ctx.font = `700 15px ${BALOO}`;
-    ctx.fillText('slice Small Finance Bank', 620, r1Y + 20);
-
-    const r2Y = r1Y + 48;
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
-    ctx.fillText('ACCOUNT NUMBER', 66, r2Y);
-    ctx.fillStyle = '#1E3A8A'; ctx.font = `700 18px ${MONO}`;
-    ctx.fillText('033311501064738', 66, r2Y + 20);
-
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
-    ctx.fillText('CUSTOMER ID', 360, r2Y);
-    ctx.fillStyle = INK; ctx.font = `600 16px ${MONO}`;
-    ctx.fillText('380050119119', 360, r2Y + 20);
-
-    ctx.fillStyle = INK_SOFT; ctx.font = `800 12px ${KARLA}`;
-    ctx.fillText('BRANCH', 620, r2Y);
-    ctx.fillStyle = INK; ctx.font = `600 13px ${KARLA}`;
-    ctx.fillText('Koramangala, Bangalore branch', 620, r2Y + 20);
-
-    y = footerTop;
-    ctx.strokeStyle = LINE; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
-    ctx.beginPath(); ctx.moveTo(46, y); ctx.lineTo(W - 46, y); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.textAlign = 'left'; ctx.fillStyle = INK_SOFT; ctx.font = `600 18px ${KARLA}`;
-    wrapText('Thank you for your continued trust — please reach out if you have any questions about this invoice.', 46, y + 34, W - 92, 26);
-    ctx.fillStyle = INK; ctx.font = `700 24px ${BALOO}`;
-    ctx.fillText('Mustannsirr Mallik', 46, y + 98);
-    ctx.fillStyle = INK_SOFT; ctx.font = `600 17px ${KARLA}`;
-    ctx.fillText('Tax & Accounts Consultant · Indore', 46, y + 124);
-
-    return await new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png', 0.95));
-  } catch (e) {
-    return null;
-  }
-}
-
 async function sendWhatsAppReminder(taskId, balance) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
@@ -1285,75 +1061,17 @@ async function sendWhatsAppReminder(taskId, balance) {
 
   let payUrl = null;
   let amountNote = '';
-  let diagnosticNote = '';
   const url = getWebhook();
   try {
     const params = new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName, id: taskId });
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000);
-    const res = await fetch(url + '?' + params.toString(), { signal: controller.signal });
-    clearTimeout(timeoutId);
+    const res = await fetch(url + '?' + params.toString());
     const data = await res.json();
-    if (data.status === 'ok' && data.shortUrl) {
-      payUrl = data.shortUrl;
-    } else {
-      diagnosticNote = 'Server said: ' + (data.message || JSON.stringify(data));
-    }
-  } catch (e) {
-    diagnosticNote = e.name === 'AbortError' ? 'Request took too long (over 25s) and timed out.' : ('Connection error: ' + e.message);
-  }
-
-  if (!payUrl) {
-    amountNote = ` (please enter ₹${balance} on the page)`;
-    try {
-      const res2 = await fetch(url + '?action=fallbacklink');
-      const data2 = await res2.json();
-      if (data2.status === 'ok' && data2.shortUrl) payUrl = data2.shortUrl;
-    } catch (e) { }
-  }
-
-  if (!payUrl) {
-    payUrl = 'https://razorpay.me/@mustansirmalik';
-  }
-
-  let invoiceUrl = null;
-  let invoiceNumber = null;
-  let invoiceClient = clientName;
-  let invoiceWork = clientName;
-  let invoiceDate = null;
-  try {
-    const invParams = new URLSearchParams({
-      action: 'getinvoice', id: taskId, client: clientName,
-      payable: t.payable, received: t.received, discount: t.discount || 0, balance, pay: payUrl
-    });
-    const invController = new AbortController();
-    const invTimeoutId = setTimeout(() => invController.abort(), 20000);
-    const invRes = await fetch(url + '?' + invParams.toString(), { signal: invController.signal });
-    clearTimeout(invTimeoutId);
-    const invData = await invRes.json();
-    if (invData.status === 'ok' && invData.invoiceUrl) {
-      invoiceUrl = invData.invoiceUrl;
-      invoiceNumber = invData.invoiceNumber;
-      if (invData.client) invoiceClient = invData.client;
-      if (invData.work) invoiceWork = invData.work;
-      if (invData.date) invoiceDate = invData.date;
-      if (t.invoice !== invoiceNumber) { t.invoice = invoiceNumber; saveTasks(); render(); }
-    }
+    if (data.status === 'ok' && data.shortUrl) payUrl = data.shortUrl;
   } catch (e) { }
 
-  let invoiceFile = null;
-  if (invoiceNumber) {
-    const invBlob = await generateInvoiceImage({
-      invoiceNumber, date: invoiceDate || new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-      client: invoiceClient, desc: invoiceWork, payable: t.payable, received: t.received, discount: t.discount || 0, balance
-    });
-    if (invBlob) invoiceFile = new File([invBlob], `Invoice-${invoiceNumber}.png`, { type: 'image/png' });
-  }
-  let canShareFile = false;
-  try { canShareFile = !!(invoiceFile && navigator.canShare && navigator.canShare({ files: [invoiceFile] })); } catch (e) { canShareFile = false; }
+  if (!payUrl) payUrl = 'https://razorpay.me/@mustansirmalik';
 
-  const invoiceLine = invoiceUrl ? `\n\n📄 *Invoice ${invoiceNumber}:*\n${invoiceUrl}` : '';
-  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invoiceLine}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+  const message = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}\n\n👉 *Pay securely here${amountNote}:*\n${payUrl}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
   const waUrl = 'https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(message);
   const waBusinessIntent = 'intent://send?phone=' + phone + '&text=' + encodeURIComponent(message) +
     '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
@@ -1361,33 +1079,13 @@ async function sendWhatsAppReminder(taskId, balance) {
   if (newWin) {
     newWin.document.write(`
       <body style="font-family:sans-serif; padding:30px; text-align:center; color:#333;">
-        ${diagnosticNote ? `<div style="background:#FFF3E0; border:1px solid #FFB800; border-radius:10px; padding:12px; margin-bottom:18px; font-size:12.5px; color:#7A5A00; text-align:left;"><strong>⚠️ Fixed amount not applied this time.</strong><br>${diagnosticNote}<br><br>The link below still works, but the client will need to type ₹${balance} themselves.</div>` : ''}
-        ${invoiceUrl ? `<p style="margin-bottom:14px;"><a href="${invoiceUrl}" target="_blank" style="display:inline-block; background:#fff; color:#7C5CFC; border:1.5px solid #7C5CFC; padding:9px 20px; border-radius:8px; text-decoration:none; font-size:13px; font-weight:bold;">📄 View Invoice ${invoiceNumber}</a></p>` : `<p style="font-size:11.5px; color:#c00; margin-bottom:14px;">Invoice could not be generated this time — reminder still sent below without it.</p>`}
         <p><a href="${waBusinessIntent}" style="display:inline-block; background:#25D366; color:#fff; padding:16px 30px; border-radius:10px; text-decoration:none; font-size:16.5px; font-weight:bold;">Open in WhatsApp Business</a></p>
-        <p style="font-size:11.5px; color:#999; margin:4px 0 16px;">Goes straight to this client's chat, with the invoice as a tappable link.</p>
         <p style="font-size:12px; color:#aaa; margin:8px 0;">— or —</p>
         <p><a href="${waUrl}" style="display:inline-block; background:#3C5470; color:#fff; padding:10px 22px; border-radius:8px; text-decoration:none; font-size:14px;">Open in WhatsApp (regular)</a></p>
-        ${canShareFile ? `
-        <p style="font-size:12px; color:#aaa; margin:16px 0 8px;">— or attach the invoice as an actual image instead —</p>
-        <p><button id="shareInvoiceBtn" style="background:#fff; color:#25D366; border:1.5px solid #25D366; padding:9px 20px; border-radius:8px; font-size:13px; font-weight:bold; cursor:pointer;">📎 Share Reminder + Invoice (pick contact yourself)</button></p>
-        <p style="font-size:11px; color:#999; margin:4px 0 0;">Opens your phone's share sheet with the invoice image attached — you'll choose the contact there instead of it opening automatically.</p>
-        ` : ''}
-        <p style="font-size:13px; color:#888; margin-top:20px;">If that doesn't open your WhatsApp app (regular or Business), copy the message below and paste it manually:</p>
-        <textarea readonly style="width:90%; max-width:400px; height:140px; font-size:13px; padding:10px; border-radius:8px; border:1px solid #ccc;">${message}</textarea><br>
-        <button onclick="navigator.clipboard.writeText(document.querySelector('textarea').value); this.textContent='Copied!';" style="margin-top:10px; background:#3C5470; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:14px;">Copy message</button>
-        <p style="font-size:12px; color:#888; margin-top:10px;">Client's number: ${phone}</p>
+        <p style="font-size:12px; color:#888; margin-top:20px;">Client's number: ${phone}</p>
       </body>
     `);
-    if (canShareFile) {
-      const shareBtn = newWin.document.getElementById('shareInvoiceBtn');
-      if (shareBtn) {
-        shareBtn.addEventListener('click', () => {
-          newWin.navigator.share({ files: [invoiceFile], text: message }).catch(() => { });
-        });
-      }
-    }
   }
-  if (!newWin) window.open(waUrl, '_blank');
 }
 
 function toggleFeeFields() {
@@ -1399,7 +1097,7 @@ function onCategoryChange() {
   const select = document.getElementById('newCat');
   if (select.value === '__NEW__') {
     showModal('Add a new category', `
-      <label>Category name (e.g. a new employer or client group)</label>
+      <label>Category name (e.g. a new client group)</label>
       <input type="text" id="modalNewCatName" style="${inputStyle()}" placeholder="e.g. ABC Company">
     `, () => {
       const raw = document.getElementById('modalNewCatName').value.trim();
@@ -1470,9 +1168,7 @@ function addTask() {
     if (calId) {
       task.id = calId;
       saveTasks();
-      if (task.done) {
-        toggleOnCalendar(task.id, task.done);
-      }
+      if (task.done) toggleOnCalendar(task.id, task.done);
     }
   });
 }
@@ -1488,12 +1184,11 @@ async function pushFeeToCalendar(name, payable, received, linked, phone, feeCat)
   } catch (e) { return null; }
 }
 
-const REMARK_PRESETS = ['Waiting for documents', 'Waiting for client confirmation', 'In progress', 'Waiting for government portal', 'On hold', 'Awaiting payment'];
-
 function setRemark(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  const presetsHtml = REMARK_PRESETS.map(p => `<button type="button" onclick="document.getElementById('modalRemarkText').value='${p}'" class="preset">${p}</button>`).join('');
+  const presets = ['Waiting for documents', 'Waiting for client confirmation', 'In progress', 'Waiting for government portal', 'On hold', 'Awaiting payment'];
+  const presetsHtml = presets.map(p => `<button type="button" onclick="document.getElementById('modalRemarkText').value='${p}'" class="preset">${p}</button>`).join('');
   showModal('Remark — ' + t.name, `
     <div class="presets">${presetsHtml}</div>
     <label>Or type your own</label>
@@ -1541,17 +1236,10 @@ function recordPayment(id) {
     <input type="number" id="modalReceivedAmt" style="${inputStyle()}" value="${t.received}">
     <label>Discount to write off (optional)</label>
     <input type="number" id="modalDiscountAmt" style="${inputStyle()}" placeholder="₹ Discount" value="${t.discount || 0}">
-    <label class="check-row">
-      <input type="checkbox" id="modalSendReceipt" checked>
-      Offer a WhatsApp receipt after saving
-    </label>
-    <div id="modalReceiptHint" class="hint"></div>
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
-    const wantReceipt = document.getElementById('modalSendReceipt').checked;
     if (isNaN(amount)) return;
-    const prevReceived = Number(t.received) || 0;
     t.received = amount;
     t.discount = discount;
     t.done = (amount + discount) >= t.payable && t.payable > 0;
@@ -1560,256 +1248,7 @@ function recordPayment(id) {
     if (t.id.startsWith('cal_')) {
       updateFeeOnCalendar(t.id, amount, discount);
     }
-    const paidNow = Math.round((amount - prevReceived) * 100) / 100;
-    if (wantReceipt && amount > 0 && !t.name.includes('Advance Credit Balance')) {
-      setTimeout(() => offerReceipt(t.id, paidNow > 0 ? paidNow : 0, true), 0);
-    }
   });
-
-  const amtEl = document.getElementById('modalReceivedAmt');
-  const boxEl = document.getElementById('modalSendReceipt');
-  const hintEl = document.getElementById('modalReceiptHint');
-  const updateReceiptHint = () => {
-    if (!boxEl.checked) { hintEl.textContent = 'No receipt will be offered.'; return; }
-    const entered = parseFloat(amtEl.value);
-    if (isNaN(entered) || entered <= 0) { hintEl.textContent = 'Nothing received yet, so there is no receipt to send.'; return; }
-    const newPayment = Math.round((entered - (Number(t.received) || 0)) * 100) / 100;
-    hintEl.textContent = newPayment > 0
-      ? 'Receipt will be for the new payment of ₹' + moneyText(newPayment) + '.'
-      : 'No new payment entered. Receipt will show the total received so far (₹' + moneyText(entered) + ').';
-  };
-  amtEl.addEventListener('input', updateReceiptHint);
-  boxEl.addEventListener('change', updateReceiptHint);
-  updateReceiptHint();
-}
-
-const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
-
-function moneyText(n) {
-  return String(Math.round((Number(n) || 0) * 100) / 100);
-}
-
-function escapeForHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function buildReceiptMessage(t, paidNow) {
-  const label = t.linked || t.name;
-  const payable = Number(t.payable) || 0;
-  const received = Number(t.received) || 0;
-  const discount = Number(t.discount) || 0;
-  const balance = Math.max(Math.round((payable - received - discount) * 100) / 100, 0);
-  const amount = paidNow > 0 ? paidNow : received;
-  const invoiceNumber = String(t.invoice || '').split('|')[0].trim();
-
-  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${moneyText(amount)}`;
-  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
-  if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${moneyText(balance)}` : `\n✅ *Status:* Fully settled`;
-  if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
-  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
-  return msg.replace(/&/g, 'and');
-}
-
-const CAT_PHONES_KEY = 'dash-cat-phones-v1';
-const DEFAULT_CATEGORY_PHONES = {
-  SHK: '9425320184',
-  HATIM_BHAI_ADV: '9826768052',
-  MHJ: '',
-  OWN: ''
-};
-
-function getCategoryPhones() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CAT_PHONES_KEY) || '{}');
-    return Object.assign({}, DEFAULT_CATEGORY_PHONES, saved);
-  } catch (e) {
-    return Object.assign({}, DEFAULT_CATEGORY_PHONES);
-  }
-}
-
-function saveCategoryPhone(catKey, phone) {
-  try {
-    const current = getCategoryPhones();
-    current[catKey] = (phone || '').replace(/[^0-9]/g, '');
-    localStorage.setItem(CAT_PHONES_KEY, JSON.stringify(current));
-  } catch (e) {}
-}
-
-function detectFeeCategory(t) {
-  if (t.feeCat) return t.feeCat;
-  const targetName = (t.linked || t.name || '').trim().toLowerCase();
-  const linkedTask = tasks.find(x => x.type === 'professional' && x.cat && (
-    x.name.trim().toLowerCase() === targetName ||
-    targetName.includes(x.name.trim().toLowerCase()) ||
-    x.name.trim().toLowerCase().includes(targetName)
-  ));
-  if (linkedTask && linkedTask.cat) return linkedTask.cat;
-  if (t.cat && t.cat !== 'FEES') return t.cat;
-  return 'SHK';
-}
-
-function getCatDisplayName(k) {
-  const map = {
-    SHK: 'SHK Husain Arif',
-    MHJ: 'MHJ',
-    OWN: 'Professional — OWN',
-    HATIM_BHAI_ADV: 'Hatim Bhai Adv'
-  };
-  return map[k] || k.replace(/_/g, ' ');
-}
-
-function launchWhatsApp(url) {
-  window.location.href = url;
-}
-
-function openReceiptWhatsApp(phone, message, useRegular) {
-  let clean = (phone || '').replace(/[^0-9]/g, '');
-  if (clean.length === 10) clean = '91' + clean;
-  const encoded = encodeURIComponent(message);
-  const phonePart = clean ? 'phone=' + clean + '&' : '';
-  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
-  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
-    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  if (isAndroid && !useRegular) {
-    launchWhatsApp(waBusinessIntent);
-  } else {
-    window.open(waUrl, '_blank');
-  }
-}
-
-function sendReceiptToClient(taskId, paidNow) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const message = buildReceiptMessage(t, paidNow || 0);
-  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
-  openReceiptWhatsApp(t.phone || '', message, useRegular);
-  const btn = document.getElementById('btnReceiptClient');
-  if (btn) {
-    btn.style.background = 'var(--muted)';
-    const span = btn.querySelector('span');
-    if (span) span.textContent = '✓ Opened for Client';
-  }
-}
-
-function sendReceiptToCategory(taskId, paidNow) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const catSelect = document.getElementById('receiptCatSelect');
-  const catKey = catSelect ? catSelect.value : 'SHK';
-  const phoneInput = document.getElementById('receiptCatPhone');
-  const catPhone = phoneInput ? phoneInput.value.trim() : '';
-  if (catPhone) saveCategoryPhone(catKey, catPhone);
-  const message = buildReceiptMessage(t, paidNow || 0);
-  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
-  openReceiptWhatsApp(catPhone, message, useRegular);
-  const btn = document.getElementById('btnReceiptCat');
-  if (btn) {
-    btn.style.background = 'var(--muted)';
-    const span = btn.querySelector('span');
-    if (span) span.textContent = '✓ Opened for ' + getCatDisplayName(catKey);
-  }
-}
-
-function onReceiptCatChange(taskId) {
-  const catSelect = document.getElementById('receiptCatSelect');
-  if (!catSelect) return;
-  const catKey = catSelect.value;
-  const phones = getCategoryPhones();
-  const phone = phones[catKey] || '';
-  const phoneInput = document.getElementById('receiptCatPhone');
-  if (phoneInput) phoneInput.value = phone;
-  const phoneTag = document.getElementById('catPhoneTag');
-  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
-  const btnText = document.getElementById('btnReceiptCatText');
-  if (btnText) btnText.textContent = 'Send to ' + getCatDisplayName(catKey);
-  const btn = document.getElementById('btnReceiptCat');
-  if (btn) btn.style.background = 'var(--green)';
-}
-
-function onReceiptCatPhoneInput(taskId) {
-  const catSelect = document.getElementById('receiptCatSelect');
-  const phoneInput = document.getElementById('receiptCatPhone');
-  if (!catSelect || !phoneInput) return;
-  const catKey = catSelect.value;
-  const phone = phoneInput.value.trim();
-  saveCategoryPhone(catKey, phone);
-  const phoneTag = document.getElementById('catPhoneTag');
-  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
-}
-
-function offerReceipt(taskId, paidNow, afterSave) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const clientPhone = (t.phone || '').trim();
-  const clientLabel = t.linked || t.name;
-  const message = buildReceiptMessage(t, paidNow || 0);
-
-  const detectedCat = detectFeeCategory(t);
-  const catPhones = getCategoryPhones();
-
-  const extraCats = [...new Set(tasks.filter(x => x.type === 'professional' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(x.cat)).map(x => x.cat))];
-  const allCatKeys = [...new Set(['SHK', 'MHJ', 'OWN', ...extraCats])];
-  let currentCatKey = detectedCat || 'SHK';
-  if (!allCatKeys.includes(currentCatKey)) allCatKeys.unshift(currentCatKey);
-
-  const currentCatPhone = catPhones[currentCatKey] || '';
-  const currentCatLabel = getCatDisplayName(currentCatKey);
-
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const saved = !afterSave ? ''
-    : paidNow > 0 ? '✓ Payment saved. '
-    : '✓ Saved. No new payment was entered, so this receipt shows the total received so far. ';
-
-  const catOptionsHtml = allCatKeys.map(k =>
-    `<option value="${k}" ${k === currentCatKey ? 'selected' : ''}>${escapeForHtml(getCatDisplayName(k))}</option>`
-  ).join('');
-
-  const modalHtml = `
-    <div class="hint">${saved}Choose who to send the receipt to via WhatsApp:</div>
-    <div class="receipt-preview">${escapeForHtml(message)}</div>
-
-    <div style="margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px;">
-      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-          <span style="font-weight: 600; font-size: 13.5px; color: var(--ink);">1. Client (${escapeForHtml(clientLabel)})</span>
-          <span style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;">${clientPhone ? clientPhone : 'No number'}</span>
-        </div>
-        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
-          ${clientPhone ? 'Sends directly to this client\'s WhatsApp chat.' : 'No phone saved — WhatsApp will prompt you to pick the contact.'}
-        </div>
-        <button type="button" id="btnReceiptClient" class="btn btn-wa" style="width: 100%; height: 38px; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToClient('${t.id}', ${paidNow || 0})">
-          ${ICON.chat} <span>Send to Client</span>
-        </button>
-      </div>
-
-      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
-          <span style="font-weight: 600; font-size: 13.5px; color: var(--ink);">2. Category Head / Principal</span>
-          <span id="catPhoneTag" style="font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;">${currentCatPhone || 'Enter phone'}</span>
-        </div>
-        <div style="display: flex; gap: 8px; margin: 6px 0 8px;">
-          <select id="receiptCatSelect" onchange="onReceiptCatChange('${t.id}')" style="flex: 1.2; height: 36px; padding: 0 8px; font-size: 13px; border: 1px solid var(--field); border-radius: 8px; background: var(--sheet); color: var(--ink);">
-            ${catOptionsHtml}
-          </select>
-          <input type="tel" id="receiptCatPhone" placeholder="Mobile number" value="${currentCatPhone}" oninput="onReceiptCatPhoneInput('${t.id}')" style="flex: 1; height: 36px; padding: 0 10px; font-size: 13px; border: 1px solid var(--field); border-radius: 8px; background: var(--sheet); color: var(--ink);">
-        </div>
-        <button type="button" id="btnReceiptCat" class="btn btn-wa" style="width: 100%; height: 38px; font-size: 13.5px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToCategory('${t.id}', ${paidNow || 0})">
-          ${ICON.chat} <span id="btnReceiptCatText">Send to ${escapeForHtml(currentCatLabel)}</span>
-        </button>
-      </div>
-    </div>
-
-    ${isAndroid ? `
-    <div style="margin-top: 10px; text-align: center; font-size: 12.5px;">
-      <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--muted);">
-        <input type="checkbox" id="receiptUseRegular" style="accent-color: var(--accent);">
-        Use regular WhatsApp instead of WhatsApp Business
-      </label>
-    </div>` : ''}
-  `;
-
-  showModal('Send payment receipt?', modalHtml, () => {}, 'Done', 'Close');
 }
 
 async function updateFeeOnCalendar(taskId, received, discount) {
@@ -1835,7 +1274,7 @@ function deleteTask(id) {
 
 function resetData() {
   showModal('Reset dashboard data?', `
-    <div class="hint">This clears saved progress on THIS device and reloads the latest task list fresh from Calendar. Use it if the board looks stuck on old tasks.</div>
+    <div class="hint">This clears saved progress on THIS device and reloads the latest task list fresh from Calendar.</div>
   `, () => {
     localStorage.removeItem(STORAGE_KEY);
     window.location.href = window.location.pathname + '?t=' + Date.now();
@@ -1861,32 +1300,17 @@ function setNamazAlarm(name, isoDate) {
   const dt = new Date(isoDate);
   const formatted = dt.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
   const label = name.replace(/^\[PERSONAL\]\s*/i, '').trim();
-  const calLink = 'https://calendar.google.com/calendar/r';
 
   const modalHtml = `
     <div style="text-align:center; padding:8px 0 16px;">
       <div style="font-size:38px; font-weight:700; font-family:var(--serif); color:var(--ink); margin-bottom:2px;">${formatted}</div>
-      <div style="font-size:14px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">${escapeForHtml(label)} &bull; Indore</div>
-      <div class="hint" style="margin-top:8px;">Fetched from mumineen.org. Your Google Calendar also has an advance notification popup set for this prayer.</div>
+      <div style="font-size:14px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">${label} &bull; Indore</div>
+      <div class="hint" style="margin-top:8px;">Fetched from mumineen.org.</div>
     </div>
-
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <button type="button" class="btn btn-primary" style="width:100%; height:44px; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px;" onclick="openClockApp()">
-        <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span>Open Phone Clock App</span>
-      </button>
-
-      <a href="${calLink}" target="_blank" rel="noopener" class="btn btn-quiet" style="width:100%; height:44px; font-size:14px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
-        <svg style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-        <span>View on Google Calendar</span>
-      </a>
-    </div>
-
-    <div style="margin-top:14px; text-align:center; font-size:12.5px; color:var(--muted); line-height:1.4;">
-      You can also say: <em>"Hey Google, set alarm for ${formatted}"</em>.
-    </div>
+    <button type="button" class="btn btn-primary" style="width:100%; height:44px; font-size:14px;" onclick="openClockApp()">
+      Open Phone Clock App
+    </button>
   `;
-
   showModal('Namaz Alarm &bull; ' + label, modalHtml, () => {}, 'Done', 'Close');
 }
 
@@ -1898,7 +1322,6 @@ function switchPage(page) {
   const finView = document.getElementById('financialsView');
   const btnTasks = document.getElementById('tabTasks');
   const btnFin = document.getElementById('tabFinancials');
-  const btnSalDirect = document.getElementById('tabSalariesDirect');
 
   if (page === 'financials') {
     if (tasksView) tasksView.style.display = 'none';
@@ -1920,19 +1343,14 @@ function switchPage(page) {
   }
 }
 
-function openSalaryClearanceDirect() {
-  switchPage('financials');
-  setFinViewMode('salaries');
-}
-
-// ---- Salary Clearance & Settlement ----
+// ---- Salary Clearance & Settlement (MHJ & Hakimi Vihar) ----
 function clearSalaryReceivable(entity, defaultAmount) {
   const currentMonth = new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
   const isMHJ = /mhj/i.test(entity);
-  const title = isMHJ ? 'Clear Monthly Salary — MHJ' : 'Clear Salary — Hakimi Vihar Society';
+  const title = isMHJ ? 'Clear Monthly Salary — MHJ (Mufazzal Husain Johar)' : 'Clear Salary — Hakimi Vihar Society';
 
   showModal(title, `
-    <div class="hint">Record receipt / settlement of <strong>${isMHJ ? 'MHJ' : 'Hakimi Vihar'}</strong> salary for ${currentMonth}.</div>
+    <div class="hint">Record receipt / settlement of <strong>${isMHJ ? 'MHJ (Mufazzal Husain Johar)' : 'Hakimi Vihar Society'}</strong> salary for ${currentMonth}.</div>
     <div style="margin:12px 0;">
       <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:4px;">AMOUNT RECEIVED (₹)</label>
       <input type="number" id="modalSalaryAmt" value="${defaultAmount}" style="width:100%; height:44px; font-size:16px; font-weight:700; border:1px solid var(--field); border-radius:10px; padding:0 12px; color:var(--green);">
@@ -1954,13 +1372,12 @@ function clearSalaryReceivable(entity, defaultAmount) {
     const dateVal = document.getElementById('modalSalaryDate').value || new Date().toISOString().slice(0, 10);
     const mode = document.getElementById('modalSalaryMode').value;
 
-    // Find and update or complete the task on dashboard & calendar
     if (isMHJ) {
-      let mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+      let mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
       if (!mhjTask) {
         mhjTask = {
           id: 'u_sal_mhj_' + Date.now(),
-          name: 'Monthly Salary Receivable (₹24,000)',
+          name: 'Monthly Salary Receivable - MHJ (Mufazzal Husain Johar) (₹24,000)',
           type: 'professional',
           cat: 'MHJ',
           done: true,
@@ -1973,11 +1390,11 @@ function clearSalaryReceivable(entity, defaultAmount) {
         if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
       }
     } else {
-      let hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+      let hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
       if (!hvTask) {
         hvTask = {
           id: 'u_sal_hv_' + Date.now(),
-          name: 'Salary Receivable - Hakimi Vihar Society',
+          name: 'Salary Receivable - Hakimi Vihar Society (₹4,000)',
           type: 'fee',
           cat: 'FEES',
           feeCat: 'OWN',
@@ -1996,23 +1413,26 @@ function clearSalaryReceivable(entity, defaultAmount) {
     }
 
     saveTasks();
-    render();
-    if (activePage === 'financials') renderFinancialsPage();
+    if (activePage === 'financials') {
+      renderFinancialsPage();
+    } else {
+      render();
+    }
     fireConfetti();
-  }, 'Confirm & Clear Settle', 'Cancel');
+  }, 'Confirm & Settle', 'Cancel');
 }
 
 function reopenSalaryReceivable(entity) {
   const isMHJ = /mhj/i.test(entity);
   if (isMHJ) {
-    const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+    const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
     if (mhjTask) {
       mhjTask.done = false;
       mhjTask.remark = 'Reopened pending clearance';
       if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, false);
     }
   } else {
-    const hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+    const hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
     if (hvTask) {
       hvTask.done = false;
       hvTask.received = 0;
@@ -2025,7 +1445,7 @@ function reopenSalaryReceivable(entity) {
   if (activePage === 'financials') renderFinancialsPage();
 }
 
-// ---- Loan & Advance Contra / Cross Adjustments ----
+// ---- Loan Adjustments ----
 const LOAN_ADJUST_LOG_KEY = 'dash-loan-adjustments-v1';
 
 function getLoanAdjustments() {
@@ -2045,7 +1465,6 @@ function saveLoanAdjustmentRecord(rec) {
 }
 
 function openLoanAdjustmentModal(presetTarget) {
-  const adjustments = getLoanAdjustments();
   const today = new Date().toISOString().slice(0, 10);
 
   const modalHtml = `
@@ -2054,7 +1473,7 @@ function openLoanAdjustmentModal(presetTarget) {
     <label>Select Loan Account to Adjust</label>
     <select id="modalAdjAccount" style="width:100%; height:40px; margin-bottom:12px; border:1px solid var(--field); border-radius:8px; padding:0 10px; font-weight:600;">
       <option value="JUZER" ${presetTarget === 'JUZER' ? 'selected' : ''}>Juzer Presswala (Given: ₹1,07,690 Receivable)</option>
-      <option value="MHJ" ${presetTarget === 'MHJ' ? 'selected' : ''}>MHJ (Taken: ₹86,000 Payable)</option>
+      <option value="MHJ" ${presetTarget === 'MHJ' ? 'selected' : ''}>MHJ - Mufazzal Husain Johar (Taken: ₹86,000 Payable)</option>
       <option value="HATIM" ${presetTarget === 'HATIM' ? 'selected' : ''}>Hatim Bhai Adv (Taken: ₹5,000 Payable)</option>
     </select>
 
@@ -2073,7 +1492,7 @@ function openLoanAdjustmentModal(presetTarget) {
     <input type="date" id="modalAdjDate" value="${today}" style="width:100%; height:40px; margin-bottom:12px; border:1px solid var(--field); border-radius:8px; padding:0 10px;">
 
     <label>Particulars / Narration</label>
-    <input type="text" id="modalAdjRemark" placeholder="e.g. Set off against November salary" style="width:100%; height:40px; margin-bottom:6px; border:1px solid var(--field); border-radius:8px; padding:0 10px;">
+    <input type="text" id="modalAdjRemark" placeholder="e.g. Set off against salary" style="width:100%; height:40px; margin-bottom:6px; border:1px solid var(--field); border-radius:8px; padding:0 10px;">
   `;
 
   showModal('Adjust Loans & Advances', modalHtml, () => {
@@ -2095,12 +1514,12 @@ function openLoanAdjustmentModal(presetTarget) {
         if (jpFee.id.startsWith('cal_')) updateFeeOnCalendar(jpFee.id, jpFee.received, jpFee.discount || 0);
       }
     } else if (acc === 'MHJ') {
-      targetTitle = 'MHJ Loan Taken';
+      targetTitle = 'MHJ (Mufazzal Husain Johar) Loan Taken';
       const mhjPers = tasks.find(x => x.id === 'cal_ed85ko32qqb708i2pvumghm51c' || (x.type === 'personal' && /MHJ/i.test(x.name)));
       if (mhjPers) {
         mhjPers.remark = (mhjPers.remark ? mhjPers.remark + ' | ' : '') + 'Adjusted ₹' + amt.toLocaleString('en-IN') + ' on ' + date + (remark ? ' (' + remark + ')' : '');
         if (type === 'CONTRA_SALARY') {
-          const mhjSal = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+          const mhjSal = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
           if (mhjSal) {
             mhjSal.done = true;
             mhjSal.remark = 'Adjusted against MHJ Loan Taken on ' + date;
@@ -2133,7 +1552,7 @@ function openLoanAdjustmentModal(presetTarget) {
   }, 'Confirm Adjustment', 'Cancel');
 }
 
-let finViewMode = 'all'; // 'all', 'salaries', 'adjust', 'pl', 'bs', 'portfolio'
+let finViewMode = 'all';
 
 function setFinViewMode(mode) {
   finViewMode = mode;
@@ -2144,33 +1563,25 @@ function renderFinancialsPage() {
   const finContainer = document.getElementById('financialsView');
   if (!finContainer) return;
 
-  // Calculate fees & client billings
-  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !t.name.includes('Juzer Presswala'));
+  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !t.name.includes('Juzer Presswala') && !t.name.includes('Hakimi Vihar'));
   const totalGrossFeesBilled = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
   const totalFeesReceivedCash = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
   const totalDiscountAllowed = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
   const totalDebtorsReceivable = totalGrossFeesBilled - totalFeesReceivedCash - totalDiscountAllowed;
 
-  // Monthly Recurring Salaries (Dynamic status & clearance)
-  const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name));
+  const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
   const mhjCleared = mhjTask ? mhjTask.done : false;
   const salaryMHJDues = mhjCleared ? 0 : 24000;
   const salaryMHJReceived = mhjCleared ? 24000 : 0;
 
-  const hvTask = tasks.find(t => /Hakimi Vihar Society/i.test(t.name));
+  const hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
   const hvCleared = hvTask ? hvTask.done : false;
   const salaryHVDues = hvCleared ? 0 : 4000;
   const salaryHVReceived = hvCleared ? 4000 : 0;
 
-  const salaryMHJ = 24000;
-  const salaryHakimi = 4000;
-
   const totalMonthlySalaryReceivable = salaryMHJDues + salaryHVDues;
-  const totalMonthlySalaryReceived = salaryMHJReceived + salaryHVReceived;
-
   const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + 28000;
 
-  // Dynamic loan balances considering adjustments
   const adjustments = getLoanAdjustments();
   const juzerAdjusted = adjustments.filter(a => a.account === 'JUZER').reduce((s, a) => s + a.amount, 0);
   const mhjAdjusted = adjustments.filter(a => a.account === 'MHJ').reduce((s, a) => s + a.amount, 0);
@@ -2181,30 +1592,25 @@ function renderFinancialsPage() {
   const loanTakenHatim = Math.max(5000 - hatimAdjusted, 0);
   const totalLoansTaken = loanTakenMHJ + loanTakenHatim;
 
-  // Balance sheet metrics
-  const totalCurrentAssets = totalDebtorsReceivable + totalMonthlySalaryReceivable + loanGivenJuzer + totalFeesReceivedCash;
+  const totalCurrentAssets = totalDebtorsReceivable + totalMonthlySalaryReceivable + loanGivenJuzer + totalFeesReceivedCash + salaryMHJReceived + salaryHVReceived;
   const totalCurrentLiabilities = totalLoansTaken;
   const netWorkingCapital = totalCurrentAssets - totalCurrentLiabilities;
 
-  // Update nav badge
   const badgeEl = document.getElementById('finBadge');
   if (badgeEl) badgeEl.textContent = inr(totalDebtorsReceivable + loanGivenJuzer);
 
   let html = `
-    <!-- Top-level Action & Mode Bar -->
+    <!-- Mode Switcher -->
     <div style="background:#FFFFFF; border:1px solid var(--rule); border-radius:14px; padding:12px 16px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:var(--shadow-xs);">
       <div class="fin-mode-toggle" style="margin:0;" role="tablist">
         <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Financial Suite</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'salaries' ? 'active' : ''}" onclick="setFinViewMode('salaries')">✓ Clear Salary Dues</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'salaries' ? 'active' : ''}" onclick="setFinViewMode('salaries')">Clear Salary Dues</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Loans</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
       </div>
 
       <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-wa" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="clearSalaryReceivable('MHJ', 24000)">
-          <span>✓ Settle MHJ Salary</span>
-        </button>
         <button type="button" class="btn btn-primary" style="height:36px; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; gap:6px;" onclick="openLoanAdjustmentModal()">
           <span>⚖️ Adjust Loans</span>
         </button>
@@ -2216,7 +1622,7 @@ function renderFinancialsPage() {
       <div class="fin-card">
         <div class="f-lbl">Net Professional Income (P&amp;L)</div>
         <div class="f-val" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</div>
-        <div class="f-sub">Billed ${inr(totalGrossFeesBilled)} &minus; Discounts ${inr(totalDiscountAllowed)}</div>
+        <div class="f-sub">Turnover ${inr(totalGrossFeesBilled + 28000)} &minus; Discounts ${inr(totalDiscountAllowed)}</div>
       </div>
       <div class="fin-card receivable">
         <div class="f-lbl">Sundry Debtors (Fees Due)</div>
@@ -2236,6 +1642,78 @@ function renderFinancialsPage() {
     </div>
   `;
 
+  // === 0. SALARY CLEARANCE CONSOLE ===
+  if (finViewMode === 'all' || finViewMode === 'salaries') {
+    html += `
+      <div class="statement-sheet" style="border-left:4px solid var(--accent); margin-bottom:24px;">
+        <div class="statement-header" style="background:linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+          <div>
+            <h3>Salary &amp; Retainership Clearance Console</h3>
+            <div class="stmt-sub">Record clearance or settlement for monthly professional salaries</div>
+          </div>
+          <span class="stmt-badge">${totalMonthlySalaryReceivable > 0 ? inr(totalMonthlySalaryReceivable) + ' Due' : 'All Cleared ✓'}</span>
+        </div>
+        <div class="statement-body">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+            <!-- 1. MHJ Salary Card -->
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px 18px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:700; font-size:15px; color:var(--ink);">MHJ (Mufazzal Husain Johar)</div>
+                  <div style="font-size:12px; color:var(--muted); margin-top:2px;">Monthly Professional Retainership &bull; ₹24,000 / month</div>
+                </div>
+                <span class="fin-pill ${mhjCleared ? 'pay' : 'rec'}" style="${mhjCleared ? 'background:var(--green-soft); color:var(--green); border:1px solid var(--green-border);' : ''}">${mhjCleared ? 'Cleared ✓' : 'Due ₹24,000'}</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:24px; font-weight:700; color:${mhjCleared ? 'var(--green)' : 'var(--red)'}; margin:10px 0 6px;">
+                ${mhjCleared ? '₹0 <small style="font-size:13px; font-weight:500; color:var(--green);">(₹24,000 Received)</small>' : inr(24000)}
+              </div>
+              <div style="font-size:12px; color:var(--muted); margin-bottom:14px; min-height:18px;">
+                ${mhjTask && mhjTask.remark ? mhjTask.remark : 'Recurring salary from Mufazzal Husain Johar office.'}
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-wa" style="flex:1; height:38px; font-size:13px; font-weight:600;" onclick="clearSalaryReceivable('MHJ', 24000)">
+                  ✓ Settle MHJ (₹24,000)
+                </button>
+                ${mhjCleared ? `
+                  <button type="button" class="btn btn-quiet" style="height:38px; font-size:12px;" onclick="reopenSalaryReceivable('MHJ')">
+                    Reopen
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- 2. Hakimi Vihar Society Salary Card -->
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px 18px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:700; font-size:15px; color:var(--ink);">Hakimi Vihar Society</div>
+                  <div style="font-size:12px; color:var(--muted); margin-top:2px;">Society Accounting / Maintenance Salary &bull; ₹4,000 / month</div>
+                </div>
+                <span class="fin-pill ${hvCleared ? 'pay' : 'rec'}" style="${hvCleared ? 'background:var(--green-soft); color:var(--green); border:1px solid var(--green-border);' : ''}">${hvCleared ? 'Cleared ✓' : 'Due ₹4,000'}</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:24px; font-weight:700; color:${hvCleared ? 'var(--green)' : 'var(--red)'}; margin:10px 0 6px;">
+                ${hvCleared ? '₹0 <small style="font-size:13px; font-weight:500; color:var(--green);">(₹4,000 Received)</small>' : inr(4000)}
+              </div>
+              <div style="font-size:12px; color:var(--muted); margin-bottom:14px; min-height:18px;">
+                ${hvTask && hvTask.remark ? hvTask.remark : 'Recurring monthly accounting salary from Hakimi Vihar Society.'}
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-wa" style="flex:1; height:38px; font-size:13px; font-weight:600;" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">
+                  ✓ Settle Hakimi Vihar (₹4,000)
+                </button>
+                ${hvCleared ? `
+                  <button type="button" class="btn btn-quiet" style="height:38px; font-size:12px;" onclick="reopenSalaryReceivable('Hakimi Vihar')">
+                    Reopen
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   // === 0A. LOANS & ADVANCES ADJUSTMENT CONSOLE ===
   if (finViewMode === 'all' || finViewMode === 'adjust') {
     html += `
@@ -2243,7 +1721,7 @@ function renderFinancialsPage() {
         <div class="statement-header" style="background:linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%);">
           <div>
             <h3>⚖️ Loans &amp; Advances Adjustment &amp; Contra Console</h3>
-            <div class="stmt-sub">Cross-adjust, set off against salary or fees, and record mutual settlements</div>
+            <div class="stmt-sub">Cross-adjust, set off against fees, and record mutual settlements</div>
           </div>
           <button type="button" class="btn" style="background:#FFFFFF; color:#6D28D9; height:34px; font-size:12px; font-weight:700; padding:0 14px; border:0;" onclick="openLoanAdjustmentModal()">
             + Record Adjustment
@@ -2251,7 +1729,6 @@ function renderFinancialsPage() {
         </div>
         <div class="statement-body">
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:20px;">
-            <!-- Adjust Juzer Card -->
             <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
@@ -2271,11 +1748,10 @@ function renderFinancialsPage() {
               </button>
             </div>
 
-            <!-- Adjust MHJ Card -->
             <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                  <div style="font-weight:700; font-size:14.5px; color:var(--ink);">MHJ (Principal)</div>
+                  <div style="font-weight:700; font-size:14.5px; color:var(--ink);">MHJ (Mufazzal Husain Johar)</div>
                   <div style="font-size:12px; color:var(--muted);">Loan Taken (Liability)</div>
                 </div>
                 <span class="fin-pill pay">Payable</span>
@@ -2287,11 +1763,10 @@ function renderFinancialsPage() {
                 Gross: ${inr(86000)} ${mhjAdjusted > 0 ? `&bull; Set off: ${inr(mhjAdjusted)}` : ''}
               </div>
               <button type="button" class="btn btn-quiet" style="width:100%; height:36px; font-size:12.5px; font-weight:600;" onclick="openLoanAdjustmentModal('MHJ')">
-                Offset Against Salary / Contra &rarr;
+                Set off / Contra Settlement &rarr;
               </button>
             </div>
 
-            <!-- Adjust Hatim Card -->
             <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:12px; padding:16px;">
               <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
@@ -2312,7 +1787,6 @@ function renderFinancialsPage() {
             </div>
           </div>
 
-          <!-- Audit Log of Adjustments -->
           <div style="border-top:1px solid var(--rule); padding-top:16px;">
             <div style="font-weight:700; font-size:13.5px; color:var(--ink); margin-bottom:10px;">Recent Adjustments &amp; Set-off Entries</div>
             ${adjustments.length === 0 ? `
@@ -2354,7 +1828,7 @@ function renderFinancialsPage() {
         <div class="statement-header">
           <div>
             <h3>Profit &amp; Loss Statement</h3>
-            <div class="stmt-sub">Mustannsirr Mallik &bull; Tax &amp; Accounts Practice &bull; FY 2026-27 (Accrual &amp; Cash Basis)</div>
+            <div class="stmt-sub">Mustannsirr Mallik &bull; Tax &amp; Accounts Practice &bull; FY 2026-27</div>
           </div>
           <span class="stmt-badge">Statement of Income &amp; Expenditure</span>
         </div>
@@ -2382,13 +1856,13 @@ function renderFinancialsPage() {
                 <td class="text-right stmt-mono"></td>
               </tr>
               <tr>
-                <td class="indent">Monthly Salary / Retainership &mdash; MHJ (Due 1st of month)</td>
-                <td class="text-right stmt-mono">${inr(salaryMHJ)}</td>
+                <td class="indent">Monthly Retainership &mdash; MHJ (Mufazzal Husain Johar) (₹24,000/mo)</td>
+                <td class="text-right stmt-mono">${inr(24000)}</td>
                 <td class="text-right stmt-mono"></td>
               </tr>
               <tr>
-                <td class="indent">Monthly Accounting Salary &mdash; Hakimi Vihar Society (Due 1st of month)</td>
-                <td class="text-right stmt-mono">${inr(salaryHakimi)}</td>
+                <td class="indent">Monthly Accounting Salary &mdash; Hakimi Vihar Society (₹4,000/mo)</td>
+                <td class="text-right stmt-mono">${inr(4000)}</td>
                 <td class="text-right stmt-mono"></td>
               </tr>
               <tr class="total-row">
@@ -2401,7 +1875,7 @@ function renderFinancialsPage() {
                 <td colspan="3">B. Direct Expenses &amp; Disallowances</td>
               </tr>
               <tr>
-                <td class="indent">Client Compliance &amp; Portal Filing Charges (Direct Outflow)</td>
+                <td class="indent">Client Compliance &amp; Portal Filing Charges</td>
                 <td class="text-right stmt-mono">0.00</td>
                 <td class="text-right stmt-mono"></td>
               </tr>
@@ -2420,12 +1894,6 @@ function renderFinancialsPage() {
                 <td><strong style="color:var(--accent);">NET PROFESSIONAL PROFIT (A &minus; B)</strong></td>
                 <td></td>
                 <td class="text-right stmt-mono" style="color:var(--green); font-size:17px;">${inr(netFeeRevenueAccrued)}</td>
-              </tr>
-
-              <tr>
-                <td class="indent-sub" colspan="3" style="padding-top:12px;">
-                  <em>Realization Note: Of the accrued net profit of ${inr(netFeeRevenueAccrued)}, <strong>${inr(totalFeesReceivedCash)}</strong> has been realized in cash/bank collections, and <strong>${inr(totalDebtorsReceivable)}</strong> remains as Sundry Debtors (Receivable).</em>
-                </td>
               </tr>
             </tbody>
           </table>
@@ -2472,7 +1940,7 @@ function renderFinancialsPage() {
                     <td colspan="2">II. Current Liabilities &amp; Borrowings</td>
                   </tr>
                   <tr>
-                    <td class="indent"><strong>Loan from Principal &mdash; MHJ</strong></td>
+                    <td class="indent"><strong>Loan from Principal &mdash; MHJ (Mufazzal Husain Johar)</strong></td>
                     <td class="text-right stmt-mono" style="color:var(--amber);">${inr(loanTakenMHJ)}</td>
                   </tr>
                   <tr>
@@ -2529,16 +1997,13 @@ function renderFinancialsPage() {
                     <td class="indent"><strong>Sundry Debtors (Clients Fees Receivable):</strong></td>
                     <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalDebtorsReceivable)}</td>
                   </tr>
+
                   <tr>
-                    <td class="indent-sub">&bull; Active billable client receivables</td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td class="indent"><strong>Monthly Salaries Receivable (Due 1st):</strong></td>
+                    <td class="indent"><strong>Salaries Receivable:</strong></td>
                     <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalMonthlySalaryReceivable)}</td>
                   </tr>
                   <tr>
-                    <td class="indent-sub">&bull; MHJ: ${inr(salaryMHJ)} &bull; Hakimi Vihar: ${inr(salaryHakimi)}</td>
+                    <td class="indent-sub">&bull; MHJ: ${inr(salaryMHJDues)} | Hakimi Vihar: ${inr(salaryHVDues)}</td>
                     <td></td>
                   </tr>
 
@@ -2547,10 +2012,10 @@ function renderFinancialsPage() {
                   </tr>
                   <tr>
                     <td class="indent">Bank Account (slice Small Finance Bank) / Cash in hand</td>
-                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(totalFeesReceivedCash)}</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(totalFeesReceivedCash + salaryMHJReceived + salaryHVReceived)}</td>
                   </tr>
                   <tr>
-                    <td class="indent-sub">Realized professional collections</td>
+                    <td class="indent-sub">Realized collections &amp; salary receipts</td>
                     <td></td>
                   </tr>
                   <tr class="total-row">
@@ -2571,110 +2036,7 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 3. LOANS & ADVANCES SCHEDULE & ACTION PORTFOLIO ===
-  if (finViewMode === 'all' || finViewMode === 'portfolio') {
-    html += `
-      <div class="fin-section-title">
-        <span>Loans &amp; Advances Portfolio Schedule</span>
-        <span style="font-size:12.5px; font-weight:600; color:var(--muted); font-family:var(--sans);">3 Verified Ledgers</span>
-      </div>
-
-      <div class="fin-item-grid">
-        <!-- 1. Juzer Presswala -->
-        <div class="fin-item-card" style="border-left:4px solid var(--red);">
-          <div class="fin-item-top">
-            <div>
-              <div class="fin-item-name">Juzer Presswala</div>
-              <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">Mob: +91 7869282535 &bull; Shivalaya</div>
-            </div>
-            <span class="fin-pill rec">Current Asset (Loan Given)</span>
-          </div>
-          <div class="fin-amount rec">${inr(107690)}</div>
-          <div class="fin-breakdown">
-            <div>&bull; Opening Balance: <strong>${inr(100000)}</strong></div>
-            <div>&bull; 05-Nov-2026: X-Ray (${inr(700)}) + Plaster (${inr(1800)})</div>
-            <div>&bull; 05-Nov-2026: Cash Advance (${inr(5000)}) + Medicine (${inr(190)})</div>
-            <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--red);">
-              Total Balance Outstanding: ${inr(107690)}
-            </div>
-          </div>
-          <div class="fin-actions">
-            <a href="https://docs.google.com/spreadsheets/d/122rmY3KXjDTu-ZoyAjtJjzTXH9izDaT_S17YzWVlTaM/edit" target="_blank" rel="noopener" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
-              ${ICON.doc} <span>Open Google Sheet</span>
-            </a>
-            <button type="button" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; display:inline-flex; align-items:center; gap:5px;" onclick="sendWhatsAppReminder('cal_lghida9k5kgvrvqamrebcdv18c', 107690)">
-              ${ICON.chat} <span>WhatsApp Reminder</span>
-            </button>
-            <button type="button" class="btn btn-primary" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="recordPayment('cal_lghida9k5kgvrvqamrebcdv18c')">
-              Record Repayment
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. MHJ (Loan Taken) -->
-        <div class="fin-item-card" style="border-left:4px solid var(--amber);">
-          <div class="fin-item-top">
-            <div>
-              <div class="fin-item-name">MHJ (M. H. Jawadwala)</div>
-              <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">Mob: +91 9425054543 &bull; Principal</div>
-            </div>
-            <span class="fin-pill pay">Current Liability (Loan Taken)</span>
-          </div>
-          <div class="fin-amount pay">${inr(loanTakenMHJ)}</div>
-          <div class="fin-breakdown">
-            <div>&bull; Account: <strong>Loan &amp; Advance Taken</strong></div>
-            <div>&bull; Status: <strong style="color:var(--amber);">Pending Clearance</strong></div>
-            <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--amber);">
-              Net Liability Payable: ${inr(loanTakenMHJ)}
-            </div>
-          </div>
-          <div class="fin-actions">
-            <a href="https://docs.google.com/spreadsheets/d/1YvOEyxX7X0BC1p-1_Q5wIAmI_6DAqKsXmGzIHdymyy0/edit" target="_blank" rel="noopener" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
-              ${ICON.doc} <span>Open Google Sheet</span>
-            </a>
-            <a href="https://api.whatsapp.com/send?phone=919425054543" target="_blank" rel="noopener" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
-              ${ICON.chat} <span>WhatsApp MHJ</span>
-            </a>
-            <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="openLoanAdjustmentModal('MHJ')">
-              Adjust / Set off
-            </button>
-          </div>
-        </div>
-
-        <!-- 3. Hatim Bhai (Adv) -->
-        <div class="fin-item-card" style="border-left:4px solid var(--amber);">
-          <div class="fin-item-top">
-            <div>
-              <div class="fin-item-name">Hatim Bhai (Advocate)</div>
-              <div style="font-size:12.5px; color:var(--muted); margin-top:2px;">Mob: +91 9826768052 &bull; Associate</div>
-            </div>
-            <span class="fin-pill pay">Current Liability (Advance Taken)</span>
-          </div>
-          <div class="fin-amount pay">${inr(loanTakenHatim)}</div>
-          <div class="fin-breakdown">
-            <div>&bull; Account: <strong>Loan &amp; Advance Taken</strong></div>
-            <div>&bull; Status: <strong style="color:var(--amber);">Pending Clearance</strong></div>
-            <div style="border-top:1px dashed var(--rule); margin-top:4px; padding-top:4px; font-weight:700; color:var(--amber);">
-              Net Liability Payable: ${inr(loanTakenHatim)}
-            </div>
-          </div>
-          <div class="fin-actions">
-            <a href="https://docs.google.com/spreadsheets/d/1Qx4Q4C2jXVyXHB2Lj2ziPgfLN410EpgpvrIp1sk-4SA/edit" target="_blank" rel="noopener" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
-              ${ICON.doc} <span>Open Google Sheet</span>
-            </a>
-            <a href="https://api.whatsapp.com/send?phone=919826768052" target="_blank" rel="noopener" class="btn btn-wa" style="height:36px; padding:0 12px; font-size:12.5px; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
-              ${ICON.chat} <span>WhatsApp Hatim Bhai</span>
-            </a>
-            <button type="button" class="btn btn-quiet" style="height:36px; padding:0 12px; font-size:12.5px;" onclick="openLoanAdjustmentModal('HATIM')">
-              Adjust / Set off
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // Bank Settlement Account Section
+  // Bank Settlement Account
   html += `
     <div class="fin-section-title">
       <span>Official Settlement Bank Account</span>
@@ -2797,7 +2159,7 @@ function render(listOnly) {
             <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted);">Advance Taken</span>
             <span style="font-size:11px; font-weight:600; color:#B45309; background:#FFFBEB; border:1px solid #FDE68A; padding:1px 6px; border-radius:4px;">Payable</span>
           </div>
-          <div style="font-weight:600; font-size:14px; color:var(--ink); margin-top:2px;">MHJ (Pending)</div>
+          <div style="font-weight:600; font-size:14px; color:var(--ink); margin-top:2px;">MHJ (Mufazzal Husain Johar)</div>
           <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#B45309; margin:2px 0;">₹86,000</div>
           <div style="font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; border-top:1px dashed var(--rule); padding-top:4px; margin-top:4px;">
             <span>Mob: 9425054543</span>
@@ -2822,7 +2184,7 @@ function render(listOnly) {
       ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
     </div>
     <div class="filters chips" role="group" aria-label="Client group">
-      ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK Husain Arif', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
+      ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ (Mufazzal Husain Johar)', 'var(--c-mhj)')}${filterBtn('shk', 'SHK Husain Arif', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
       ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
     </div>
   `;
@@ -2836,7 +2198,7 @@ function render(listOnly) {
       : '<div class="empty">No tasks here.</div>';
   } else {
     const groupDefs = [
-      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' },
+      { key: 'MHJ', label: 'Professional — MHJ (Mufazzal Husain Johar)', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' },
     ];
     const extraColors = EXTRA_COLORS;
     extraCats.forEach((cat, i) => {
@@ -2852,6 +2214,8 @@ function render(listOnly) {
     const renderCard = (t, idx, g) => {
         const isFee = t.type === 'fee';
         const isNamaz = t.type === 'personal' && /namaz/i.test(t.name);
+        const isMHJSalary = /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name));
+        const isHVSalary = /Hakimi Vihar/i.test(t.name);
         const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
         const taskOverdue = isOverdue(t);
         const dueDateLabel = t.dueDate ? (isNamaz
@@ -2865,17 +2229,14 @@ function render(listOnly) {
         const status = (taskOverdue ? '<span class="badge over">Overdue</span>' : (t.urgent && !t.done ? '<span class="badge urgent">Urgent</span>' : ''))
           + (dueDateLabel && !t.done ? `<span class="due${taskOverdue ? ' over' : ''}">Due ${dueDateLabel}</span>` : '');
         const sub = !isFee ? '' : `<div class="task-sub"><span>${inr(t.received)} of ${inr(t.payable)} received${t.discount ? ' + ' + inr(t.discount) + ' discount' : ''}</span>${status ? '<span class="state">' + status + '</span>' : ''}${showLinked ? '<span>linked: ' + t.linked + '</span>' : ''}${t.invoice ? '<span>' + ICON.doc + t.invoice + '</span>' : ''}</div>`;
-        const isMHJSalary = /Monthly Salary Receivable/i.test(t.name);
-        const isHVSalary = /Hakimi Vihar Society/i.test(t.name);
         const isJuzerLoan = /Juzer Presswala/i.test(t.name);
+        
         const actions = [
+          isMHJSalary ? `<button type="button" class="act" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('MHJ', 24000)">✓ Settle Salary (₹24k)</button>` : '',
+          isHVSalary ? `<button type="button" class="act" style="color:var(--green); font-weight:700;" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">✓ Settle Salary (₹4k)</button>` : '',
           isFee && !isHVSalary ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
-          isMHJSalary && !t.done ? `<button type="button" class="act pay" style="color:var(--green); border-color:var(--green-border); background:var(--green-soft);" onclick="clearSalaryReceivable('MHJ', 24000)">✓ Settle Salary (₹24k)</button>` : '',
-          isMHJSalary && !t.done ? `<button type="button" class="act" style="color:#6D28D9;" onclick="openLoanAdjustmentModal('MHJ')">⚖️ Adjust vs Loan</button>` : '',
-          isHVSalary && !t.done ? `<button type="button" class="act pay" style="color:var(--green); border-color:var(--green-border); background:var(--green-soft);" onclick="clearSalaryReceivable('Hakimi Vihar', 4000)">✓ Settle Salary (₹4k)</button>` : '',
           isJuzerLoan ? `<button type="button" class="act" style="color:#6D28D9;" onclick="openLoanAdjustmentModal('JUZER')">⚖️ Adjust Loan</button>` : '',
           isFee && balance > 0 && t.phone ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : '',
-          isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}')">${ICON.doc}Send receipt</button>` : '',
           isNamaz && !t.done && t.dueDate ? `<button type="button" class="act" onclick="setNamazAlarm('${escapeForHtml(t.name)}', '${t.dueDate}')">⏰ Set alarm</button>` : '',
           !t.done && !isNamaz ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Change' : 'Set'} due date</button>` : '',
           !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Edit' : 'Add'} remark</button>` : ''
@@ -2940,57 +2301,6 @@ function render(listOnly) {
   if (info) info.textContent = searchActive ? shownCount + ' of ' + tasks.length + ' tasks' : '';
 }
 
-const FESTIVAL_THEMES = [
-  { name: 'Republic Day', start: '2026-01-25', end: '2026-01-27', greeting: '🇮🇳 Happy Republic Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
-  { name: 'Holi', start: '2026-03-03', end: '2026-03-06', greeting: '🎨 Happy Holi 🎨', accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#F5F3FF', accentBorder: '#DDD6FE', bg: '#FCF9FF', crestGrad: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)' },
-  { name: 'Eid al-Fitr', start: '2026-03-19', end: '2026-03-23', greeting: '🌙 Eid Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
-  { name: 'Eid al-Adha', start: '2026-05-26', end: '2026-05-30', greeting: '🌙 Eid al-Adha Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
-  { name: 'Muharram (Ashara Mubaraka)', start: '2026-06-16', end: '2026-06-26', mourning: true, greeting: '· Ashara Mubaraka ·', accent: '#334155', accentHover: '#1E293B', accentSoft: '#F1F5F9', accentBorder: '#CBD5E1', bg: '#F1F3F5', crestGrad: 'linear-gradient(135deg, #0F172A, #334155)' },
-  { name: 'Independence Day', start: '2026-08-14', end: '2026-08-16', greeting: '🇮🇳 Happy Independence Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
-  { name: 'Mawlid al-Nabi', start: '2026-08-24', end: '2026-08-27', greeting: '✨ Milad un-Nabi Mubarak ✨', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B, #047857)' },
-  { name: 'Ganesh Chaturthi', start: '2026-09-13', end: '2026-09-17', greeting: '🌸 Happy Ganesh Chaturthi 🌸', accent: '#C2410C', accentHover: '#EA580C', accentSoft: '#FFF7ED', accentBorder: '#FED7AA', bg: '#FFFBF7', crestGrad: 'linear-gradient(135deg, #9A3412, #EA580C)' },
-  { name: 'Dussehra', start: '2026-10-18', end: '2026-10-22', greeting: '🏹 Happy Dussehra 🏹', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F, #D97706)' },
-  { name: 'Diwali', start: '2026-11-03', end: '2026-11-12', greeting: '🪔 Shubh Deepavali & Saal Mubarak 🪔', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%)' },
-  { name: 'Christmas & New Year', start: '2026-12-23', end: '2027-01-02', greeting: '🎄 Merry Christmas & Happy New Year 🎄', accent: '#BE123C', accentHover: '#E11D48', accentSoft: '#FFF1F2', accentBorder: '#FECDD3', bg: '#FCFAFA', crestGrad: 'linear-gradient(135deg, #9F1239 0%, #047857 100%)' },
-  { name: 'Republic Day', start: '2027-01-25', end: '2027-01-27', greeting: '🇮🇳 Happy Republic Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
-  { name: 'Eid al-Fitr', start: '2027-03-08', end: '2027-03-12', greeting: '🌙 Eid Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
-  { name: 'Holi', start: '2027-03-22', end: '2027-03-24', greeting: '🎨 Happy Holi 🎨', accent: '#7C3AED', accentHover: '#6D28D9', accentSoft: '#F5F3FF', accentBorder: '#DDD6FE', bg: '#FCF9FF', crestGrad: 'linear-gradient(135deg, #EC4899, #8B5CF6, #3B82F6)' },
-  { name: 'Eid al-Adha', start: '2027-05-15', end: '2027-05-19', greeting: '🌙 Eid al-Adha Mubarak 🌙', accent: '#047857', accentHover: '#059669', accentSoft: '#ECFDF5', accentBorder: '#A7F3D0', bg: '#F6FDF9', crestGrad: 'linear-gradient(135deg, #064E3B 0%, #047857 50%, #D97706 100%)' },
-  { name: 'Muharram (Ashara Mubaraka)', start: '2027-06-05', end: '2027-06-15', mourning: true, greeting: '· Ashara Mubaraka ·', accent: '#334155', accentHover: '#1E293B', accentSoft: '#F1F5F9', accentBorder: '#CBD5E1', bg: '#F1F3F5', crestGrad: 'linear-gradient(135deg, #0F172A, #334155)' },
-  { name: 'Independence Day', start: '2027-08-14', end: '2027-08-16', greeting: '🇮🇳 Happy Independence Day 🇮🇳', accent: '#0B3D91', accentHover: '#1D4ED8', accentSoft: '#EFF6FF', accentBorder: '#BFDBFE', bg: '#FFFBF5', crestGrad: 'linear-gradient(135deg, #FF9933 0%, #0B3D91 50%, #138808 100%)' },
-  { name: 'Diwali', start: '2027-10-26', end: '2027-11-04', greeting: '🪔 Shubh Deepavali & Saal Mubarak 🪔', accent: '#B45309', accentHover: '#D97706', accentSoft: '#FFFBEB', accentBorder: '#FDE68A', bg: '#FFFDF5', crestGrad: 'linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%)' }
-];
-
-function applyFestivalTheme() {
-  const today = new Date();
-  const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
-  const active = FESTIVAL_THEMES.find(f => todayStr >= f.start && todayStr <= f.end);
-  if (!active) return;
-
-  const root = document.documentElement.style;
-  if (active.accent) root.setProperty('--accent', active.accent);
-  if (active.accentHover) root.setProperty('--accent-hover', active.accentHover);
-  if (active.accentSoft) root.setProperty('--accent-soft', active.accentSoft);
-  if (active.accentBorder) root.setProperty('--accent-border', active.accentBorder);
-  if (active.bg) root.setProperty('--bg', active.bg);
-
-  const crest = document.querySelector('.masthead-crest');
-  if (crest && active.crestGrad) crest.style.background = active.crestGrad;
-
-  const themeMeta = document.querySelector('meta[name="theme-color"]');
-  if (themeMeta && active.bg) themeMeta.setAttribute('content', active.bg);
-
-  if (active.mourning) {
-    document.body.style.setProperty('--confetti-disabled', 'true');
-  }
-
-  const banner = document.createElement('div');
-  banner.textContent = active.greeting || (active.mourning ? '· ' + active.name + ' ·' : '✨ ' + active.name + ' ✨');
-  banner.className = 'festival-banner';
-  document.body.insertBefore(banner, document.body.firstChild);
-}
-applyFestivalTheme();
-
 const DASHBOARD_PASSWORD = 'Mustansir@2026';
 const AUTH_KEY = 'dashboard-auth-ok';
 
@@ -3020,13 +2330,6 @@ if (localStorage.getItem(AUTH_KEY) === 'yes') {
   startDashboard();
 } else {
   document.getElementById('authInput').focus();
-}
-</script>
-<script>
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { });
-  });
 }
 </script>
 </body>
