@@ -676,6 +676,7 @@
 const STORAGE_KEY = 'tasks-v2';
 const WEBHOOK_KEY = 'webhookUrl';
 const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+const SALARY_SETTLEMENT_KEY = 'dash-salary-settlements-v1';
 let tasks = [];
 let filter = 'all';
 
@@ -756,6 +757,23 @@ function getWebhook() {
   return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
 }
 
+// Persistent Salary Settlements registry across resets
+function getSalarySettlements() {
+  try {
+    return JSON.parse(localStorage.getItem(SALARY_SETTLEMENT_KEY) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveSalarySettlement(entity, data) {
+  try {
+    const s = getSalarySettlements();
+    s[entity] = data;
+    localStorage.setItem(SALARY_SETTLEMENT_KEY, JSON.stringify(s));
+  } catch (e) {}
+}
+
 async function pushToCalendar(name, tag, dueDate) {
   const url = getWebhook();
   if (!url) return null;
@@ -832,10 +850,38 @@ async function pullFromCalendar() {
     tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
     const removed = beforeCount - tasks.length;
 
+    // Apply persistent salary settlement state on freshly pulled events
+    applyPersistedSettlements();
+
     if (added > 0 || removed > 0 || refreshed > 0) { saveTasks(); render(); }
     document.getElementById('lastSync').textContent = 'Synced with Calendar ✓ ' + new Date().toLocaleTimeString();
   } catch (e) {
     document.getElementById('lastSync').textContent = 'Calendar sync check failed';
+  }
+}
+
+function applyPersistedSettlements() {
+  const settlements = getSalarySettlements();
+
+  if (settlements['MHJ']) {
+    const s = settlements['MHJ'];
+    const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
+    if (mhjTask) {
+      mhjTask.done = s.done;
+      mhjTask.remark = s.remark || mhjTask.remark;
+      if (s.pendingRemainder !== undefined) mhjTask.pendingRemainder = s.pendingRemainder;
+      if (s.partialReceived !== undefined) mhjTask.partialReceived = s.partialReceived;
+    }
+  }
+
+  if (settlements['HAKIMI_VIHAR']) {
+    const s = settlements['HAKIMI_VIHAR'];
+    const hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
+    if (hvTask) {
+      hvTask.done = s.done;
+      hvTask.received = s.received !== undefined ? s.received : hvTask.received;
+      hvTask.remark = s.remark || hvTask.remark;
+    }
   }
 }
 
@@ -950,12 +996,16 @@ async function loadTasks() {
     mhjPers.remark = 'Payable to MHJ (Mufazzal Husain Johar &bull; Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet';
   }
 
+  // Ensure tasks exist
   if (!tasks.some(x => /Monthly Salary Receivable/i.test(x.name))) {
     tasks.unshift(seedTasks[4]);
   }
   if (!tasks.some(x => /Hakimi Vihar Society/i.test(x.name))) {
     tasks.unshift(seedTasks[5]);
   }
+
+  // Apply persistent salary settlement state
+  applyPersistedSettlements();
 
   saveTasks();
   render();
@@ -1339,7 +1389,6 @@ function recordPayment(id) {
     updatePaymentShortfallOptions(payable);
   }
 
-  // Radio toggle for loan target row
   setTimeout(() => {
     const radios = document.querySelectorAll('input[name="feeShortfallAction"]');
     const loanRow = document.getElementById('loanTargetSelectRow');
@@ -1390,9 +1439,17 @@ function deleteTask(id) {
 
 function resetData() {
   showModal('Reset dashboard data?', `
-    <div class="hint">This clears saved progress on THIS device and reloads the latest task list fresh from Calendar.</div>
+    <div class="hint">This refreshes tasks and syncs fresh from Google Calendar. Verified salary settlements and loan contra adjustments will be preserved.</div>
   `, () => {
+    // Preserve salary settlements and loan adjustments
+    const preservedSalary = localStorage.getItem(SALARY_SETTLEMENT_KEY);
+    const preservedLoans = localStorage.getItem(LOAN_ADJUST_LOG_KEY);
+
     localStorage.removeItem(STORAGE_KEY);
+
+    if (preservedSalary) localStorage.setItem(SALARY_SETTLEMENT_KEY, preservedSalary);
+    if (preservedLoans) localStorage.setItem(LOAN_ADJUST_LOG_KEY, preservedLoans);
+
     window.location.href = window.location.pathname + '?t=' + Date.now();
   }, 'Reset', 'Cancel');
 }
@@ -1459,7 +1516,7 @@ function switchPage(page) {
   }
 }
 
-// Salary Clearance & Settlement
+// Salary Clearance & Settlement with Persistence
 function clearSalaryReceivable(entity, defaultAmount) {
   const currentMonth = new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
   const isMHJ = /mhj/i.test(entity);
@@ -1529,6 +1586,7 @@ function clearSalaryReceivable(entity, defaultAmount) {
           remark: 'Remaining salary of ₹' + remainder.toLocaleString('en-IN') + ' set off against MHJ Loan Taken'
         });
 
+        const remarkText = 'Settled: ₹' + amt.toLocaleString('en-IN') + ' recd via ' + mode + ' + ₹' + remainder.toLocaleString('en-IN') + ' adjusted with MHJ Loan on ' + dateVal;
         if (!mhjTask) {
           mhjTask = {
             id: 'u_sal_mhj_' + Date.now(),
@@ -1536,15 +1594,18 @@ function clearSalaryReceivable(entity, defaultAmount) {
             type: 'professional',
             cat: 'MHJ',
             done: true,
-            remark: 'Settled: ₹' + amt.toLocaleString('en-IN') + ' recd via ' + mode + ' + ₹' + remainder.toLocaleString('en-IN') + ' adjusted with MHJ Loan on ' + dateVal
+            remark: remarkText
           };
           tasks.unshift(mhjTask);
         } else {
           mhjTask.done = true;
-          mhjTask.remark = 'Settled: ₹' + amt.toLocaleString('en-IN') + ' recd via ' + mode + ' + ₹' + remainder.toLocaleString('en-IN') + ' adjusted with MHJ Loan on ' + dateVal;
+          mhjTask.remark = remarkText;
           if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
         }
+
+        saveSalarySettlement('MHJ', { done: true, remark: remarkText, pendingRemainder: 0 });
       } else if (isShortfall && optPending) {
+        const remarkText = 'Part payment: ₹' + amt.toLocaleString('en-IN') + ' recd on ' + dateVal + ' via ' + mode + '. ₹' + remainder.toLocaleString('en-IN') + ' remains PENDING.';
         if (!mhjTask) {
           mhjTask = {
             id: 'u_sal_mhj_' + Date.now(),
@@ -1554,17 +1615,20 @@ function clearSalaryReceivable(entity, defaultAmount) {
             done: false,
             partialReceived: amt,
             pendingRemainder: remainder,
-            remark: 'Part payment: ₹' + amt.toLocaleString('en-IN') + ' recd on ' + dateVal + ' via ' + mode + '. ₹' + remainder.toLocaleString('en-IN') + ' remains PENDING.'
+            remark: remarkText
           };
           tasks.unshift(mhjTask);
         } else {
           mhjTask.done = false;
           mhjTask.partialReceived = amt;
           mhjTask.pendingRemainder = remainder;
-          mhjTask.remark = 'Part payment: ₹' + amt.toLocaleString('en-IN') + ' recd on ' + dateVal + ' via ' + mode + '. ₹' + remainder.toLocaleString('en-IN') + ' remains PENDING.';
+          mhjTask.remark = remarkText;
           if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, false);
         }
+
+        saveSalarySettlement('MHJ', { done: false, remark: remarkText, pendingRemainder: remainder, partialReceived: amt });
       } else {
+        const remarkText = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
         if (!mhjTask) {
           mhjTask = {
             id: 'u_sal_mhj_' + Date.now(),
@@ -1572,19 +1636,23 @@ function clearSalaryReceivable(entity, defaultAmount) {
             type: 'professional',
             cat: 'MHJ',
             done: true,
-            remark: 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode
+            remark: remarkText
           };
           tasks.unshift(mhjTask);
         } else {
           mhjTask.done = true;
           delete mhjTask.pendingRemainder;
-          mhjTask.remark = 'Cleared ₹' + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode;
+          mhjTask.remark = remarkText;
           if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, true);
         }
+
+        saveSalarySettlement('MHJ', { done: true, remark: remarkText, pendingRemainder: 0 });
       }
     } else {
       let hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
       const isPaidFull = !isShortfall || amt >= defaultAmount;
+      const remarkText = (isPaidFull ? 'Cleared ₹' : 'Partially received ₹') + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode + (isShortfall ? ' (₹' + remainder.toLocaleString('en-IN') + ' pending)' : '');
+
       if (!hvTask) {
         hvTask = {
           id: 'u_sal_hv_' + Date.now(),
@@ -1595,15 +1663,17 @@ function clearSalaryReceivable(entity, defaultAmount) {
           payable: 4000,
           received: amt,
           done: isPaidFull,
-          remark: (isPaidFull ? 'Cleared ₹' : 'Partially received ₹') + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode + (isShortfall ? ' (₹' + remainder.toLocaleString('en-IN') + ' pending)' : '')
+          remark: remarkText
         };
         tasks.unshift(hvTask);
       } else {
         hvTask.done = isPaidFull;
         hvTask.received = amt;
-        hvTask.remark = (isPaidFull ? 'Cleared ₹' : 'Partially received ₹') + amt.toLocaleString('en-IN') + ' on ' + dateVal + ' via ' + mode + (isShortfall ? ' (₹' + remainder.toLocaleString('en-IN') + ' pending)' : '');
+        hvTask.remark = remarkText;
         if (hvTask.id.startsWith('cal_')) updateFeeOnCalendar(hvTask.id, amt, 0);
       }
+
+      saveSalarySettlement('HAKIMI_VIHAR', { done: isPaidFull, received: amt, remark: remarkText });
     }
 
     saveTasks();
@@ -1633,6 +1703,8 @@ function updateSalarySettleOptions(totalAmt, isMHJ) {
 
 function reopenSalaryReceivable(entity) {
   const isMHJ = /mhj/i.test(entity);
+  const settlements = getSalarySettlements();
+
   if (isMHJ) {
     const mhjTask = tasks.find(t => /Monthly Salary Receivable/i.test(t.name) || (t.cat === 'MHJ' && /Salary/i.test(t.name)));
     if (mhjTask) {
@@ -1642,6 +1714,7 @@ function reopenSalaryReceivable(entity) {
       mhjTask.remark = 'Reopened pending clearance';
       if (mhjTask.id.startsWith('cal_')) toggleOnCalendar(mhjTask.id, false);
     }
+    delete settlements['MHJ'];
   } else {
     const hvTask = tasks.find(t => /Hakimi Vihar/i.test(t.name));
     if (hvTask) {
@@ -1650,7 +1723,13 @@ function reopenSalaryReceivable(entity) {
       hvTask.remark = 'Reopened pending clearance';
       if (hvTask.id.startsWith('cal_')) updateFeeOnCalendar(hvTask.id, 0, 0);
     }
+    delete settlements['HAKIMI_VIHAR'];
   }
+
+  try {
+    localStorage.setItem(SALARY_SETTLEMENT_KEY, JSON.stringify(settlements));
+  } catch (e) {}
+
   saveTasks();
   render();
   if (activePage === 'financials') renderFinancialsPage();
