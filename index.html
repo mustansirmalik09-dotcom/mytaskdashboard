@@ -3,568 +3,2964 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Task Dashboard — Mustannsirr Mallik</title>
+<title>Live Task Dashboard &amp; Double-Entry Financial Suite</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#FFFDF5">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#F8FAFC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   :root {
-    --bg: #FFFDF5;
+    --bg: #F8FAFC;
     --sheet: #FFFFFF;
-    --sheet-alt: #F8FAFC;
+    --sheet-alt: #F1F5F9;
     --ink: #0F172A;
+    --ink-light: #1E293B;
     --muted: #64748B;
     --muted-light: #94A3B8;
+    --icon: #94A3B8;
+    --field: #CBD5E1;
     --rule: #E2E8F0;
     --rule-soft: #F1F5F9;
-    --accent: #B45309;
-    --accent-hover: #D97706;
-    --accent-soft: #FFFBEB;
-    --accent-border: #FDE68A;
+
+    --accent: #1E3A8A;
+    --accent-hover: #1D4ED8;
+    --accent-soft: #EFF6FF;
+    --accent-border: #BFDBFE;
+
     --red: #BE123C;
     --red-soft: #FFF1F2;
     --red-border: #FECDD3;
+
     --green: #047857;
     --green-soft: #ECFDF5;
     --green-border: #A7F3D0;
+
     --amber: #B45309;
-    --serif: 'Newsreader', Georgia, serif;
-    --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-    --mono: 'IBM Plex Mono', monospace;
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --amber-soft: #FFFBEB;
+    --amber-border: #FDE68A;
+
+    --c-mhj: #2563EB;
+    --c-shk: #6D28D9;
+    --c-own: #0F766E;
+    --c-personal: #BE185D;
+    --c-fees: #D97706;
+
+    --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+    --sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
     --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); overflow-x: hidden; max-width: 100vw; -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  
   body {
-    font-family: var(--sans); font-size: 14.5px; line-height: 1.5; color: var(--ink);
-    background: var(--bg); margin: 0 auto; max-width: 1120px; padding: 20px 18px 72px;
+    font-family: var(--sans); font-size: 14px; line-height: 1.45; color: var(--ink);
+    background: var(--bg); margin: 0 auto; max-width: 1140px; padding: 14px 14px 60px; overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
-  .festival-banner {
-    text-align: center; font: 600 13px var(--sans); color: #B45309; background: #FFFBEB;
-    padding: 8px 16px; margin: 0 0 16px; border-radius: 10px; border: 1px solid #FDE68A;
+
+  button, input, select, textarea { font-family: var(--sans); }
+  button, [role=button] { -webkit-tap-highlight-color: transparent; }
+  :where(button, input, select, a, [role=button]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #searchBox:focus, .add-box input:focus, .add-box select:focus, #modalFields input:focus, #modalFields select:focus, #modalFields textarea:focus {
+    outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
+  .ic { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Masthead */
   .masthead {
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-    gap: 12px; margin-bottom: 16px; padding: 18px 22px;
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 16px;
-    box-shadow: var(--shadow-sm);
+    gap: 8px 14px; margin-bottom: 12px; padding: 10px 16px;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow-xs);
   }
-  .masthead-brand { display: flex; align-items: center; gap: 14px; }
+  .masthead-brand { display: flex; align-items: center; gap: 10px; }
   .masthead-crest {
-    width: 44px; height: 44px; border-radius: 12px;
-    background: linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%);
+    width: 36px; height: 36px; border-radius: 9px;
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
     color: #F8FAFC; display: grid; place-content: center;
-    font-family: var(--serif); font-weight: 600; font-size: 19px;
+    font-family: var(--serif); font-weight: 600; font-size: 16px; letter-spacing: 0.04em;
+    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.15); border: 1px solid rgba(255, 255, 255, 0.15);
   }
-  h1 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; color: var(--ink); }
-  .sub { color: var(--muted); font-size: 13px; font-weight: 500; margin-top: 2px; }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 20px; line-height: 1.15; letter-spacing: -0.015em; margin: 0; color: var(--ink); }
+  .sub { color: var(--muted); font-size: 12px; font-weight: 500; margin-top: 1px; display: flex; align-items: center; gap: 5px; }
+  .sub-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted-light); }
+  
+  .masthead .status {
+    display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted);
+  }
   .sync-badge {
-    display: inline-flex; align-items: center; gap: 7px;
+    display: inline-flex; align-items: center; gap: 6px;
     background: #F8FAFC; border: 1px solid var(--rule); border-radius: 999px;
-    padding: 4px 12px; font-size: 12px; font-weight: 500; color: #475569;
+    padding: 3px 10px; font-size: 11.5px; font-weight: 500; color: #475569;
   }
-  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; }
-
-  /* Liquidity Header */
-  .liquidity-strip {
-    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-    gap: 12px; padding: 14px 20px; background: #ECFDF5; border: 1.5px solid #A7F3D0;
-    border-radius: 14px; margin-bottom: 18px; box-shadow: var(--shadow-sm);
+  .pulse-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #10B981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
   }
-  .liq-box { display: flex; align-items: baseline; gap: 8px; }
-  .liq-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; color: #047857; letter-spacing: 0.04em; }
-  .liq-val { font-family: var(--serif); font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .liq-val.green { color: #047857; }
-  .liq-val.red { color: #BE123C; }
+  #resetBtn {
+    background: transparent; border: 1px solid var(--rule); border-radius: 6px;
+    padding: 3px 8px; font: 600 11.5px var(--sans); color: var(--muted); cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  #resetBtn:hover { color: var(--ink); border-color: var(--muted); background: var(--sheet-alt); }
+  
+  .festival-banner {
+    text-align: center; font: 600 12px var(--sans); color: var(--accent); background: var(--accent-soft);
+    padding: 5px 12px; margin: 0 0 10px; border-radius: 8px; border: 1px solid var(--accent-border);
+  }
 
   /* Navigation */
   .page-nav {
-    display: flex; gap: 8px; margin: 0 0 18px; padding: 4px;
-    background: #EEF2F6; border: 1px solid var(--rule); border-radius: 12px; max-width: 460px;
+    display: flex; gap: 6px; margin: 0 0 12px; padding: 3px;
+    background: #EEF2F6; border: 1px solid var(--rule); border-radius: 10px;
+    max-width: 440px;
   }
   .page-nav-btn {
-    flex: 1; padding: 9px 16px; border-radius: 8px; border: 0; background: transparent;
-    color: var(--muted); font: 600 13.5px var(--sans); cursor: pointer;
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px 12px; border-radius: 7px; border: 0; background: transparent;
+    color: var(--muted); font: 600 12.5px var(--sans); cursor: pointer; transition: all 0.15s ease;
   }
-  .page-nav-btn.active { background: #FFFFFF; color: #1E3A8A; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); }
+  .page-nav-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.6); }
+  .page-nav-btn.active {
+    background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  }
+  .page-nav-btn .nav-badge {
+    background: var(--accent-soft); color: var(--accent);
+    padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+  }
+  .page-nav-btn.active .nav-badge {
+    background: var(--accent); color: #FFFFFF;
+  }
 
-  /* Task / UI styles */
-  .btn { height: 40px; padding: 0 16px; border-radius: 8px; border: 1px solid transparent; font: 600 13.5px var(--sans); cursor: pointer; }
-  .btn-primary { background: #1E3A8A; color: #fff; }
-  .btn-wa { background: #047857; color: #fff; }
-  .btn-quiet { background: #fff; color: #334155; border-color: var(--rule); }
-  .btn-danger { background: #BE123C; color: #fff; }
+  /* KPI Summary */
+  .summary-sheet {
+    background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px;
+    margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-xs);
+  }
+  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 8px 12px 7px; transition: background 0.15s ease; }
+  .hero-card + .hero-card { border-left: 1px solid var(--rule-soft); }
+  .hero-card .l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; color: var(--muted); margin-top: 2px; }
+  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .hero-card.alert .n { color: var(--red); }
 
-  .task-grid { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; margin-bottom: 20px; }
-  .task { display: flex; align-items: flex-start; gap: 10px; padding: 13px 16px; border-top: 1px solid var(--rule-soft); }
+  .totals { border-top: 1px solid var(--rule-soft); padding: 5px 0 4px; background: #FAFCFE; }
+  .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; padding: 3px 14px; }
+  .totals .l { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 16px; line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+  .totals .fig.recd { color: var(--green); }
+  .totals > .tot.sum { margin: 4px 14px 0; padding: 6px 0 3px; border-top: 1px dashed var(--rule); }
+  .totals .fig.out { color: var(--red); font-size: 17px; line-height: 1.1; padding-bottom: 1px; border-bottom: 2px solid var(--red); }
+  .totals .fig.out.clear { color: var(--green); border-bottom-color: var(--green); }
+
+  /* Compact Loan Strip */
+  .loan-strip {
+    background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 3.5px solid var(--accent);
+    border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; box-shadow: var(--shadow-xs);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .loan-strip-items { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 12px; }
+  .loan-pill-item { display: inline-flex; align-items: baseline; gap: 5px; }
+  .loan-pill-item b { font-weight: 600; }
+  .loan-pill-item span.red { color: var(--red); font-weight: 700; font-family: var(--serif); font-size: 14px; }
+  .loan-pill-item span.amber { color: var(--amber); font-weight: 700; font-family: var(--serif); font-size: 14px; }
+
+  /* Filters */
+  .filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .filters.seg {
+    gap: 2px; flex-wrap: nowrap; padding: 3px; background: #EEF2F6;
+    border: 1px solid #E2E8F0; border-radius: 10px; overflow-x: auto; scrollbar-width: none;
+  }
+  .filters.seg::-webkit-scrollbar { display: none; }
+  .filter-btn { cursor: pointer; font: 500 12.5px var(--sans); transition: all 0.15s ease; }
+  .filters.seg .filter-btn {
+    flex: 1 1 auto; border: 0; background: transparent; color: var(--muted);
+    padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+  }
+  .filters.seg .filter-btn:hover { color: var(--ink); background: rgba(255, 255, 255, 0.5); }
+  .filters.seg .filter-btn.active { background: #FFFFFF; color: var(--accent); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
+  
+  .filters.chips { margin-bottom: 10px; gap: 5px; }
+  .filters.chips .filter-btn {
+    display: inline-flex; align-items: center; background: #FFFFFF; border: 1px solid var(--rule);
+    color: var(--ink); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    box-shadow: var(--shadow-xs);
+  }
+  .filters.chips .filter-btn:hover { border-color: var(--field); background: var(--sheet-alt); }
+  .filters.chips .filter-btn.active {
+    background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); font-weight: 600;
+  }
+  .filter-btn .dot { width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; flex: none; }
+
+  /* Search & Add */
+  #searchRow { margin: 0 0 10px; }
+  #searchWrap { position: relative; }
+  #searchWrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 15px; height: 15px; }
+  #searchBox {
+    width: 100%; height: 38px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
+    padding: 0 36px 0 36px; border-radius: 9px; font: 400 13.5px var(--sans);
+    box-shadow: var(--shadow-xs); transition: all 0.15s ease;
+  }
+  #searchClear {
+    display: none; position: absolute; right: 4px; top: 4px; width: 30px; height: 30px;
+    padding: 0; border: 0; background: transparent; color: var(--muted); cursor: pointer; border-radius: 6px;
+  }
+  #searchClear svg { display: block; margin: auto; width: 14px; height: 14px; }
+  #searchClear:hover { background: var(--rule-soft); color: var(--ink); }
+  #searchInfo { font-size: 11.5px; color: var(--muted); margin: 4px 2px 0; font-weight: 500; }
+  #searchInfo:empty { display: none; }
+
+  .add-box { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .add-box input, .add-box select {
+    height: 38px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
+    padding: 0 10px; border-radius: 8px; font: 400 13.5px var(--sans); max-width: 100%; min-width: 0;
+    box-shadow: var(--shadow-xs);
+  }
+  .add-box select {
+    -webkit-appearance: none; appearance: none; padding-right: 28px;
+    background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+  }
+  #newCat { flex: 1 1 140px; font-weight: 500; }
+  .add-box input[type=text] { flex: 2 1 180px; }
+  .add-box button {
+    height: 38px; padding: 0 18px;
+    background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+    color: #FFFFFF; border: 0; border-radius: 8px; font: 600 13.5px var(--sans); cursor: pointer;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2); transition: all 0.15s ease;
+  }
+  .add-box button:hover { filter: brightness(1.08); }
+
+  #app { margin-top: 14px; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 32px 14px; background: #FFFFFF; border: 1px dashed var(--rule); border-radius: 10px; }
+  .loading { text-align: center; padding: 32px; color: var(--muted); font-weight: 500; }
+
+  /* Sections & Cards */
+  .cat-section { margin-bottom: 16px; }
+  .cat-heading { display: flex; align-items: center; gap: 8px; margin: 0 2px 7px; min-height: 26px; }
+  .cat-heading .dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .cat-heading .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; min-width: 0; font-family: var(--serif); font-weight: 600; font-size: 16.5px; line-height: 1.25; color: var(--ink); }
+  .cat-heading .kind { font: 500 11.5px var(--sans); color: var(--muted); }
+  .cat-heading .count {
+    margin-left: auto; padding: 1px 7px; background: #F1F5F9; border: 1px solid var(--rule);
+    border-radius: 999px; font: 500 11px var(--sans); color: var(--muted); white-space: nowrap; flex-shrink: 0;
+  }
+  .cat-heading .count b { font-weight: 600; color: var(--ink); }
+  .cat-heading .count.has-pending b { color: #BE123C; }
+  .cat-heading .chev { width: 14px; height: 14px; flex: none; color: var(--icon); transition: transform .15s ease; }
+  .cat-heading.fold { cursor: pointer; user-select: none; }
+  .cat-heading.fold:hover .chev { color: var(--ink); }
+  .cat-section.collapsed { margin-bottom: 8px; }
+  .cat-section.collapsed .cat-heading { margin-bottom: 0; }
+  .cat-section.collapsed .cat-heading .chev { transform: rotate(-90deg); }
+
+  .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-xs); }
+  .task {
+    display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px 8px;
+    border-top: 1px solid var(--rule-soft); position: relative; transition: all 0.15s ease;
+  }
   .task:first-child { border-top: 0; }
-  .task-name { font-size: 15px; font-weight: 600; color: var(--ink); flex: 1; }
-  .amt { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+  .task.overdue { box-shadow: inset 3px 0 0 var(--red); background: #FFFDFD; }
+  .task.urgent { box-shadow: inset 3px 0 0 var(--amber); background: #FFFFFD; }
+  .task .num { flex: none; width: 18px; margin-left: -2px; text-align: right; font-size: 11px; line-height: 20px; color: var(--muted-light); font-variant-numeric: tabular-nums; font-weight: 500; }
+  
+  .task input[type=checkbox] {
+    -webkit-appearance: none; appearance: none; flex: none; position: relative; display: grid; place-content: center;
+    width: 17px; height: 17px; margin: 2px 0 0; border: 1.5px solid var(--field); border-radius: 5px; background: var(--sheet); cursor: pointer;
+  }
+  .task input[type=checkbox]::after { content: ''; position: absolute; inset: -8px; }
+  .task input[type=checkbox]:checked { background: #2563EB; border-color: #2563EB; }
+  .task input[type=checkbox]:checked::before { content: ''; width: 8px; height: 4px; margin-top: -2px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); }
+  
+  .task-body { flex: 1; min-width: 0; }
+  .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .task-name { flex: 1; min-width: 0; font-size: 14px; line-height: 1.35; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+  .amt { flex: none; text-align: right; font-family: var(--serif); font-weight: 600; font-size: 16px; line-height: 1.15; font-variant-numeric: tabular-nums; }
   .amt.owed { color: var(--red); }
-  .amt.clear { font-size: 13px; color: var(--green); }
+  .amt.clear { font: 600 11.5px var(--sans); color: var(--green); background: var(--green-soft); border: 1px solid var(--green-border); padding: 1px 6px; border-radius: 4px; }
+  .amt small { display: block; font: 500 10.5px var(--sans); color: var(--muted); }
+  
+  .task-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; margin-top: 2px; font-size: 12px; line-height: 1.4; color: var(--muted); }
+  .task-sub > span { display: inline-flex; align-items: center; gap: 4px; }
+  
+  .note {
+    display: flex; align-items: flex-start; gap: 5px; margin-top: 4px; width: fit-content; max-width: 100%;
+    padding: 3px 8px; border-radius: 6px; background: var(--amber-soft); border: 1px solid var(--amber-border);
+    color: #92400E; font-size: 11.5px; line-height: 1.35; font-weight: 500;
+  }
+  .note .ic { margin-top: 2px; width: 12px; height: 12px; color: var(--amber); }
 
-  /* Statements */
-  .stmt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-  .stmt-table th { background: #F8FAFC; padding: 10px 14px; border-bottom: 1.5px solid var(--rule); text-align: left; font-size: 11.5px; text-transform: uppercase; color: var(--muted); }
-  .stmt-table td { padding: 10px 14px; border-bottom: 1px solid var(--rule-soft); }
-  .stmt-table tr.total-row td { border-top: 1.5px solid var(--rule); font-weight: 700; background: #FAFCFE; }
-  .stmt-mono { font-family: var(--serif); font-size: 15.5px; font-weight: 600; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; margin-top: 3px; font-size: 12px; }
+  .badge { font-size: 10.5px; font-weight: 600; line-height: 1.4; padding: 1px 5px; border-radius: 4px; }
+  .badge.over { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-border); }
+  .badge.urgent { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-border); }
+  .due { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+  .due.over { color: var(--red); font-weight: 600; }
+
+  .act {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 0; background: none; border: 0;
+    font: 600 11.5px var(--sans); color: var(--accent); cursor: pointer; text-underline-offset: 2px;
+  }
+  .act:hover { text-decoration: underline; color: var(--accent-hover); }
+  .act.wa { color: var(--green); }
+  .act.pay {
+    padding: 2px 7px; margin: 1px 0; border: 1px solid var(--rule); border-radius: 6px;
+    background: #F8FAFC; color: #1E3A8A; font-weight: 600;
+  }
+  .act.pay:hover { text-decoration: none; border-color: var(--accent-border); background: var(--accent-soft); }
+  .act.del {
+    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+    margin: -3px 0 -3px 0; padding: 0; border-radius: 6px; color: var(--icon); background: transparent; border: 0; cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .act.del:hover { color: var(--red); background: var(--red-soft); text-decoration: none; }
+  .act.del .ic { width: 14px; height: 14px; }
+
+  .task.done { padding: 7px 12px 6px; opacity: 0.72; }
+  .task.done .task-name { font-weight: 400; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--field); }
+  .task.done .task-meta { margin-top: 0; }
+  .done-toggle {
+    display: block; width: 100%; text-align: left; padding: 8px 12px; background: #FAFCFE; border: 0; border-top: 1px solid var(--rule-soft);
+    color: var(--muted); font: 500 12px var(--sans); cursor: pointer; transition: all .12s ease;
+  }
+  .done-toggle:first-child { border-top: 0; }
+  .done-toggle:hover { background: #F1F5F9; color: var(--ink); }
+
+  #toTop {
+    position: fixed; right: 16px; bottom: 18px; width: 38px; height: 38px; padding: 0; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2); background: #0F172A; color: #fff; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3); opacity: 0; pointer-events: none; transform: translateY(6px);
+    transition: opacity 0.2s ease, transform 0.2s ease; z-index: 900;
+  }
+  #toTop svg { display: block; margin: auto; width: 18px; height: 18px; }
+  #toTop.show { opacity: 0.95; pointer-events: auto; transform: none; }
+
+  /* Modals */
+  .btn { height: 38px; padding: 0 16px; border-radius: 8px; border: 1px solid transparent; font: 600 13.5px var(--sans); cursor: pointer; }
+  .btn-primary { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #fff; }
+  .btn-wa { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff; }
+  .btn-danger { background: linear-gradient(135deg, #BE123C 0%, #E11D48 100%); color: #fff; }
+  .btn-quiet { background: #FFFFFF; color: #334155; border-color: var(--field); }
+  .btn-quiet:hover { background: var(--sheet-alt); border-color: var(--muted-light); }
+
+  #modalOverlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px);
+    z-index: 1000; align-items: center; justify-content: center; padding: 14px;
+  }
+  .modal {
+    background: #FFFFFF; border-radius: 14px; padding: 20px; width: 100%; max-width: 440px;
+    max-height: calc(100vh - 28px); max-height: calc(100dvh - 28px); overflow-y: auto;
+    box-shadow: var(--shadow-modal); border: 1px solid var(--rule);
+  }
+  #modalTitle { font-family: var(--serif); font-weight: 600; font-size: 19px; line-height: 1.25; margin-bottom: 12px; color: var(--ink); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+  #modalFields label { display: block; margin: 0 0 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  #modalFields input:not([type=checkbox]), #modalFields select, #modalFields textarea {
+    display: block; width: 100%; height: 38px; margin-bottom: 12px; padding: 0 10px; background: #FFFFFF; color: var(--ink);
+    border: 1px solid var(--field); border-radius: 8px; font: 400 13.5px var(--sans);
+  }
+  #modalFields .check-row {
+    display: flex; align-items: center; gap: 8px; margin: 8px 0 2px;
+    font-size: 13px; font-weight: 600; color: var(--green); cursor: pointer; text-transform: none; letter-spacing: normal;
+  }
+  #modalFields .check-row input[type=checkbox] {
+    width: 17px; height: 17px; margin: 0; flex: none; accent-color: var(--green);
+  }
+  .receipt-preview {
+    white-space: pre-wrap; word-break: break-word; background: var(--green-soft);
+    border: 1px solid var(--green-border); border-radius: 8px; padding: 10px 12px;
+    font-size: 12.5px; line-height: 1.45; max-height: 220px; overflow-y: auto; color: var(--ink);
+  }
+  .hint { font-size: 12px; line-height: 1.45; color: var(--muted); margin-bottom: 10px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+  .preset { padding: 4px 10px; border: 1px solid var(--rule); border-radius: 999px; background: #FFFFFF; color: var(--ink); font: 500 11.5px var(--sans); cursor: pointer; }
+  .preset:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+  #authGate {
+    position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px;
+    background: radial-gradient(circle at 50% 35%, #1E293B 0%, #0F172A 100%);
+  }
+  .auth-card {
+    width: 100%; max-width: 340px; text-align: center;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px); border-radius: 16px; padding: 30px 22px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  }
+  .auth-crest {
+    width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 12px;
+    background: linear-gradient(135deg, #1E3A8A, #2563EB);
+    color: #FFFFFF; display: grid; place-content: center;
+    font-family: var(--serif); font-size: 18px; font-weight: 600;
+  }
+  .auth-title { font-family: var(--serif); font-weight: 600; font-size: 22px; color: #FFFFFF; }
+  .auth-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+  .auth-note { margin: 18px 0 8px; font-size: 11.5px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  #authInput {
+    display: block; width: 100%; height: 42px; margin-bottom: 10px; padding: 0 14px;
+    background: rgba(255, 255, 255, 0.08); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px; font: 400 15px var(--sans); text-align: center;
+  }
+  #authInput:focus { border-color: #3B82F6; outline: none; }
+  .auth-card .btn { width: 100%; height: 42px; }
+  #authError { display: none; margin-top: 10px; font-size: 12.5px; font-weight: 600; color: #FB7185; }
+
+  /* Desktop Grid */
+  @media (min-width: 760px) {
+    body { padding: 20px 24px 60px; }
+    h1 { font-size: 24px; }
+    .summary-sheet { display: grid; grid-template-columns: 1.2fr 0.8fr; }
+    .hero-stats { grid-template-columns: repeat(4, 1fr); }
+    .hero-card { padding: 10px 14px; }
+    .totals { border-top: 0; border-left: 1px solid var(--rule-soft); align-self: center; }
+    .totals > .tot { padding: 4px 18px; }
+    .totals > .tot.sum { margin: 4px 18px 0; padding: 6px 0 4px; }
+
+    .task-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px;
+      background: none; border: 0; border-radius: 0; overflow: visible; box-shadow: none;
+    }
+    .task {
+      background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px;
+      border-left: 3px solid var(--catcolor, var(--rule)); box-shadow: var(--shadow-xs);
+    }
+    .task:first-child { border-top: 1px solid var(--rule); }
+    .done-toggle { grid-column: 1 / -1; border: 1px solid var(--rule); border-radius: 8px; background: #FFFFFF; }
+    @media (hover: hover) {
+      .task:hover { border-color: #CBD5E1; transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    }
+  }
+
+  /* Financials View Styles */
+  #financialsView { display: none; }
+  .fin-hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .fin-card { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow-xs); }
+  .fin-card .f-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .fin-card .f-val { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 3px 0 1px; color: var(--ink); }
+  .fin-card .f-sub { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .statement-sheet { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow-xs); margin-bottom: 18px; overflow: hidden; }
+  .statement-header { background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); color: #FFFFFF; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .statement-header h3 { font-family: var(--serif); font-size: 18px; font-weight: 600; margin: 0; }
+  .statement-body { padding: 16px 18px; }
+  .stmt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .stmt-table th { background: #F8FAFC; border-bottom: 1px solid var(--rule); padding: 8px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+  .stmt-table td { padding: 8px 10px; border-bottom: 1px solid var(--rule-soft); }
+  .stmt-mono { font-family: var(--serif); font-weight: 600; font-size: 14.5px; }
   .text-right { text-align: right; }
-
-  /* Modal */
-  #modalOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 16px; }
-  .modal { background: #FFFFFF; border-radius: 16px; padding: 22px; width: 100%; max-width: 440px; box-shadow: var(--shadow-modal); max-height: calc(100vh - 40px); overflow-y: auto; }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
-  #modalFields label { display: block; margin: 0 0 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--muted); }
-  #modalFields input, #modalFields select { width: 100%; height: 40px; margin-bottom: 12px; padding: 0 10px; border: 1px solid var(--rule); border-radius: 8px; font-size: 14px; }
+  .fin-mode-toggle { display: inline-flex; gap: 3px; padding: 2px; background: #EEF2F6; border: 1px solid var(--rule); border-radius: 8px; flex-wrap: wrap; }
+  .fin-mode-btn { border: 0; background: transparent; padding: 5px 10px; border-radius: 6px; font: 600 12px var(--sans); color: var(--muted); cursor: pointer; }
+  .fin-mode-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
 </style>
 </head>
 <body>
 
-<div class="festival-banner">🪔 Shubh Deepavali &amp; Saal Mubarak 🪔</div>
+<div id="authGate">
+  <div class="auth-card">
+    <div class="auth-crest">MM</div>
+    <div class="auth-title">Mustannsirr Mallik</div>
+    <div class="auth-sub">Tax &amp; Accounts Consultant &bull; Indore</div>
+    <div class="auth-note">Password Protected Dashboard</div>
+    <input type="password" id="authInput" placeholder="Enter password" aria-label="Password" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
+    <button type="button" class="btn btn-primary" onclick="checkAuth()">Unlock</button>
+    <div id="authError">Incorrect password — try again.</div>
+  </div>
+</div>
+
+<div id="modalOverlay" style="display:none;">
+  <div class="modal" role="dialog" aria-labelledby="modalTitle">
+    <div id="modalTitle"></div>
+    <div id="modalFields"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-quiet" onclick="closeModal()">Skip</button>
+      <button type="button" id="modalConfirmBtn" class="btn btn-primary">Save</button>
+    </div>
+  </div>
+</div>
 
 <header class="masthead">
   <div class="masthead-brand">
     <div class="masthead-crest">MM</div>
     <div>
       <h1>Mustannsirr Mallik</h1>
-      <div class="sub">Tax &amp; Accounts Consultant &bull; Indore</div>
+      <div class="sub">Tax &amp; Accounts Consultant <span class="sub-dot"></span> Indore</div>
     </div>
   </div>
   <div class="status">
-    <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Cloud Synced ✓</span></span>
+    <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Cloud Sync Active</span></span>
+    <button id="resetBtn" type="button" onclick="resetTasksOnly()" title="Resyncs fresh task list from Calendar without losing financial balances">Reset tasks</button>
   </div>
 </header>
 
-<div class="liquidity-strip">
-  <div class="liq-box">
-    <span class="liq-label">Cash in Hand:</span>
-    <span id="headerCash" class="liq-val red">-₹6,000.00</span>
-  </div>
-  <div class="liq-box">
-    <span class="liq-label">slice SFB Bank:</span>
-    <span id="headerBank" class="liq-val green">₹17,216.83</span>
-  </div>
-  <div class="liq-box">
-    <span class="liq-label">Net Liquid:</span>
-    <span id="headerLiquid" class="liq-val green">₹11,216.83</span>
-  </div>
-  <button type="button" class="btn btn-quiet" style="height:32px; font-size:12px;" onclick="openCashBankModal()">✏️ Update Cash &amp; Bank</button>
-</div>
-
-<nav class="page-nav">
-  <button type="button" id="tabTasks" class="page-nav-btn active" onclick="switchPage('tasks')">Tasks &amp; Operations</button>
-  <button type="button" id="tabFinancials" class="page-nav-btn" onclick="switchPage('financials')">Financials &amp; Statements</button>
-  <button type="button" id="tabTrip" class="page-nav-btn" onclick="switchPage('trip')">🕌 Kathiyawad Trip</button>
+<nav class="page-nav" role="tablist" aria-label="Dashboard Pages">
+  <button type="button" id="tabTasks" class="page-nav-btn active" role="tab" aria-selected="true" onclick="switchPage('tasks')">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span>Tasks &amp; Operations</span>
+  </button>
+  <button type="button" id="tabFinancials" class="page-nav-btn" role="tab" aria-selected="false" onclick="switchPage('financials')">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span>Financials &amp; Ledgers</span>
+    <span class="nav-badge" id="finBadge">₹1.07L</span>
+  </button>
 </nav>
 
-<!-- Page 1: Tasks -->
 <div id="tasksView">
-  <div class="task-grid" id="taskContainer">
-    <!-- Populated by JS -->
+  <div id="summaryArea"></div>
+
+  <div id="searchRow">
+    <div id="searchWrap">
+      <svg class="ic ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" id="searchBox" placeholder="Search client, task, remark or category…" autocomplete="off" aria-label="Search tasks" oninput="onSearch(this.value)">
+      <button type="button" id="searchClear" aria-label="Clear search" onclick="clearSearch()"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="searchInfo"></div>
+  </div>
+
+  <div class="add-box">
+    <select id="newCat" onchange="onCategoryChange()">
+      <option value="MHJ">Professional — MHJ (Mufazzal Husain Johar)</option>
+      <option value="SHK">Professional — SHK Husain Arif</option>
+      <option value="OWN">Professional — OWN</option>
+      <option value="FEES">Fees</option>
+      <option value="PERSONAL">Personal</option>
+      <option value="__NEW__">+ Add new category…</option>
+    </select>
+    <input type="text" id="newTask" placeholder="New task or client name…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+    <input type="date" id="newDueDate" style="flex:1; min-width:125px;" title="Due date (optional)">
+    <button onclick="addTask()">Add</button>
+  </div>
+  <div class="add-box" id="feeFields" style="display:none;">
+    <input type="number" id="feePayable" placeholder="₹ Payable" style="flex:1; min-width:90px;">
+    <input type="number" id="feeReceived" placeholder="₹ Received" style="flex:1; min-width:90px;">
+    <input type="text" id="feeLinked" placeholder="Linked client (optional)" style="flex:2; min-width:140px;">
+    <input type="tel" id="feePhone" placeholder="Client phone (for WhatsApp)" style="flex:2; min-width:140px;">
+  </div>
+
+  <div id="app">
+    <div class="loading">Loading tasks...</div>
   </div>
 </div>
 
-<!-- Page 2: Financials -->
-<div id="financialsView" style="display:none;">
-  <div style="background:#fff; border:1px solid var(--rule); border-radius:14px; padding:20px; margin-bottom:20px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="font-family:var(--serif); font-size:20px;">Profit &amp; Loss Statement</h3>
-      <span style="font-size:12px; color:var(--muted);">Royal Consultancy Gumasta</span>
-    </div>
-    <table class="stmt-table">
-      <thead>
-        <tr><th>Particulars</th><th class="text-right">Amount (₹)</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Gross Professional Fee (Royal Consultancy Gumasta)</td><td class="text-right stmt-mono">₹700.00</td></tr>
-        <tr><td style="color:var(--muted); padding-left:24px;">Less: Razorpay Gateway Charges (Difference)</td><td class="text-right stmt-mono" style="color:var(--red);">− ₹18.18</td></tr>
-        <tr><td style="color:var(--muted); padding-left:24px;">Less: Government Portal Challan Paid</td><td class="text-right stmt-mono" style="color:var(--red);">− ₹224.00</td></tr>
-        <tr class="total-row"><td><strong>NET PROFESSIONAL PROFIT</strong></td><td class="text-right stmt-mono" style="color:var(--green);">₹457.82</td></tr>
-      </tbody>
-    </table>
-  </div>
+<div id="financialsView"></div>
 
-  <div style="background:#fff; border:1px solid var(--rule); border-radius:14px; padding:20px; margin-bottom:20px;">
-    <h3 style="font-family:var(--serif); font-size:20px; margin-bottom:14px;">Balance Sheet Statement</h3>
-    <table class="stmt-table">
-      <thead><tr><th>Liabilities &amp; Capital</th><th class="text-right">₹</th><th>Assets &amp; Receivables</th><th class="text-right">₹</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><strong>Owner's Capital (Net Worth)</strong></td><td class="text-right stmt-mono" id="bsCapital">₹1,11,457.82</td>
-          <td><strong>Cash in Hand</strong></td><td class="text-right stmt-mono" style="color:var(--red);" id="bsCash">-₹6,000.00</td>
-        </tr>
-        <tr>
-          <td><strong>Loan Taken — MHJ</strong></td><td class="text-right stmt-mono" style="color:var(--amber);">₹86,000.00</td>
-          <td><strong>slice Small Finance Bank</strong></td><td class="text-right stmt-mono" style="color:var(--green);" id="bsBank">₹17,216.83</td>
-        </tr>
-        <tr>
-          <td><strong>Loan Taken — Hatim Bhai</strong></td><td class="text-right stmt-mono" style="color:var(--amber);">₹5,000.00</td>
-          <td><strong>Loan Given — Juzer Presswala</strong></td><td class="text-right stmt-mono" style="color:var(--red);">₹1,07,690.00</td>
-        </tr>
-        <tr>
-          <td></td><td></td>
-          <td><strong>Kathiyawad Ziyarat Trip Advance</strong></td><td class="text-right stmt-mono" style="color:var(--accent);" id="bsTripAdv">₹13,000.00</td>
-        </tr>
-        <tr class="total-row">
-          <td><strong>TOTAL LIABILITIES</strong></td><td class="text-right stmt-mono" id="bsTotLiab">₹2,02,457.82</td>
-          <td><strong>TOTAL ASSETS</strong></td><td class="text-right stmt-mono" id="bsTotAssets">₹2,02,457.82</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Page 3: Kathiyawad Ziyarat Trip -->
-<div id="tripView" style="display:none;">
-  <div style="background:#fff; border:1px solid var(--rule); border-radius:14px; padding:20px; margin-bottom:18px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
-      <div>
-        <h3 style="font-family:var(--serif); font-size:22px; color:#1E3A8A;">🕌 Kathiyawad Ziyarat Trip</h3>
-        <div style="font-size:12.5px; color:var(--muted);">3 Families: Mustannsirr Family (Mine), Father-in-law Family, Sister-in-law Family</div>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-primary" onclick="openAddTripPaymentModal()">+ Add Payment / Outflow</button>
-        <button type="button" class="btn btn-wa" onclick="openAddTripContributionModal()">+ Add Contribution / Inflow</button>
-      </div>
-    </div>
-
-    <!-- 3 Family KPI Cards -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:20px;">
-      <div style="background:#F8FAFC; border:1px solid #BFDBFE; border-radius:10px; padding:12px 14px;">
-        <span style="font-size:11px; font-weight:700; color:#1E3A8A; text-transform:uppercase;">1. Mustannsirr Family (Mine)</span>
-        <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#1E3A8A; margin-top:4px;" id="kpiMine">Paid: ₹3,000.00</div>
-        <div style="font-size:11.5px; color:var(--muted);">Tour Operator Advance</div>
-      </div>
-      <div style="background:#F8FAFC; border:1px solid #FDE68A; border-radius:10px; padding:12px 14px;">
-        <span style="font-size:11px; font-weight:700; color:#B45309; text-transform:uppercase;">2. Father-in-law Family</span>
-        <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#B45309; margin-top:4px;" id="kpiFil">Cash Given: ₹10,000.00</div>
-        <div style="font-size:11.5px; color:var(--muted);">Handed in cash on 07-Nov-2026</div>
-      </div>
-      <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px 14px;">
-        <span style="font-size:11px; font-weight:700; color:#64748B; text-transform:uppercase;">3. Sister-in-law Family</span>
-        <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#64748B; margin-top:4px;" id="kpiSil">Paid: ₹0.00</div>
-        <div style="font-size:11.5px; color:var(--muted);">1 Family Share</div>
-      </div>
-    </div>
-
-    <!-- Table of Trip Disbursements -->
-    <h4 style="font-size:14px; font-weight:700; margin-bottom:8px;">Trip Disbursements &amp; Expenses</h4>
-    <table class="stmt-table" style="margin-bottom:20px;">
-      <thead>
-        <tr><th>Date</th><th>Family</th><th>Description</th><th>Mode</th><th class="text-right">Amount (₹)</th><th>Action</th></tr>
-      </thead>
-      <tbody id="tripPaymentsTable">
-        <!-- Rendered by JS -->
-      </tbody>
-    </table>
-
-    <h4 style="font-size:14px; font-weight:700; margin-bottom:8px;">Family Contributions / Inflows</h4>
-    <table class="stmt-table">
-      <thead>
-        <tr><th>Date</th><th>Family / Member</th><th>Mode</th><th class="text-right">Amount (₹)</th><th>Action</th></tr>
-      </thead>
-      <tbody id="tripContribTable">
-        <!-- Rendered by JS -->
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Modal Container -->
-<div id="modalOverlay">
-  <div class="modal">
-    <h3 id="modalTitle" style="font-family:var(--serif); font-size:20px; margin-bottom:14px;"></h3>
-    <div id="modalFields"></div>
-    <div class="modal-actions">
-      <button type="button" class="btn btn-quiet" onclick="closeModal()">Cancel</button>
-      <button type="button" id="modalConfirmBtn" class="btn btn-primary">Save</button>
-    </div>
-  </div>
-</div>
+<button type="button" id="toTop" aria-label="Back to top" title="Back to top" onclick="scrollToTop()">
+  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 19V5"/></svg>
+</button>
 
 <script>
-const WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+let activePage = (location.hash === '#financials') ? 'financials' : 'tasks';
 
-// Baseline state
-let ledger = {
-  cashInHand: -6000.00,
+const FIN_LEDGER_KEY = 'MM_FINANCIAL_LEDGER_V1';
+const WEBHOOK_KEY = 'webhookUrl';
+const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+
+function getWebhook() {
+  return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
+}
+
+const defaultFinLedger = {
+  openingCapital: 111000.00,
+  cashInHand: -6000.00, // ₹4,000 opening less ₹10,000 cash given to Father-in-law for Kathiyawad Trip
   bankSlice: 17216.83,
+  loansGiven: {
+    juzer: {
+      name: 'Juzer Presswala',
+      phone: '7869282535',
+      address: 'Shivalaya',
+      base: 107690,
+      adjustments: 0
+    }
+  },
+  loansTaken: {
+    mhj: {
+      name: 'MHJ (Mufazzal Husain Johar)',
+      phone: '9425054543',
+      base: 86000,
+      adjustments: 0
+    },
+    hatim: {
+      name: 'Hatim Bhai (Advocate)',
+      phone: '9826768052',
+      base: 5000,
+      adjustments: 0
+    }
+  },
   kathiyawadTrip: {
+    title: 'Kathiyawad Ziyarat Trip',
+    families: [
+      { id: 'fam_mine', name: 'Mustansir Family (Mine)', members: 'Self & Family', shareRatio: 1 },
+      { id: 'fam_fil', name: 'Father-in-law Family', members: 'Father-in-law & Family', shareRatio: 1 },
+      { id: 'fam_sil', name: 'Sister-in-law Family', members: 'Sister-in-law & Family', shareRatio: 1 }
+    ],
+    estimatedBudget: 35000.00,
     payments: [
-      { id: 'kz_p_fil_cash_10k', date: '2026-11-07', family: 'Father-in-law Family', desc: 'Cash given to Father-in-law for trip expenses', amount: 10000, mode: 'Cash' },
-      { id: 'kz_adv_1', date: '2026-11-06', family: 'Mustannsirr Family (Mine)', desc: 'Advance given to tour operator', amount: 3000, mode: 'slice SFB' }
+      {
+        id: 'kz_p_fil_cash_10k',
+        date: '2026-11-07',
+        family: 'Father-in-law Family',
+        desc: 'Cash given to Father-in-law for Kathiyawad Ziyarat trip expenses & arrangements',
+        amount: 10000.00,
+        mode: 'Cash',
+        ref: 'Handed in Cash to Father-in-law'
+      },
+      {
+        id: 'kz_adv_1',
+        date: '2026-11-06',
+        family: 'Joint Pool',
+        desc: 'Advance given to tour operator for booking & travel arrangements',
+        amount: 3000.00,
+        mode: 'slice SFB',
+        ref: '2026-11-06-Vendor-Contact'
+      }
     ],
     contributions: []
-  }
+  },
+  expenses: [
+    {
+      id: 'exp_challan_royal',
+      date: '2026-11-06',
+      payee: 'MP Government Portal (Gumasta Challan)',
+      amount: 224.00,
+      source: 'slice SFB',
+      category: 'Portal Filing & Challan',
+      note: 'Portal challan paid against Royal consultancy services gumasta application'
+    },
+    {
+      id: 'exp_rzp_royal',
+      date: '2026-11-04',
+      payee: 'Razorpay Payment Gateway',
+      amount: 18.18,
+      source: 'slice SFB',
+      category: 'Gateway / Merchant Fee',
+      note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application (Net credited ₹681.82)'
+    }
+  ],
+  adjustmentsLog: []
 };
 
-let tasks = [
-  { id: 't_juzer', name: 'Loan & Advances — Juzer Presswala (₹1,07,690)', type: 'loan', done: false, amount: 107690, status: 'Receivable' },
-  { id: 't_mhj_loan', name: 'Loan & Advance Taken — MHJ (₹86,000)', type: 'loan', done: false, amount: 86000, status: 'Payable' },
-  { id: 't_hatim_loan', name: 'Loan & Advance Taken — Hatim Bhai (₹5,000)', type: 'loan', done: false, amount: 5000, status: 'Payable' },
-  { id: 't_royal_gumasta', name: 'Royal Consultancy Services Gumasta Application (₹700)', type: 'client', done: true, amount: 700, status: 'Settled' },
-  { id: 't_trip_kath', name: 'Kathiyawad Ziyarat Trip (₹13,000 Advance Paid across 3 Families)', type: 'trip', done: false, amount: 13000, status: 'Active' }
-];
+let currentLedger = null;
 
-function inr(n) {
-  const v = Math.round((Number(n) || 0) * 100) / 100;
-  return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+function sanitizeLedger(parsed) {
+  if (parsed.bankSlice === undefined) parsed.bankSlice = 17216.83;
+  if (parsed.openingCapital === undefined) parsed.openingCapital = 111000.00;
+  
+  if (!parsed.expenses) parsed.expenses = [];
+  parsed.expenses = parsed.expenses.filter(e => !(e.amount === 3000 && (/Personal Drawings/i.test(e.category || '') || /Vendor \/ Contact/i.test(e.payee || ''))));
+
+  if (!parsed.kathiyawadTrip) {
+    parsed.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
+  } else {
+    if (!parsed.kathiyawadTrip.families || parsed.kathiyawadTrip.families.length === 0) {
+      parsed.kathiyawadTrip.families = defaultFinLedger.kathiyawadTrip.families;
+    }
+    if (!parsed.kathiyawadTrip.payments) parsed.kathiyawadTrip.payments = [];
+    if (!parsed.kathiyawadTrip.contributions) parsed.kathiyawadTrip.contributions = [];
+    
+    // Ensure the 10,000 cash entry to Father-in-law is present
+    if (!parsed.kathiyawadTrip.payments.some(p => p.id === 'kz_p_fil_cash_10k' || (p.amount === 10000 && /father-in-law/i.test(p.desc || '')))) {
+      parsed.kathiyawadTrip.payments.unshift({
+        id: 'kz_p_fil_cash_10k',
+        date: '2026-11-07',
+        family: 'Father-in-law Family',
+        desc: 'Cash given to Father-in-law for Kathiyawad Ziyarat trip expenses & arrangements',
+        amount: 10000.00,
+        mode: 'Cash',
+        ref: 'Handed in Cash to Father-in-law'
+      });
+      // Deduct 10,000 cash from cashInHand if it wasn't yet deducted
+      if (parsed.cashInHand === 4000) {
+        parsed.cashInHand = -6000.00;
+      }
+    }
+
+    if (!parsed.kathiyawadTrip.payments.some(p => p.amount === 3000)) {
+      parsed.kathiyawadTrip.payments.push({
+        id: 'kz_adv_1',
+        date: '2026-11-06',
+        family: 'Joint Pool',
+        desc: 'Advance given to tour operator for booking & travel arrangements',
+        amount: 3000.00,
+        mode: 'slice SFB',
+        ref: '2026-11-06-Vendor-Contact'
+      });
+    }
+  }
+
+  if (parsed.cashInHand === undefined) {
+    parsed.cashInHand = -6000.00;
+  }
+
+  return Object.assign({}, defaultFinLedger, parsed);
 }
 
-function updateLiquidityHeader() {
-  const cashEl = document.getElementById('headerCash');
-  const bankEl = document.getElementById('headerBank');
-  const liqEl = document.getElementById('headerLiquid');
-
-  cashEl.textContent = inr(ledger.cashInHand);
-  cashEl.className = 'liq-val ' + (ledger.cashInHand < 0 ? 'red' : 'green');
-
-  bankEl.textContent = inr(ledger.bankSlice);
-  liqEl.textContent = inr(ledger.cashInHand + ledger.bankSlice);
-
-  // Update Balance sheet
-  const tripTotal = ledger.kathiyawadTrip.payments.reduce((s, p) => s + p.amount, 0) - ledger.kathiyawadTrip.contributions.reduce((s, c) => s + c.amount, 0);
-  document.getElementById('bsCash').textContent = inr(ledger.cashInHand);
-  document.getElementById('bsBank').textContent = inr(ledger.bankSlice);
-  document.getElementById('bsTripAdv').textContent = inr(tripTotal);
-
-  const totAssets = ledger.cashInHand + ledger.bankSlice + 107690 + tripTotal;
-  document.getElementById('bsTotAssets').textContent = inr(totAssets);
-  document.getElementById('bsTotLiab').textContent = inr(totAssets);
+function getFinLedger() {
+  if (currentLedger) return currentLedger;
+  try {
+    const raw = localStorage.getItem(FIN_LEDGER_KEY);
+    if (raw) {
+      currentLedger = sanitizeLedger(JSON.parse(raw));
+      return currentLedger;
+    }
+  } catch (e) {}
+  currentLedger = Object.assign({}, defaultFinLedger);
+  return currentLedger;
 }
 
-function renderTasks() {
-  const c = document.getElementById('taskContainer');
-  let html = '';
-  tasks.forEach(t => {
-    html += `
-      <div class="task">
-        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
-        <div class="task-name">${t.name}</div>
-        <div class="amt ${t.status === 'Receivable' ? 'owed' : (t.status === 'Settled' ? 'clear' : '')}">${inr(t.amount)}</div>
-      </div>
-    `;
-  });
-  c.innerHTML = html;
+async function syncCloudFinLedger() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const res = await fetch(url + '?action=getfinledger');
+    const data = await res.json();
+    if (data.status === 'ok' && data.ledger) {
+      currentLedger = sanitizeLedger(data.ledger);
+      localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(currentLedger));
+      if (activePage === 'financials') renderFinancialsPage();
+      render();
+    }
+  } catch(e) {}
 }
 
-function renderTrip() {
-  const pTable = document.getElementById('tripPaymentsTable');
-  const cTable = document.getElementById('tripContribTable');
+async function saveFinLedger(ledger) {
+  currentLedger = ledger;
+  try {
+    localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(ledger));
+  } catch (e) {}
 
-  let mineTotal = 0, filTotal = 0, silTotal = 0;
-
-  let pHtml = '';
-  ledger.kathiyawadTrip.payments.forEach(p => {
-    if (/mine|mustannsirr/i.test(p.family)) mineTotal += p.amount;
-    else if (/father/i.test(p.family)) filTotal += p.amount;
-    else if (/sister/i.test(p.family)) silTotal += p.amount;
-
-    pHtml += `
-      <tr>
-        <td>${p.date}</td>
-        <td><strong>${p.family}</strong></td>
-        <td>${p.desc}</td>
-        <td>${p.mode}</td>
-        <td class="text-right stmt-mono">${inr(p.amount)}</td>
-        <td><button type="button" style="border:0; background:transparent; color:var(--red); cursor:pointer; font-weight:700;" onclick="deleteTripPayment('${p.id}')">✕</button></td>
-      </tr>
-    `;
-  });
-  pTable.innerHTML = pHtml || '<tr><td colspan="6" style="text-align:center; color:var(--muted);">No disbursements yet</td></tr>';
-
-  let cHtml = '';
-  ledger.kathiyawadTrip.contributions.forEach(c => {
-    cHtml += `
-      <tr>
-        <td>${c.date}</td>
-        <td><strong>${c.family}</strong></td>
-        <td>${c.mode}</td>
-        <td class="text-right stmt-mono" style="color:var(--green);">${inr(c.amount)}</td>
-        <td><button type="button" style="border:0; background:transparent; color:var(--red); cursor:pointer; font-weight:700;" onclick="deleteTripContrib('${c.id}')">✕</button></td>
-      </tr>
-    `;
-  });
-  cTable.innerHTML = cHtml || '<tr><td colspan="5" style="text-align:center; color:var(--muted);">No contributions yet</td></tr>';
-
-  document.getElementById('kpiMine').textContent = 'Paid: ' + inr(mineTotal);
-  document.getElementById('kpiFil').textContent = 'Cash Given: ' + inr(filTotal);
-  document.getElementById('kpiSil').textContent = 'Paid: ' + inr(silTotal);
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const payload = JSON.stringify({ action: 'savefinledger', ledger: ledger });
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      mode: 'no-cors'
+    }).catch(() => {
+      const encoded = encodeURIComponent(JSON.stringify(ledger));
+      fetch(url + '?action=savefinledger&data=' + encoded).catch(()=>{});
+    });
+  } catch(e) {}
 }
 
-function switchPage(page) {
-  document.getElementById('tasksView').style.display = page === 'tasks' ? 'block' : 'none';
-  document.getElementById('financialsView').style.display = page === 'financials' ? 'block' : 'none';
-  document.getElementById('tripView').style.display = page === 'trip' ? 'block' : 'none';
-
-  document.getElementById('tabTasks').className = 'page-nav-btn ' + (page === 'tasks' ? 'active' : '');
-  document.getElementById('tabFinancials').className = 'page-nav-btn ' + (page === 'financials' ? 'active' : '');
-  document.getElementById('tabTrip').className = 'page-nav-btn ' + (page === 'trip' ? 'active' : '');
-}
-
-function showModal(title, fields, onConfirm) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalFields').innerHTML = fields;
-  document.getElementById('modalOverlay').style.display = 'flex';
-  document.getElementById('modalConfirmBtn').onclick = () => { onConfirm(); closeModal(); };
-}
-function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
-function openCashBankModal() {
+function openEditBalancesModal() {
+  const ledger = getFinLedger();
   showModal('Update Cash & Bank Balances', `
-    <label>Cash in Hand (₹)</label>
-    <input type="number" step="0.01" id="mCash" value="${ledger.cashInHand}">
-    <label>slice Small Finance Bank (₹)</label>
-    <input type="number" step="0.01" id="mBank" value="${ledger.bankSlice}">
+    <div class="hint">Adjust your physical cash in hand and slice Small Finance Bank liquid funds.</div>
+    <label>Cash in Hand Balance (₹)</label>
+    <input type="number" step="0.01" id="modalCashBal" value="${ledger.cashInHand !== undefined ? ledger.cashInHand : -6000.00}">
+    <label>Bank Balance — slice SFB (₹)</label>
+    <input type="number" step="0.01" id="modalBankBal" value="${ledger.bankSlice !== undefined ? ledger.bankSlice : 17216.83}">
+    <div style="font-size:12px; color:var(--muted); margin-top:4px;">
+      * Note: If you withdrew cash from your slice SFB ATM to pay the ₹10,000 cash to your Father-in-law, you can use the "+ ATM Cash Withdrawal" button to transfer from Bank to Cash.
+    </div>
   `, () => {
-    ledger.cashInHand = parseFloat(document.getElementById('mCash').value) || 0;
-    ledger.bankSlice = parseFloat(document.getElementById('mBank').value) || 0;
-    saveCloud();
-    updateLiquidityHeader();
-  });
+    const cashVal = parseFloat(document.getElementById('modalCashBal').value);
+    const bankVal = parseFloat(document.getElementById('modalBankBal').value);
+    if (!isNaN(cashVal)) ledger.cashInHand = cashVal;
+    if (!isNaN(bankVal)) ledger.bankSlice = bankVal;
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Update Balances', 'Cancel');
+}
+
+function openAtmCashWithdrawalModal() {
+  showModal('Contra Transfer: ATM Cash Withdrawal', `
+    <div class="hint">Transfer liquid funds from slice Small Finance Bank to Cash in Hand (Self ATM Withdrawal).</div>
+    <label>Withdrawal Amount (₹)</label>
+    <input type="number" step="0.01" id="atmWithdrawalAmt" value="10000" placeholder="10000">
+    <label>Date</label>
+    <input type="date" id="atmWithdrawalDate" value="${new Date().toISOString().slice(0, 10)}">
+  `, () => {
+    const amt = parseFloat(document.getElementById('atmWithdrawalAmt').value) || 0;
+    if (amt <= 0) return;
+    const ledger = getFinLedger();
+    ledger.bankSlice = Math.round(((ledger.bankSlice || 0) - amt) * 100) / 100;
+    ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + amt) * 100) / 100;
+    ledger.adjustmentsLog.unshift({
+      date: document.getElementById('atmWithdrawalDate').value,
+      desc: `Self ATM Cash Withdrawal: ${inr(amt)} withdrawn from slice SFB to Cash in Hand`,
+      amount: amt
+    });
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Record Transfer', 'Cancel');
 }
 
 function openAddTripPaymentModal() {
-  showModal('Add Payment — Kathiyawad Trip', `
+  showModal('Add Payment / Expense to Kathiyawad Ziyarat Trip', `
+    <div class="hint">Record advance payments, tickets, accommodation, or travel disbursements for the 3 families.</div>
     <label>Family Allocated To</label>
-    <select id="mTripFam">
-      <option value="Mustannsirr Family (Mine)">Mustannsirr Family (Mine)</option>
+    <select id="tripPayFamily">
       <option value="Father-in-law Family">Father-in-law Family</option>
       <option value="Sister-in-law Family">Sister-in-law Family</option>
+      <option value="Mustansir Family (Mine)">Mustansir Family (Mine)</option>
+      <option value="Joint Pool">Joint Pool (Shared by all 3 families)</option>
     </select>
-    <label>Description</label>
-    <input type="text" id="mTripDesc" placeholder="e.g. Hotel advance / bus ticket">
-    <label>Amount (₹)</label>
-    <input type="number" id="mTripAmt" placeholder="₹ Amount">
-    <label>Paid From</label>
-    <select id="mTripMode">
-      <option value="Cash">Cash in Hand (Deduct Cash)</option>
-      <option value="slice SFB">slice SFB (Deduct Bank)</option>
+    <label>Payment Description / Beneficiary</label>
+    <input type="text" id="tripPayDesc" placeholder="e.g. Cash given for expenses, Train tickets, Hotel booking">
+    <label>Amount Paid (₹)</label>
+    <input type="number" step="0.01" id="tripPayAmount" placeholder="Amount (₹)">
+    <label>Payment Mode / Account Debited (Double-Entry Source)</label>
+    <select id="tripPaySource">
+      <option value="Cash">Cash in Hand (Instantly reduces Cash)</option>
+      <option value="slice SFB">slice Small Finance Bank (Instantly reduces Bank)</option>
+      <option value="Direct / External">Direct / Other Account (No local cash/bank deduction)</option>
     </select>
+    <label>Reference / Note</label>
+    <input type="text" id="tripPayRef" placeholder="e.g. Cash given directly / UPI ref">
   `, () => {
-    const fam = document.getElementById('mTripFam').value;
-    const desc = document.getElementById('mTripDesc').value || 'Trip Expense';
-    const amt = parseFloat(document.getElementById('mTripAmt').value) || 0;
-    const mode = document.getElementById('mTripMode').value;
+    const family = document.getElementById('tripPayFamily').value;
+    const desc = document.getElementById('tripPayDesc').value.trim() || 'Trip Payment';
+    const amt = parseFloat(document.getElementById('tripPayAmount').value) || 0;
+    const source = document.getElementById('tripPaySource').value;
+    const ref = document.getElementById('tripPayRef').value.trim() || 'Payment Outflow';
     if (amt <= 0) return;
 
-    if (mode === 'Cash') ledger.cashInHand -= amt;
-    else ledger.bankSlice -= amt;
+    const ledger = getFinLedger();
+    if (!ledger.kathiyawadTrip) ledger.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
+    if (!ledger.kathiyawadTrip.payments) ledger.kathiyawadTrip.payments = [];
 
-    ledger.kathiyawadTrip.payments.push({
-      id: 'kz_' + Date.now(),
+    ledger.kathiyawadTrip.payments.unshift({
+      id: 'kz_p_' + Date.now(),
       date: new Date().toISOString().slice(0, 10),
-      family: fam,
+      family: family,
       desc: desc,
       amount: amt,
-      mode: mode
+      mode: source,
+      ref: ref
     });
 
-    saveCloud();
-    renderTrip();
-    updateLiquidityHeader();
-  });
+    if (source.includes('Cash')) {
+      ledger.cashInHand = Math.round(((ledger.cashInHand || 0) - amt) * 100) / 100;
+    } else if (source.includes('slice')) {
+      ledger.bankSlice = Math.round(((ledger.bankSlice || 0) - amt) * 100) / 100;
+    }
+
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Record Payment', 'Cancel');
 }
 
 function openAddTripContributionModal() {
-  showModal('Add Family Contribution — Kathiyawad Trip', `
+  showModal('Add Family Contribution / Inflow', `
+    <div class="hint">Record money pooled or contributed by Father-in-law, Sister-in-law, or your family.</div>
     <label>Contributing Family</label>
-    <select id="mContribFam">
+    <select id="tripContribFamily">
       <option value="Father-in-law Family">Father-in-law Family</option>
       <option value="Sister-in-law Family">Sister-in-law Family</option>
-      <option value="Mustannsirr Family (Mine)">Mustannsirr Family (Mine)</option>
+      <option value="Mustansir Family (Mine)">Mustansir Family (Mine)</option>
     </select>
-    <label>Amount (₹)</label>
-    <input type="number" id="mContribAmt" placeholder="₹ Amount">
-    <label>Received Into</label>
-    <select id="mContribMode">
-      <option value="Cash">Cash in Hand (Increase Cash)</option>
-      <option value="slice SFB">slice SFB (Increase Bank)</option>
+    <label>Member / Contributor Name</label>
+    <input type="text" id="tripContribMember" placeholder="e.g. Father-in-law, Sister-in-law, Self">
+    <label>Amount Contributed / Received (₹)</label>
+    <input type="number" step="0.01" id="tripContribAmount" placeholder="Amount (₹)">
+    <label>Received Into (Account / Cash)</label>
+    <select id="tripContribTarget">
+      <option value="Cash">Cash in Hand (Instantly increases Cash)</option>
+      <option value="slice SFB">slice Small Finance Bank (Instantly increases Bank Balance)</option>
+      <option value="Direct to Operator">Paid directly to Tour Operator (No local cash addition)</option>
     </select>
+    <label>Note / Remarks</label>
+    <input type="text" id="tripContribNote" placeholder="e.g. Contribution for travel / Part advance">
   `, () => {
-    const fam = document.getElementById('mContribFam').value;
-    const amt = parseFloat(document.getElementById('mContribAmt').value) || 0;
-    const mode = document.getElementById('mContribMode').value;
+    const family = document.getElementById('tripContribFamily').value;
+    const member = document.getElementById('tripContribMember').value.trim() || family;
+    const amt = parseFloat(document.getElementById('tripContribAmount').value) || 0;
+    const target = document.getElementById('tripContribTarget').value;
+    const note = document.getElementById('tripContribNote').value.trim() || 'Trip Contribution';
     if (amt <= 0) return;
 
-    if (mode === 'Cash') ledger.cashInHand += amt;
-    else ledger.bankSlice += amt;
+    const ledger = getFinLedger();
+    if (!ledger.kathiyawadTrip) ledger.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
+    if (!ledger.kathiyawadTrip.contributions) ledger.kathiyawadTrip.contributions = [];
 
-    ledger.kathiyawadTrip.contributions.push({
+    ledger.kathiyawadTrip.contributions.unshift({
       id: 'kz_c_' + Date.now(),
       date: new Date().toISOString().slice(0, 10),
-      family: fam,
+      family: family,
+      member: member,
       amount: amt,
-      mode: mode
+      mode: target,
+      note: note
     });
 
-    saveCloud();
-    renderTrip();
-    updateLiquidityHeader();
+    if (target.includes('Cash')) {
+      ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + amt) * 100) / 100;
+    } else if (target.includes('slice')) {
+      ledger.bankSlice = Math.round(((ledger.bankSlice || 0) + amt) * 100) / 100;
+    }
+
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Record Contribution', 'Cancel');
+}
+
+function confirmDeleteFinancialEntry(entryType, identifier, description, amount, onConfirmCallback) {
+  showModal('Delete ' + entryType + '?', `
+    <div class="hint">Are you sure you want to delete this entry?</div>
+    <div style="background:#FFF1F2; border:1px solid #FECDD3; border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:12.5px; color:#9F1239;">
+      <div><strong>${escapeForHtml(description)}</strong></div>
+      ${amount ? `<div style="font-family:var(--serif); font-weight:700; font-size:16px; margin-top:3px;">${inr(amount)}</div>` : ''}
+    </div>
+    <div style="font-size:12px; color:var(--muted); line-height:1.4;">
+      Double-entry effect will be automatically reversed (Cash or Bank balances adjusted back).
+    </div>
+  `, onConfirmCallback, 'Delete Entry', 'Cancel');
+}
+
+function deleteTripEntry(type, id) {
+  const ledger = getFinLedger();
+  if (!ledger.kathiyawadTrip) return;
+
+  if (type === 'payment' && ledger.kathiyawadTrip.payments) {
+    const p = ledger.kathiyawadTrip.payments.find(x => x.id === id);
+    if (!p) return;
+    confirmDeleteFinancialEntry('Trip Payment', id, p.desc || 'Trip Payment', p.amount, () => {
+      if (p.mode && p.mode.includes('Cash')) {
+        ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + p.amount) * 100) / 100;
+      } else if (p.mode && p.mode.includes('slice')) {
+        ledger.bankSlice = Math.round(((ledger.bankSlice || 0) + p.amount) * 100) / 100;
+      }
+      ledger.kathiyawadTrip.payments = ledger.kathiyawadTrip.payments.filter(x => x.id !== id);
+      saveFinLedger(ledger);
+      renderFinancialsPage();
+      render();
+    });
+  } else if (type === 'contribution' && ledger.kathiyawadTrip.contributions) {
+    const c = ledger.kathiyawadTrip.contributions.find(x => x.id === id);
+    if (!c) return;
+    confirmDeleteFinancialEntry('Trip Contribution', id, (c.member ? 'From: ' + c.member : 'Trip Contribution'), c.amount, () => {
+      if (c.mode && c.mode.includes('Cash')) {
+        ledger.cashInHand = Math.round(((ledger.cashInHand || 0) - c.amount) * 100) / 100;
+      } else if (c.mode && c.mode.includes('slice')) {
+        ledger.bankSlice = Math.round(((ledger.bankSlice || 0) - c.amount) * 100) / 100;
+      }
+      ledger.kathiyawadTrip.contributions = ledger.kathiyawadTrip.contributions.filter(x => x.id !== id);
+      saveFinLedger(ledger);
+      renderFinancialsPage();
+      render();
+    });
+  }
+}
+
+function deleteExpenseEntry(id) {
+  const ledger = getFinLedger();
+  if (!ledger.expenses) return;
+  const e = ledger.expenses.find(x => x.id === id);
+  if (!e) return;
+
+  confirmDeleteFinancialEntry('Expense Entry', id, e.payee + (e.note ? ' — ' + e.note : ''), e.amount, () => {
+    if (e.source === 'Cash') {
+      ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + e.amount) * 100) / 100;
+    } else if (e.source === 'slice SFB' || !e.source) {
+      ledger.bankSlice = Math.round(((ledger.bankSlice || 0) + e.amount) * 100) / 100;
+    }
+
+    if (e.category === 'Loan Repayment - MHJ') {
+      ledger.loansTaken.mhj.adjustments = Math.max(0, (ledger.loansTaken.mhj.adjustments || 0) - e.amount);
+    } else if (e.category === 'Loan Repayment - Hatim') {
+      ledger.loansTaken.hatim.adjustments = Math.max(0, (ledger.loansTaken.hatim.adjustments || 0) - e.amount);
+    } else if (e.category === 'Advance to Juzer') {
+      ledger.loansGiven.juzer.adjustments = (ledger.loansGiven.juzer.adjustments || 0) + e.amount;
+    }
+
+    ledger.expenses = ledger.expenses.filter(x => x.id !== id);
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
   });
 }
 
-function deleteTripPayment(id) {
-  const idx = ledger.kathiyawadTrip.payments.findIndex(p => p.id === id);
-  if (idx === -1) return;
-  const p = ledger.kathiyawadTrip.payments[idx];
-  // Reversal
-  if (p.mode === 'Cash') ledger.cashInHand += p.amount;
-  else ledger.bankSlice += p.amount;
+function deleteAdjustmentEntry(idx) {
+  const ledger = getFinLedger();
+  if (!ledger.adjustmentsLog || !ledger.adjustmentsLog[idx]) return;
+  const a = ledger.adjustmentsLog[idx];
 
-  ledger.kathiyawadTrip.payments.splice(idx, 1);
-  saveCloud();
-  renderTrip();
-  updateLiquidityHeader();
+  confirmDeleteFinancialEntry('Contra Adjustment Log', idx, a.desc, a.amount, () => {
+    ledger.adjustmentsLog.splice(idx, 1);
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  });
 }
 
-function deleteTripContrib(id) {
-  const idx = ledger.kathiyawadTrip.contributions.findIndex(c => c.id === id);
-  if (idx === -1) return;
-  const c = ledger.kathiyawadTrip.contributions[idx];
-  // Reversal
-  if (c.mode === 'Cash') ledger.cashInHand -= c.amount;
-  else ledger.bankSlice -= c.amount;
+function recordManualExpense(payee, amount, category, note, paymentSource) {
+  const ledger = getFinLedger();
+  if (!ledger.expenses) ledger.expenses = [];
+  
+  const amt = parseFloat(amount) || 0;
+  if (amt <= 0) return;
 
-  ledger.kathiyawadTrip.contributions.splice(idx, 1);
-  saveCloud();
-  renderTrip();
-  updateLiquidityHeader();
+  const source = paymentSource || 'slice SFB';
+
+  if (/ziyarat|kathiyawad|tour operator|father-in-law/i.test(category) || /ziyarat|kathiyawad/i.test(note)) {
+    if (!ledger.kathiyawadTrip) ledger.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
+    if (!ledger.kathiyawadTrip.payments) ledger.kathiyawadTrip.payments = [];
+    
+    let fam = 'Joint Pool';
+    if (/father-in-law/i.test(payee) || /father-in-law/i.test(note) || /father-in-law/i.test(category)) {
+      fam = 'Father-in-law Family';
+    } else if (/sister-in-law/i.test(payee) || /sister-in-law/i.test(note)) {
+      fam = 'Sister-in-law Family';
+    }
+
+    ledger.kathiyawadTrip.payments.unshift({
+      id: 'kz_p_' + Date.now(),
+      date: new Date().toISOString().slice(0, 10),
+      family: fam,
+      desc: note || ('Payment to ' + payee),
+      amount: amt,
+      mode: source,
+      ref: payee
+    });
+
+    if (source === 'Cash') {
+      ledger.cashInHand = Math.round(((ledger.cashInHand || 0) - amt) * 100) / 100;
+    } else if (source === 'slice SFB') {
+      ledger.bankSlice = Math.round(((ledger.bankSlice || 0) - amt) * 100) / 100;
+    }
+
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+    return;
+  }
+
+  const item = {
+    id: 'exp_' + Date.now(),
+    date: new Date().toISOString().slice(0, 10),
+    payee: payee || 'General Outflow',
+    amount: amt,
+    source: source,
+    category: category || 'Office Expense',
+    note: note || ''
+  };
+
+  if (/mhj/i.test(category) || /mhj/i.test(payee)) {
+    ledger.loansTaken.mhj.adjustments += amt;
+    ledger.adjustmentsLog.unshift({
+      date: item.date,
+      desc: `Auto-adjusted payment of ${inr(amt)} (${source}) to MHJ against ₹86,000 Loan Taken`,
+      amount: amt
+    });
+  } else if (/hatim/i.test(category) || /hatim/i.test(payee)) {
+    ledger.loansTaken.hatim.adjustments += amt;
+    ledger.adjustmentsLog.unshift({
+      date: item.date,
+      desc: `Auto-adjusted payment of ${inr(amt)} (${source}) to Hatim Bhai against ₹5,000 Loan Taken`,
+      amount: amt
+    });
+  } else if (/juzer/i.test(category) || /juzer/i.test(payee)) {
+    ledger.loansGiven.juzer.adjustments -= amt;
+    ledger.adjustmentsLog.unshift({
+      date: item.date,
+      desc: `Further advance of ${inr(amt)} (${source}) given to Juzer Presswala`,
+      amount: amt
+    });
+  }
+
+  if (source === 'Cash') {
+    ledger.cashInHand = Math.round(((ledger.cashInHand || 0) - amt) * 100) / 100;
+  } else if (source === 'slice SFB') {
+    ledger.bankSlice = Math.round(((ledger.bankSlice || 0) - amt) * 100) / 100;
+  }
+
+  ledger.expenses.unshift(item);
+  saveFinLedger(ledger);
+  renderFinancialsPage();
+  render();
 }
 
-function saveCloud() {
-  try {
-    localStorage.setItem('MM_LEDGER', JSON.stringify(ledger));
-    fetch(WEBHOOK + '?action=savefinledger&data=' + encodeURIComponent(JSON.stringify(ledger)));
-  } catch(e) {}
+function parseSmsText(sms) {
+  if (!sms) return null;
+  const isDebit = /debited|spent|paid|transferred/i.test(sms);
+  const amtMatch = sms.match(/(?:Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)/i) || sms.match(/([\d,]+(?:\.\d{1,2})?)\s*(?:debited|paid)/i);
+  let payee = 'Vendor / Contact';
+  const payeeMatch = sms.match(/(?:to|at|info\/)\s+([A-Za-z0-9\s\.\@\_\-]+?)(?:\s+on|\s+ref|\s+upi|\s+bal|\.|$)/i);
+  if (payeeMatch) payee = payeeMatch[1].trim().replace(/^(vpa|upi)\s+/i, '');
+
+  const amt = amtMatch ? parseFloat(amtMatch[1].replace(/,/g, '')) : 0;
+  return { amount: amt, payee, isDebit };
 }
 
-function loadCloud() {
-  try {
-    const local = localStorage.getItem('MM_LEDGER');
-    if (local) ledger = JSON.parse(local);
-  } catch(e) {}
-
-  fetch(WEBHOOK + '?action=getfinledger')
-    .then(r => r.json())
-    .then(data => {
-      if (data && data.ledger) {
-        ledger = data.ledger;
-        renderTrip();
-        updateLiquidityHeader();
+function openAddExpenseModal() {
+  showModal('Record Payment / Double-Entry Expense', `
+    <div class="hint">Double-entry accounting: Posting this expense will immediately deduct the amount from Cash in Hand or your slice Bank account.</div>
+    <label>Paid From (Payment Account / 2nd Effect)</label>
+    <select id="expSource" style="border:1.5px solid var(--accent); font-weight:600;">
+      <option value="slice SFB">slice Small Finance Bank (Deducts from Bank)</option>
+      <option value="Cash">Cash in Hand (Spontaneously deducts from Cash)</option>
+      <option value="Direct / External">Direct / Outside Account (No local cash/bank reduction)</option>
+    </select>
+    <label>Paste Bank / UPI SMS (Auto-Fills Below)</label>
+    <textarea id="expSmsPaste" rows="2" placeholder="e.g. A/C ... debited by Rs.1200 to ABC on 06-11..." style="width:100%; font-size:12px; border-radius:8px; border:1px solid var(--field); padding:8px; margin-bottom:10px;" oninput="
+      const p = parseSmsText(this.value);
+      if (p && p.amount) {
+        document.getElementById('expAmount').value = p.amount;
+        document.getElementById('expPayee').value = p.payee;
+        document.getElementById('expSource').value = 'slice SFB';
       }
-    })
-    .catch(() => {});
+    "></textarea>
+    <label>Paid To (Person / Vendor / Description)</label>
+    <input type="text" id="expPayee" placeholder="e.g. Father-in-law, Tour Operator, MP Treasury, Stationery">
+    <label>Amount Paid (₹)</label>
+    <input type="number" step="0.01" id="expAmount" placeholder="Amount (₹)">
+    <label>Classification / Ledger</label>
+    <select id="expCategory">
+      <option value="Office Expense">Office Operating Expense (Deducts from P&amp;L Profit)</option>
+      <option value="Kathiyawad Ziyarat Trip Advance">Kathiyawad Ziyarat Trip (Advance / Expenses)</option>
+      <option value="Portal Filing & Challan">Government Portal / Challan Charges (Gumasta, GST, MCA)</option>
+      <option value="Gateway / Merchant Fee">Payment Gateway / Merchant Charges (Razorpay etc.)</option>
+      <option value="Loan Repayment - MHJ">Repayment to MHJ (Reduces ₹86k Loan Taken)</option>
+      <option value="Loan Repayment - Hatim">Repayment to Hatim Bhai (Reduces ₹5k Loan Taken)</option>
+      <option value="Advance to Juzer">Advance to Juzer Presswala (Adds to Loan Asset)</option>
+      <option value="Personal Drawings">Personal Drawings (Direct Owner Withdrawal)</option>
+    </select>
+    <label>Remarks / Notes</label>
+    <input type="text" id="expNote" placeholder="e.g. Paid online or given in cash">
+  `, () => {
+    const payee = document.getElementById('expPayee').value.trim() || 'Paid';
+    const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+    const cat = document.getElementById('expCategory').value;
+    const note = document.getElementById('expNote').value.trim();
+    const source = document.getElementById('expSource').value;
+    if (amount <= 0) return;
+    recordManualExpense(payee, amount, cat, note, source);
+  }, 'Record & Deduct', 'Cancel');
 }
 
-window.onload = function() {
-  loadCloud();
-  renderTasks();
-  renderTrip();
-  updateLiquidityHeader();
+const STORAGE_KEY = 'tasks-v2';
+let tasks = [];
+let filter = 'all';
+
+const ICON = {
+  chat:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+  doc:    '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+  note:   '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  wallet: '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>',
+  x:      '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  chev:   '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'
 };
+
+const EXTRA_COLORS = ['#2563EB', '#6D28D9', '#0F766E', '#B45309', '#BE185D', '#4D7FB8'];
+
+function inr(n) {
+  const v = Math.round((Number(n) || 0) * 100) / 100;
+  return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: (v % 1 !== 0 ? 2 : 0), maximumFractionDigits: 2 });
+}
+
+function moneyText(n) {
+  return String(Math.round((Number(n) || 0) * 100) / 100);
+}
+
+function escapeForHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const UI_KEY = 'dash-ui-compact-v1';
+let uiState = { collapsed: {} };
+try {
+  const saved = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
+  if (saved && saved.collapsed && typeof saved.collapsed === 'object') uiState.collapsed = saved.collapsed;
+} catch (e) {}
+let doneOpen = {};
+let searchQuery = '';
+let searchTimer = null;
+
+function saveUi() {
+  try { localStorage.setItem(UI_KEY, JSON.stringify(uiState)); } catch (e) {}
+}
+
+function toggleGroup(key) {
+  if (uiState.collapsed[key]) delete uiState.collapsed[key]; else uiState.collapsed[key] = true;
+  saveUi();
+  render();
+}
+
+function toggleDone(key) {
+  doneOpen[key] = !doneOpen[key];
+  render();
+}
+
+function onSearch(value) {
+  searchQuery = value || '';
+  document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => render(true), 120);
+}
+
+function clearSearch() {
+  const box = document.getElementById('searchBox');
+  box.value = '';
+  onSearch('');
+  box.focus();
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.addEventListener('scroll', () => {
+  const b = document.getElementById('toTop');
+  if (b) b.classList.toggle('show', window.scrollY > 400);
+}, { passive: true });
+
+// ==========================================
+// RECEIPT GENERATION & WHATSAPP DISPATCH
+// ==========================================
+const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
+const CAT_PHONES_KEY = 'dash-cat-phones-v1';
+const DEFAULT_CATEGORY_PHONES = {
+  SHK: '9425320184',
+  HATIM_BHAI_ADV: '9826768052',
+  MHJ: '9425054543',
+  OWN: ''
+};
+
+function getCategoryPhones() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CAT_PHONES_KEY) || '{}');
+    return Object.assign({}, DEFAULT_CATEGORY_PHONES, saved);
+  } catch (e) {
+    return Object.assign({}, DEFAULT_CATEGORY_PHONES);
+  }
+}
+
+function saveCategoryPhone(catKey, phone) {
+  try {
+    const current = getCategoryPhones();
+    current[catKey] = (phone || '').replace(/[^0-9]/g, '');
+    localStorage.setItem(CAT_PHONES_KEY, JSON.stringify(current));
+  } catch (e) {}
+}
+
+function detectFeeCategory(t) {
+  if (t.feeCat) return t.feeCat;
+  const targetName = (t.linked || t.name || '').trim().toLowerCase();
+  const linkedTask = tasks.find(x => x.type === 'professional' && x.cat && (
+    x.name.trim().toLowerCase() === targetName ||
+    targetName.includes(x.name.trim().toLowerCase()) ||
+    x.name.trim().toLowerCase().includes(targetName)
+  ));
+  if (linkedTask && linkedTask.cat) return linkedTask.cat;
+  if (t.cat && t.cat !== 'FEES') return t.cat;
+  return 'SHK';
+}
+
+function getCatDisplayName(k) {
+  const map = {
+    SHK: 'SHK Husain Arif',
+    MHJ: 'MHJ (Mufazzal Husain Johar)',
+    OWN: 'Professional — OWN',
+    HATIM_BHAI_ADV: 'Hatim Bhai (Adv)'
+  };
+  return map[k] || k.replace(/_/g, ' ');
+}
+
+function buildReceiptMessage(t, paidNow) {
+  const label = t.linked || t.name;
+  const payable = Number(t.payable) || 0;
+  const received = Number(t.received) || 0;
+  const discount = Number(t.discount) || 0;
+  const balance = Math.max(Math.round((payable - received - discount) * 100) / 100, 0);
+  const amount = (paidNow && paidNow > 0) ? paidNow : received;
+  const invoiceNumber = String(t.invoice || '').split('|')[0].trim();
+
+  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${moneyText(amount)}`;
+  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
+  if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${moneyText(balance)}` : `\n✅ *Status:* Fully settled`;
+  if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
+  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
+  return msg.replace(/&/g, 'and');
+}
+
+function openReceiptWhatsApp(phone, message, useRegular) {
+  let clean = (phone || '').replace(/[^0-9]/g, '');
+  if (clean.length === 10) clean = '91' + clean;
+  const encoded = encodeURIComponent(message);
+  const phonePart = clean ? 'phone=' + clean + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
+  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid && !useRegular) {
+    window.location.href = waBusinessIntent;
+  } else {
+    window.open(waUrl, '_blank');
+  }
+}
+
+function sendReceiptToClient(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
+  openReceiptWhatsApp(t.phone || '', message, useRegular);
+  const btn = document.getElementById('btnReceiptClient');
+  if (btn) {
+    btn.style.background = 'var(--muted)';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '✓ Opened for Client';
+  }
+}
+
+function sendReceiptToCategory(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const catSelect = document.getElementById('receiptCatSelect');
+  const catKey = catSelect ? catSelect.value : 'SHK';
+  const phoneInput = document.getElementById('receiptCatPhone');
+  const catPhone = phoneInput ? phoneInput.value.trim() : '';
+  if (catPhone) saveCategoryPhone(catKey, catPhone);
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
+  openReceiptWhatsApp(catPhone, message, useRegular);
+  const btn = document.getElementById('btnReceiptCat');
+  if (btn) {
+    btn.style.background = 'var(--muted)';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '✓ Opened for ' + getCatDisplayName(catKey);
+  }
+}
+
+function onReceiptCatChange(taskId) {
+  const catSelect = document.getElementById('receiptCatSelect');
+  if (!catSelect) return;
+  const catKey = catSelect.value;
+  const phones = getCategoryPhones();
+  const phone = phones[catKey] || '';
+  const phoneInput = document.getElementById('receiptCatPhone');
+  if (phoneInput) phoneInput.value = phone;
+  const phoneTag = document.getElementById('catPhoneTag');
+  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
+  const btnText = document.getElementById('btnReceiptCatText');
+  if (btnText) btnText.textContent = 'Send to ' + getCatDisplayName(catKey);
+  const btn = document.getElementById('btnReceiptCat');
+  if (btn) btn.style.background = 'var(--green)';
+}
+
+function onReceiptCatPhoneInput(taskId) {
+  const catSelect = document.getElementById('receiptCatSelect');
+  const phoneInput = document.getElementById('receiptCatPhone');
+  if (!catSelect || !phoneInput) return;
+  const catKey = catSelect.value;
+  const phone = phoneInput.value.trim();
+  saveCategoryPhone(catKey, phone);
+  const phoneTag = document.getElementById('catPhoneTag');
+  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
+}
+
+function offerReceipt(taskId, paidNow, afterSave) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const clientPhone = (t.phone || '').trim();
+  const clientLabel = t.linked || t.name;
+  const message = buildReceiptMessage(t, paidNow || 0);
+
+  const detectedCat = detectFeeCategory(t);
+  const catPhones = getCategoryPhones();
+
+  const extraCats = [...new Set(tasks.filter(x => x.type === 'professional' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(x.cat)).map(x => x.cat))];
+  const allCatKeys = [...new Set(['SHK', 'MHJ', 'OWN', ...extraCats])];
+  let currentCatKey = detectedCat || 'SHK';
+  if (!allCatKeys.includes(currentCatKey)) allCatKeys.unshift(currentCatKey);
+
+  const currentCatPhone = catPhones[currentCatKey] || '';
+  const currentCatLabel = getCatDisplayName(currentCatKey);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  const savedNotice = !afterSave ? ''
+    : paidNow > 0 ? `✓ Payment of ${inr(paidNow)} recorded successfully. `
+    : '✓ Payment recorded. ';
+
+  const catOptionsHtml = allCatKeys.map(k =>
+    `<option value="${k}" ${k === currentCatKey ? 'selected' : ''}>${escapeForHtml(getCatDisplayName(k))}</option>`
+  ).join('');
+
+  const modalHtml = `
+    <div class="hint">${savedNotice}Choose who to send the receipt to via WhatsApp:</div>
+    <div class="receipt-preview">${escapeForHtml(message)}</div>
+
+    <div style="margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+          <span style="font-weight: 600; font-size: 13px; color: var(--ink);">1. Client (${escapeForHtml(clientLabel)})</span>
+          <span style="font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums;">${clientPhone ? clientPhone : 'No number'}</span>
+        </div>
+        <div style="font-size: 11.5px; color: var(--muted); margin-bottom: 8px;">
+          ${clientPhone ? 'Sends directly to client\'s WhatsApp chat with invoice link.' : 'No phone saved — WhatsApp will prompt you to pick contact.'}
+        </div>
+        <button type="button" id="btnReceiptClient" class="btn btn-wa" style="width: 100%; height: 36px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToClient('${t.id}', ${paidNow || 0})">
+          ${ICON.chat} <span>Send to Client</span>
+        </button>
+      </div>
+
+      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+          <span style="font-weight: 600; font-size: 13px; color: var(--ink);">2. Category Head / Principal</span>
+          <span id="catPhoneTag" style="font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums;">${currentCatPhone || 'Enter phone'}</span>
+        </div>
+        <div style="display: flex; gap: 6px; margin: 6px 0 8px;">
+          <select id="receiptCatSelect" onchange="onReceiptCatChange('${t.id}')" style="flex: 1.2; height: 34px; padding: 0 6px; font-size: 12.5px; border: 1px solid var(--field); border-radius: 6px; background: var(--sheet); color: var(--ink); margin-bottom:0;">
+            ${catOptionsHtml}
+          </select>
+          <input type="tel" id="receiptCatPhone" placeholder="Mobile number" value="${currentCatPhone}" oninput="onReceiptCatPhoneInput('${t.id}')" style="flex: 1; height: 34px; padding: 0 8px; font-size: 12.5px; border: 1px solid var(--field); border-radius: 6px; background: var(--sheet); color: var(--ink); margin-bottom:0;">
+        </div>
+        <button type="button" id="btnReceiptCat" class="btn btn-wa" style="width: 100%; height: 36px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToCategory('${t.id}', ${paidNow || 0})">
+          ${ICON.chat} <span id="btnReceiptCatText">Send to ${escapeForHtml(currentCatLabel)}</span>
+        </button>
+      </div>
+    </div>
+
+    ${isAndroid ? `
+    <div style="margin-top: 8px; text-align: center; font-size: 12px;">
+      <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px; color: var(--muted);">
+        <input type="checkbox" id="receiptUseRegular" style="accent-color: var(--accent);">
+        Use regular WhatsApp instead of WhatsApp Business
+      </label>
+    </div>` : ''}
+  `;
+
+  showModal('Send Payment Receipt', modalHtml, () => {}, 'Done', 'Close');
+}
+
+const seedTasks = [
+  {
+    id: 'cal_lghida9k5kgvrvqamrebcdv18c',
+    name: 'Loan & Advances - Juzer Presswala',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'PERSONAL',
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    payable: 107690,
+    received: 0,
+    discount: 0,
+    linked: 'Juzer Presswala (Loan & Advances)',
+    phone: '7869282535',
+    invoice: '',
+    remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues 1,07,690'
+  },
+  {
+    id: 'cal_vcmcfguocnmhf6psqui072vnts',
+    name: 'Loan & Advances - Juzer Presswala (₹1,07,690)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Opening 1L + X-Ray 700 + Plaster 1800 + Adv 5k + Med 190'
+  },
+  {
+    id: 'cal_ed85ko32qqb708i2pvumghm51c',
+    name: 'Loan & Advance Taken - MHJ (₹86,000)',
+    type: 'professional',
+    cat: 'MHJ',
+    due: '',
+    dueDate: '2026-11-05T10:00:00.000Z',
+    done: false,
+    urgent: true,
+    remark: 'Payable to MHJ (Mufazzal Husain Johar &bull; Mob: 9425054543). Pending ₹86,000'
+  },
+  {
+    id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc',
+    name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T09:15:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Payable to Hatim Bhai (Mob: 9826768052). Pending clearance'
+  },
+  {
+    id: 'cal_kathiyawad_ziyarat_trip',
+    name: 'Kathiyawad Ziyarat Trip (₹13,000 Total Advance Paid across 3 Families)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-07T10:00:00.000Z',
+    done: false,
+    urgent: false,
+    remark: '3 Families: Mine, Father-in-law Family, Sister-in-law Family. ₹10,000 cash given to Father-in-law + ₹3,000 operator advance. Tracked in Financials.'
+  },
+  {
+    id: 'cal_royal_gumasta_settled',
+    name: 'Royal consultancy services gumasta application',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'SHK',
+    due: '',
+    dueDate: '2026-11-04T08:53:00.000Z',
+    done: true,
+    urgent: false,
+    payable: 700,
+    received: 700,
+    discount: 0,
+    linked: 'Royal consultancy services',
+    phone: '9425320184',
+    invoice: 'INV-2026-11-001',
+    remark: 'Fee ₹700 settled via Razorpay (bank net ₹681.82, fee ₹18.18). Govt portal challan ₹224 paid. Net profit: ₹457.82'
+  }
+];
+
+async function loadTasks() {
+  let saved = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) {
+    saved = [];
+  }
+  const savedIds = new Set(saved.map(t => t.id));
+  const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
+  tasks = saved.concat(newFromSeed);
+
+  const tripTask = tasks.find(t => /Kathiyawad/i.test(t.name));
+  if (tripTask) {
+    tripTask.name = 'Kathiyawad Ziyarat Trip (₹13,000 Total Advance Paid across 3 Families)';
+    tripTask.remark = '3 Families: Mine, Father-in-law Family, Sister-in-law Family. ₹10,000 cash given to Father-in-law + ₹3,000 operator advance. Tracked in Financials.';
+  }
+
+  const royalTask = tasks.find(t => /Royal consultancy/i.test(t.name) || /Royal consultancy/i.test(t.linked || ''));
+  if (royalTask) {
+    royalTask.payable = 700;
+    royalTask.received = 700;
+    royalTask.discount = 0;
+    royalTask.done = true;
+    royalTask.remark = 'Fee ₹700 settled via Razorpay (bank net ₹681.82, fee ₹18.18). Govt portal challan ₹224 paid. Net profit: ₹457.82';
+  }
+
+  tasks = tasks.filter(t => !/Monthly Salary Receivable/i.test(t.name) && !/Salary Receivable - Hakimi Vihar/i.test(t.name));
+
+  tasks.forEach(t => {
+    if (t.cat === 'MHJ' && t.remark && t.remark.includes('M. H. Jawadwala')) {
+      t.remark = t.remark.replace(/M\.\s*H\.\s*Jawadwala/g, 'Mufazzal Husain Johar');
+    }
+  });
+
+  saveTasks();
+  render();
+  if (activePage === 'financials') renderFinancialsPage();
+}
+
+async function saveTasks() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    document.getElementById('lastSync').textContent = 'Cloud Active ' + new Date().toLocaleTimeString();
+  } catch (e) {}
+}
+
+async function pullFromCalendar() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    const events = await res.json();
+    const calIds = new Set(events.map(ev => ev.id));
+    const existingIds = new Set(tasks.map(t => t.id));
+    let added = 0;
+    let refreshed = 0;
+
+    events.forEach(ev => {
+      if (/Monthly Salary Receivable/i.test(ev.title) || /Salary Receivable - Hakimi Vihar/i.test(ev.title)) return;
+
+      if (existingIds.has(ev.id)) {
+        const local = tasks.find(x => x.id === ev.id);
+        if (local) {
+          let changed = false;
+          if (local.name !== ev.title) { local.name = ev.title; changed = true; }
+          if (local.done !== ev.done) { local.done = ev.done; changed = true; }
+          if (local.dueDate !== (ev.dueDate || null)) { local.dueDate = ev.dueDate || null; changed = true; }
+          if (local.remark !== (ev.remark || '')) { local.remark = ev.remark || ''; changed = true; }
+          if (ev.tag === 'FEES') {
+            if (local.payable !== (ev.payable || 0)) { local.payable = ev.payable || 0; changed = true; }
+            if (local.received !== (ev.received || 0)) { local.received = ev.received || 0; changed = true; }
+            if (local.discount !== (ev.discount || 0)) { local.discount = ev.discount || 0; changed = true; }
+            if (local.linked !== (ev.linked || '')) { local.linked = ev.linked || ''; changed = true; }
+            if (local.phone !== (ev.phone || '')) { local.phone = ev.phone || ''; changed = true; }
+            if (local.feeCat !== (ev.feeCat || '')) { local.feeCat = ev.feeCat || ''; changed = true; }
+          }
+          if (changed) refreshed++;
+        }
+        return;
+      }
+      const tag = ev.tag;
+      const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional');
+      const cat = (tag === 'PERSONAL') ? null : tag;
+      const task = { id: ev.id, name: ev.title, type, cat, due: '', dueDate: ev.dueDate || null, done: ev.done, urgent: false, remark: ev.remark || '' };
+      if (tag === 'FEES') {
+        task.payable = ev.payable || 0;
+        task.received = ev.received || 0;
+        task.discount = ev.discount || 0;
+        task.linked = ev.linked || '';
+        task.phone = ev.phone || '';
+        task.feeCat = ev.feeCat || '';
+      }
+      tasks.push(task);
+      added++;
+    });
+
+    const beforeCount = tasks.length;
+    tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
+    const removed = beforeCount - tasks.length;
+
+    if (added > 0 || removed > 0 || refreshed > 0) { saveTasks(); render(); }
+    document.getElementById('lastSync').textContent = 'Cloud Synced ✓ ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    document.getElementById('lastSync').textContent = 'Live';
+  }
+}
+
+function resetTasksOnly() {
+  showModal('Reset task views?', `
+    <div class="hint">This clears the local task display and pulls fresh events from Google Calendar. Your cloud financial ledgers, cash balance, and loan records remain 100% safe.</div>
+  `, () => {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.reload();
+  }, 'Reset', 'Cancel');
+}
+
+function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalFields').innerHTML = fieldsHtml;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  const btn = document.getElementById('modalConfirmBtn');
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.textContent = confirmLabel || 'Save';
+  newBtn.className = 'btn ' + (confirmLabel === 'Delete' || (confirmLabel && confirmLabel.includes('Delete')) ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
+  newBtn.onclick = () => { onConfirm(); closeModal(); };
+  document.querySelector('#modalOverlay button[onclick="closeModal()"]').textContent = skipLabel || 'Cancel';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function fireConfetti() {
+  if (document.body.style.getPropertyValue('--confetti-disabled') === 'true') return;
+  const colors = ['#1E3A8A', '#047857', '#B45309', '#6D28D9', '#0F766E', '#BE123C'];
+  for (let i = 0; i < 24; i++) {
+    const piece = document.createElement('div');
+    piece.style.position = 'fixed';
+    piece.style.top = '0';
+    piece.style.zIndex = '3000';
+    piece.style.pointerEvents = 'none';
+    piece.style.borderRadius = '2px';
+    const size = 6 + Math.random() * 6;
+    piece.style.width = size + 'px';
+    piece.style.height = (size * 0.4) + 'px';
+    piece.style.left = (Math.random() * 100) + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    const duration = 1.2 + Math.random() * 1;
+    piece.style.transition = `transform ${duration}s cubic-bezier(.25,.46,.45,.94), opacity ${duration}s`;
+    document.body.appendChild(piece);
+    requestAnimationFrame(() => {
+      piece.style.transform = `translateY(100vh) rotate(${360 + Math.random() * 360}deg)`;
+      piece.style.opacity = '0';
+    });
+    setTimeout(() => piece.remove(), (duration + 0.2) * 1000);
+  }
+}
+
+// =========================================================================
+// COMPLETION TO FEE PROMPT LOGIC
+// =========================================================================
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks();
+  render();
+  if (t.id.startsWith('cal_')) toggleOnCalendar(t.id, t.done);
+
+  if (t.done && t.type !== 'fee') {
+    fireConfetti();
+
+    const targetName = (t.linked || t.name).trim().toLowerCase();
+    const existingFee = tasks.find(x => x.type === 'fee' && (
+      (x.linked && x.linked.trim().toLowerCase() === targetName) ||
+      x.name.trim().toLowerCase() === targetName ||
+      x.name.trim().toLowerCase().includes(targetName)
+    ));
+
+    if (existingFee && !existingFee.done) {
+      setTimeout(() => recordPayment(existingFee.id), 120);
+      return;
+    }
+
+    const catPhones = getCategoryPhones();
+    const defaultPhone = catPhones[t.cat] || (t.cat === 'SHK' ? '9425320184' : (t.cat === 'MHJ' ? '9425054543' : (t.cat === 'HATIM_BHAI_ADV' ? '9826768052' : '')));
+
+    const promptHtml = `
+      <div class="hint">Task "<strong>${escapeForHtml(t.name)}</strong>" marked complete! Enter fee details to bill client and record payment.</div>
+      <label>Total Billable Fee (₹) (Leave blank or 0 to skip fee entry)</label>
+      <input type="number" id="modalPromptPayable" placeholder="₹ Total Fee" oninput="checkPromptShortfall()">
+      <label>Amount Received Right Now (₹)</label>
+      <input type="number" id="modalPromptReceived" placeholder="0" value="0" oninput="checkPromptShortfall()">
+      <label>Account Debited / Deposited Into</label>
+      <select id="modalPromptSource">
+        <option value="bank">slice Small Finance Bank (Auto-debit bank balance)</option>
+        <option value="cash">Cash in hand (Auto-debit physical cash)</option>
+      </select>
+      <label>Client Mobile Number (for WhatsApp Receipt)</label>
+      <input type="tel" id="modalPromptPhone" placeholder="Mobile Number" value="${defaultPhone}">
+      <label class="check-row">
+        <input type="checkbox" id="modalPromptSendReceipt" checked>
+        Offer WhatsApp payment receipt after saving
+      </label>
+
+      <div id="promptShortfallCard" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px; margin-top:10px; margin-bottom:12px;">
+        <div style="font-weight:700; color:#B45309; font-size:12px;" id="promptShortfallTitle">Shortfall Detected</div>
+        <div style="font-size:11.5px; color:#78350F; margin:4px 0 8px;" id="promptShortfallDesc"></div>
+        <label style="font-size:11px; font-weight:700; color:#B45309;">Action for Remaining Balance:</label>
+        <select id="promptShortfallAction" style="height:34px; font-size:12px; margin-bottom:0;">
+          <option value="pending">Keep remaining balance in Pending (Sundry Debtors)</option>
+          <option value="adjust_mhj">Adjust against MHJ Loan Taken (₹86,000)</option>
+          <option value="adjust_hatim">Adjust against Hatim Bhai Loan Taken (₹5,000)</option>
+          <option value="adjust_juzer">Adjust against Juzer Presswala Advance (₹1,07,690)</option>
+          <option value="discount">Write off as Discount / Concession</option>
+        </select>
+      </div>
+    `;
+
+    setTimeout(() => {
+      showModal('Record Payment / Fee — ' + t.name, promptHtml, () => {
+        const payable = parseFloat(document.getElementById('modalPromptPayable').value) || 0;
+        const received = parseFloat(document.getElementById('modalPromptReceived').value) || 0;
+        const phone = document.getElementById('modalPromptPhone').value.trim();
+        const source = document.getElementById('modalPromptSource').value;
+        const wantReceipt = document.getElementById('modalPromptSendReceipt') ? document.getElementById('modalPromptSendReceipt').checked : false;
+        const shortfallActionEl = document.getElementById('promptShortfallAction');
+        const shortfallAction = shortfallActionEl ? shortfallActionEl.value : 'pending';
+
+        if (payable <= 0) return;
+
+        const ledger = getFinLedger();
+        const localFeeId = 'u' + Date.now();
+        let discount = 0;
+        let isDone = (received >= payable);
+        let remark = '';
+
+        if (received > 0) {
+          if (source === 'cash') {
+            ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + received) * 100) / 100;
+          } else {
+            ledger.bankSlice = Math.round(((ledger.bankSlice || 0) + received) * 100) / 100;
+          }
+        }
+
+        const diff = payable - received;
+        if (diff > 0 && shortfallAction.startsWith('adjust_')) {
+          let targetName = 'MHJ';
+          if (shortfallAction === 'adjust_mhj') {
+            ledger.loansTaken.mhj.adjustments += diff;
+            targetName = 'MHJ Loan Taken';
+          } else if (shortfallAction === 'adjust_hatim') {
+            ledger.loansTaken.hatim.adjustments += diff;
+            targetName = 'Hatim Bhai Loan Taken';
+          } else if (shortfallAction === 'adjust_juzer') {
+            ledger.loansGiven.juzer.adjustments += diff;
+            targetName = 'Juzer Presswala Loan Given';
+          }
+          ledger.adjustmentsLog.unshift({
+            date: new Date().toISOString().slice(0, 10),
+            desc: `Offset ${inr(diff)} shortfall on ${t.name} against ${targetName}`,
+            amount: diff
+          });
+          isDone = true;
+          remark = `Received ${inr(received)} in ${source === 'cash' ? 'Cash' : 'Bank'}. Balance ${inr(diff)} adjusted against ${targetName}.`;
+        } else if (diff > 0 && shortfallAction === 'discount') {
+          discount = diff;
+          isDone = true;
+          remark = `Received ${inr(received)}. Shortfall ${inr(diff)} written off as concession.`;
+        } else if (diff > 0) {
+          remark = `Received ${inr(received)} in ${source === 'cash' ? 'Cash' : 'Bank'}. Remaining ${inr(diff)} pending.`;
+        }
+
+        saveFinLedger(ledger);
+
+        const feeTask = {
+          id: localFeeId,
+          name: t.name,
+          type: 'fee',
+          cat: 'FEES',
+          feeCat: t.cat || 'SHK',
+          due: '',
+          done: isDone,
+          urgent: false,
+          payable: payable,
+          received: received,
+          discount: discount,
+          linked: t.name,
+          phone: phone,
+          remark: remark
+        };
+
+        tasks.unshift(feeTask);
+        saveTasks();
+        render();
+        if (activePage === 'financials') renderFinancialsPage();
+
+        pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || '').then(calId => {
+          if (calId) { feeTask.id = calId; saveTasks(); }
+        });
+
+        if (wantReceipt && received > 0) {
+          setTimeout(() => offerReceipt(feeTask.id, received, true), 80);
+        }
+      }, 'Save & Bill Fee', 'Skip Fee');
+    }, 80);
+  }
+}
+
+function checkPromptShortfall() {
+  const pEl = document.getElementById('modalPromptPayable');
+  const rEl = document.getElementById('modalPromptReceived');
+  const card = document.getElementById('promptShortfallCard');
+  if (!pEl || !rEl || !card) return;
+
+  const payable = parseFloat(pEl.value) || 0;
+  const received = parseFloat(rEl.value) || 0;
+  const shortfall = payable - received;
+
+  if (payable > 0 && received > 0 && shortfall > 0) {
+    card.style.display = 'block';
+    document.getElementById('promptShortfallTitle').textContent = `Shortfall of ${inr(shortfall)}`;
+    document.getElementById('promptShortfallDesc').textContent = `Amount received is less than total fee. Select how to handle the remaining ${inr(shortfall)}:`;
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+async function pushFeeToCalendar(name, payable, received, linked, phone, feeCat) {
+  const url = getWebhook();
+  if (!url) return null;
+  try {
+    const params = new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '', feeCat: feeCat || '' });
+    const res = await fetch(url + '?' + params.toString());
+    const data = await res.json();
+    return data.id || null;
+  } catch (e) { return null; }
+}
+
+async function toggleOnCalendar(taskId, done) {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const params = new URLSearchParams({ action: 'toggle', id: taskId, done: done ? 'true' : 'false' });
+    await fetch(url + '?' + params.toString());
+  } catch (e) {}
+}
+
+function deleteTask(id) {
+  const t = tasks.find(x => x.id === id);
+  showModal('Remove "' + (t ? t.name : 'this task') + '"?', `
+    <div class="hint">This removes it from your dashboard and Calendar.</div>
+  `, () => {
+    tasks = tasks.filter(x => x.id !== id);
+    saveTasks();
+    render();
+    if (id.startsWith('cal_')) {
+      const url = getWebhook();
+      if (url) fetch(url + '?action=delete&id=' + id).catch(()=>{});
+    }
+  }, 'Delete', 'Cancel');
+}
+
+function setRemark(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const presets = ['Waiting for documents', 'Client confirmation pending', 'In progress', 'Waiting for portal', 'Awaiting payment'];
+  const presetsHtml = presets.map(p => `<button type="button" onclick="document.getElementById('modalRemarkText').value='${p}'" class="preset">${p}</button>`).join('');
+  showModal('Remark — ' + t.name, `
+    <div class="presets">${presetsHtml}</div>
+    <label>Or custom note</label>
+    <input type="text" id="modalRemarkText" placeholder="Why is this pending?" value="${escapeForHtml(t.remark || '')}">
+  `, async () => {
+    const val = document.getElementById('modalRemarkText').value.trim();
+    t.remark = val;
+    saveTasks();
+    render();
+    if (t.id.startsWith('cal_')) {
+      const url = getWebhook();
+      if (url) fetch(url + '?action=setremark&id=' + t.id + '&remark=' + encodeURIComponent(val)).catch(()=>{});
+    }
+  }, 'Save', 'Cancel');
+}
+
+function setDueDate(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const currentVal = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
+  showModal('Due date — ' + t.name, `
+    <label>Pick a due date</label>
+    <input type="date" id="modalDueDate" value="${currentVal}">
+  `, async () => {
+    const val = document.getElementById('modalDueDate').value;
+    if (!val) return;
+    t.dueDate = new Date(val + 'T09:00:00').toISOString();
+    saveTasks();
+    render();
+    if (t.id.startsWith('cal_')) {
+      const url = getWebhook();
+      if (url) fetch(url + '?action=setduedate&id=' + t.id + '&dueDate=' + val).catch(()=>{});
+    }
+  });
+}
+
+function recordPayment(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const payable = Number(t.payable) || 0;
+  const currentRec = Number(t.received) || 0;
+
+  showModal('Record payment — ' + t.name, `
+    <div class="hint">Total Payable: <strong>${inr(payable)}</strong> &bull; Received so far: <strong>${inr(currentRec)}</strong></div>
+    <label>Total Amount Received so far (₹)</label>
+    <input type="number" id="modalReceivedAmt" value="${currentRec}" oninput="checkShortfall(${payable})">
+    <label>Deposit To Account (Double-Entry Debit)</label>
+    <select id="modalPayMode">
+      <option value="bank">slice Small Finance Bank (Immediately increases Bank Balance)</option>
+      <option value="cash">Cash in hand (Immediately increases Cash Balance)</option>
+    </select>
+    <label>Discount / Concession (₹)</label>
+    <input type="number" id="modalDiscountAmt" placeholder="0" value="${t.discount || 0}" oninput="checkShortfall(${payable})">
+    
+    <label class="check-row">
+      <input type="checkbox" id="modalSendReceipt" checked>
+      Offer a WhatsApp payment receipt after saving
+    </label>
+    <div id="modalReceiptHint" class="hint" style="margin-top:4px;"></div>
+
+    <div id="shortfallCard" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px; margin-top:10px; margin-bottom:12px;">
+      <div style="font-weight:700; color:#B45309; font-size:12px;" id="shortfallTitle">Shortfall Detected</div>
+      <div style="font-size:11.5px; color:#78350F; margin:4px 0 8px;" id="shortfallDesc"></div>
+      <label style="font-size:11px; font-weight:700; color:#B45309;">Action for Remaining Balance:</label>
+      <select id="shortfallAction" style="height:34px; font-size:12px; margin-bottom:0;">
+        <option value="pending">Keep remaining balance in Pending (Sundry Debtors)</option>
+        <option value="adjust_mhj">Adjust against MHJ Loan Taken (₹86,000)</option>
+        <option value="adjust_hatim">Adjust against Hatim Bhai Loan Taken (₹5,000)</option>
+        <option value="adjust_juzer">Adjust against Juzer Presswala Advance (₹1,07,690)</option>
+        <option value="discount">Write off as Discount / Concession</option>
+      </select>
+    </div>
+  `, () => {
+    const entered = parseFloat(document.getElementById('modalReceivedAmt').value) || 0;
+    const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+    const payMode = document.getElementById('modalPayMode').value;
+    const wantReceipt = document.getElementById('modalSendReceipt') ? document.getElementById('modalSendReceipt').checked : false;
+    const shortfallActionEl = document.getElementById('shortfallAction');
+    const shortfallAction = shortfallActionEl ? shortfallActionEl.value : 'pending';
+
+    const diff = entered - currentRec;
+    const ledger = getFinLedger();
+    
+    if (diff > 0) {
+      if (payMode === 'cash') {
+        ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + diff) * 100) / 100;
+      } else {
+        ledger.bankSlice = Math.round(((ledger.bankSlice || 0) + diff) * 100) / 100;
+      }
+    }
+
+    const remaining = payable - entered - discount;
+
+    if (remaining > 0 && shortfallAction.startsWith('adjust_')) {
+      let targetName = 'MHJ';
+      if (shortfallAction === 'adjust_mhj') {
+        ledger.loansTaken.mhj.adjustments += remaining;
+        targetName = 'MHJ Loan Taken';
+      } else if (shortfallAction === 'adjust_hatim') {
+        ledger.loansTaken.hatim.adjustments += remaining;
+        targetName = 'Hatim Bhai Loan Taken';
+      } else if (shortfallAction === 'adjust_juzer') {
+        ledger.loansGiven.juzer.adjustments += remaining;
+        targetName = 'Juzer Presswala Loan Given';
+      }
+      ledger.adjustmentsLog.unshift({
+        date: new Date().toISOString().slice(0, 10),
+        desc: `Offset ${inr(remaining)} shortfall on ${t.name} against ${targetName}`,
+        amount: remaining
+      });
+
+      t.received = entered;
+      t.discount = discount;
+      t.done = true;
+      t.remark = `Received ${inr(entered)} in ${payMode === 'cash' ? 'Cash' : 'Bank'}. Balance ${inr(remaining)} adjusted against ${targetName}.`;
+    } else if (remaining > 0 && shortfallAction === 'discount') {
+      t.received = entered;
+      t.discount = discount + remaining;
+      t.done = true;
+      t.remark = `Received ${inr(entered)}. Shortfall ${inr(remaining)} written off as concession.`;
+    } else {
+      t.received = entered;
+      t.discount = discount;
+      t.done = (entered + discount) >= payable;
+      if (remaining > 0) {
+        t.remark = `Received ${inr(entered)} in ${payMode === 'cash' ? 'Cash' : 'Bank'}. Remaining ${inr(diff > 0 ? remaining : diff)} pending.`;
+      }
+    }
+
+    saveFinLedger(ledger);
+    saveTasks();
+    render();
+    if (activePage === 'financials') renderFinancialsPage();
+    if (t.id.startsWith('cal_')) updateFeeOnCalendar(t.id, t.received, t.discount);
+
+    const paidNow = Math.round(diff * 100) / 100;
+    if (wantReceipt && entered > 0 && !t.name.includes('Advance Credit Balance')) {
+      setTimeout(() => offerReceipt(t.id, paidNow > 0 ? paidNow : entered, true), 50);
+    }
+  });
+
+  const amtEl = document.getElementById('modalReceivedAmt');
+  const boxEl = document.getElementById('modalSendReceipt');
+  const hintEl = document.getElementById('modalReceiptHint');
+  const updateReceiptHint = () => {
+    if (!boxEl || !hintEl) return;
+    if (!boxEl.checked) { hintEl.textContent = 'No receipt prompt will open.'; return; }
+    const val = parseFloat(amtEl.value) || 0;
+    const addl = Math.round((val - currentRec) * 100) / 100;
+    hintEl.textContent = addl > 0
+      ? `Receipt will be generated for new payment of ${inr(addl)}.`
+      : `Receipt will show total received so far (${inr(val)}).`;
+  };
+  if (amtEl && boxEl) {
+    amtEl.addEventListener('input', updateReceiptHint);
+    boxEl.addEventListener('change', updateReceiptHint);
+    updateReceiptHint();
+  }
+}
+
+function checkShortfall(payable) {
+  const entered = parseFloat(document.getElementById('modalReceivedAmt').value) || 0;
+  const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+  const shortfall = payable - entered - discount;
+  const card = document.getElementById('shortfallCard');
+  if (shortfall > 0) {
+    card.style.display = 'block';
+    document.getElementById('shortfallTitle').textContent = `Shortfall of ${inr(shortfall)}`;
+    document.getElementById('shortfallDesc').textContent = `Total received is less than billable amount. Choose how to handle the remaining ${inr(shortfall)}:`;
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+async function updateFeeOnCalendar(taskId, received, discount) {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const params = new URLSearchParams({ action: 'updatefee', id: taskId, received, discount: discount || 0 });
+    await fetch(url + '?' + params.toString());
+  } catch (e) {}
+}
+
+function toggleFeeFields() {
+  const isFee = document.getElementById('newCat').value === 'FEES';
+  document.getElementById('feeFields').style.display = isFee ? 'flex' : 'none';
+}
+
+function onCategoryChange() {
+  const select = document.getElementById('newCat');
+  if (select.value === '__NEW__') {
+    showModal('Add new category', `
+      <label>Category name</label>
+      <input type="text" id="modalNewCatName" placeholder="e.g. ABC Company">
+    `, () => {
+      const raw = document.getElementById('modalNewCatName').value.trim();
+      if (!raw) { select.value = 'MHJ'; return; }
+      const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      const opt = document.createElement('option');
+      opt.value = tag;
+      opt.textContent = 'Professional — ' + raw;
+      select.insertBefore(opt, select.querySelector('option[value="__NEW__"]'));
+      select.value = tag;
+      toggleFeeFields();
+    }, 'Create', 'Cancel');
+    select.value = 'MHJ';
+  } else {
+    toggleFeeFields();
+  }
+}
+
+function addTask() {
+  const input = document.getElementById('newTask');
+  const catVal = document.getElementById('newCat').value;
+  const name = input.value.trim();
+  if (!name) return;
+
+  if (catVal === 'FEES') {
+    const payable = parseFloat(document.getElementById('feePayable').value) || 0;
+    const received = parseFloat(document.getElementById('feeReceived').value) || 0;
+    const linked = document.getElementById('feeLinked').value.trim();
+    const phone = document.getElementById('feePhone').value.trim();
+    const localId = 'u'+Date.now();
+    const task = { id: localId, name, type: 'fee', cat: 'FEES', feeCat: '', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, linked, phone };
+    tasks.unshift(task);
+    input.value = '';
+    document.getElementById('feePayable').value = '';
+    document.getElementById('feeReceived').value = '';
+    document.getElementById('feeLinked').value = '';
+    document.getElementById('feePhone').value = '';
+    saveTasks();
+    render();
+    pushFeeToCalendar(name, payable, received, linked, phone, '').then(calId => {
+      if (calId) { task.id = calId; saveTasks(); }
+    });
+    return;
+  }
+
+  const type = catVal === 'PERSONAL' ? 'personal' : 'professional';
+  const cat = catVal === 'PERSONAL' ? null : catVal;
+  const localId = 'u'+Date.now();
+  const dueDateInput = document.getElementById('newDueDate');
+  const dueDateVal = dueDateInput.value;
+  const task = { id: localId, name, type, cat, due: '', dueDate: dueDateVal ? new Date(dueDateVal + 'T09:00:00').toISOString() : null, done: false, urgent: false };
+  tasks.unshift(task);
+  input.value = '';
+  dueDateInput.value = '';
+  saveTasks();
+  render();
+
+  const url = getWebhook();
+  if (url) {
+    var paramsObj = { action: 'add', name: name, tag: catVal };
+    if (dueDateVal) paramsObj.dueDate = dueDateVal;
+    fetch(url + '?' + new URLSearchParams(paramsObj).toString())
+      .then(r => r.json())
+      .then(d => { if (d && d.id) { task.id = d.id; saveTasks(); } })
+      .catch(()=>{});
+  }
+}
+
+function setFilter(f) {
+  filter = f;
+  render();
+}
+
+function render(listOnly) {
+  const summaryEl = document.getElementById('summaryArea');
+  const app = document.getElementById('app');
+  const nowTs = Date.now();
+
+  const isOverdue = t => !t.done && t.dueDate && new Date(t.dueDate).getTime() < nowTs;
+  const done = tasks.filter(t => t.done).length;
+  const pending = tasks.filter(t => !t.done).length;
+  const overdue = tasks.filter(isOverdue).length;
+  const total = tasks.length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance'));
+  const totalPayable = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
+  const totalReceived = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
+  const totalDiscount = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
+  const totalOutstanding = totalPayable - totalReceived - totalDiscount;
+
+  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES']);
+  const extraCats = [...new Set(tasks.filter(t => t.type === 'professional' && !knownCats.has(t.cat)).map(t => t.cat))];
+
+  let filtered = tasks;
+  if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal');
+  else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional');
+  else if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN');
+  else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ');
+  else if (filter === 'shk') filtered = tasks.filter(t => t.cat === 'SHK');
+  else if (filter === 'fees') filtered = tasks.filter(t => t.cat === 'FEES');
+  else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
+  else if (filter === 'done') filtered = tasks.filter(t => t.done);
+  else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
+
+  const q = searchQuery.trim().toLowerCase();
+  const searchActive = q.length > 0;
+  if (searchActive) {
+    const words = q.split(/\s+/);
+    filtered = filtered.filter(t => {
+      const hay = [t.name, t.linked, t.invoice, t.remark, t.phone, t.cat].join(' ').toLowerCase();
+      return words.every(w => hay.includes(w));
+    });
+  }
+
+  const filterBtn = (key, label, dotColor) =>
+    `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" aria-pressed="${filter === key}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
+
+  if (!listOnly) {
+    summaryEl.innerHTML = `
+      <div class="summary-sheet">
+        <div class="hero-stats">
+          <div class="hero-card"><div class="n">${pct}%</div><div class="l">Complete</div></div>
+          <div class="hero-card"><div class="n">${pending}</div><div class="l">Pending</div></div>
+          <div class="hero-card alert"><div class="n">${overdue}</div><div class="l">Overdue</div></div>
+          <div class="hero-card"><div class="n">${done}</div><div class="l">Done</div></div>
+        </div>
+        ${feeTasks.length > 0 ? `
+        <div class="totals">
+          <div class="tot"><div class="l">Gross Receivable</div><div class="fig">${inr(totalPayable)}</div></div>
+          <div class="tot"><div class="l">Realized in Cash/Bank</div><div class="fig recd">${inr(totalReceived)}</div></div>
+          <div class="tot sum"><div class="l">Net Outstanding</div><div class="fig out${totalOutstanding > 0 ? '' : ' clear'}">${inr(totalOutstanding)}</div></div>
+        </div>` : ''}
+      </div>
+
+      <div class="loan-strip">
+        <div class="loan-strip-items">
+          <div class="loan-pill-item"><b>Juzer Presswala:</b> <span class="red">₹1,07,690</span> (Adv Given)</div>
+          <div class="loan-pill-item"><b>MHJ:</b> <span class="amber">₹86,000</span> (Loan Taken)</div>
+          <div class="loan-pill-item"><b>Hatim Bhai:</b> <span class="amber">₹5,000</span> (Loan Taken)</div>
+          <div class="loan-pill-item"><b>Kathiyawad Ziyarat:</b> <span style="color:#0284C7; font-weight:700;">₹13,000 Disbursed (3 Families)</span></div>
+        </div>
+        <button type="button" onclick="switchPage('financials')" style="background:none; border:0; color:var(--accent); font-weight:700; font-size:12px; cursor:pointer;">Financials Page &rarr;</button>
+      </div>
+
+      <div class="filters seg" role="group" aria-label="Status filters">
+        ${filterBtn('all', 'All')}${filterBtn('pending', 'Pending First')}${filterBtn('professional', 'Professional')}${filterBtn('fees', 'Fees')}${filterBtn('personal', 'Personal')}${filterBtn('done', 'Completed')}
+      </div>
+      <div class="filters chips" role="group" aria-label="Category filters">
+        ${filterBtn('mhj', 'MHJ (Mufazzal Husain Johar)', 'var(--c-mhj)')}
+        ${filterBtn('shk', 'SHK Husain Arif', 'var(--c-shk)')}
+        ${filterBtn('own', 'OWN', 'var(--c-own)')}
+        ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
+      </div>
+    `;
+  }
+
+  const groupDefs = [
+    { key: 'MHJ', label: 'Professional — MHJ (Mufazzal Husain Johar)', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' },
+    { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
+    { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' }
+  ];
+
+  extraCats.forEach((cat, i) => {
+    groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: EXTRA_COLORS[i % EXTRA_COLORS.length], match: t => t.cat === cat });
+  });
+
+  groupDefs.push(
+    { key: 'FEES', label: 'Fees & Receivables', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') },
+    { key: 'PERSONAL', label: 'Personal & Routine', color: 'var(--c-personal)', match: t => t.type === 'personal' }
+  );
+
+  const renderCard = (t, idx, g) => {
+    const isFee = t.type === 'fee';
+    const isNamaz = t.type === 'personal' && /namaz/i.test(t.name);
+    const balance = isFee ? (t.payable - t.received - (t.discount || 0)) : 0;
+    const taskOverdue = isOverdue(t);
+    const dueDateLabel = t.dueDate ? (isNamaz
+      ? new Date(t.dueDate).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true })
+      : new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })) : '';
+    const showLinked = !!t.linked && t.linked.trim().toLowerCase() !== t.name.replace(/^✅\s*/, '').trim().toLowerCase();
+    const stateClass = (isFee ? ' fee' : '') + (t.done ? ' done' : (taskOverdue ? ' overdue' : (t.urgent ? ' urgent' : '')));
+    const amount = !isFee ? '' : (balance > 0
+      ? `<div class="amt owed">${inr(balance)}<small>due</small></div>`
+      : '<div class="amt clear">Settled</div>');
+    const status = (taskOverdue ? '<span class="badge over">Overdue</span>' : (t.urgent && !t.done ? '<span class="badge urgent">Urgent</span>' : ''))
+      + (dueDateLabel && !t.done ? `<span class="due${taskOverdue ? ' over' : ''}">Due ${dueDateLabel}</span>` : '');
+    const sub = !isFee ? '' : `<div class="task-sub"><span>${inr(t.received)} of ${inr(t.payable)} recd${t.discount ? ' + ' + inr(t.discount) + ' disc' : ''}</span>${showLinked ? '<span>&bull; ' + escapeForHtml(t.linked) + '</span>' : ''}</div>`;
+    
+    const actions = [
+      isFee && !t.done ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
+      isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}', 0, false)">${ICON.doc} Send receipt</button>` : '',
+      /Kathiyawad/i.test(t.name) ? `<button type="button" class="act" onclick="switchPage('financials'); setFinViewMode('trip');" style="color:#0284C7; font-weight:700;">🕌 Open Trip Statement</button>` : '',
+      !t.done && !isNamaz ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Due' : 'Set due'}</button>` : '',
+      !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Note' : '+ Note'}</button>` : ''
+    ].join('');
+    
+    const meta = (isFee ? '' : status) + actions;
+
+    return `
+      <div class="task${stateClass}" style="--catcolor:${g.color}">
+        <span class="num">${idx + 1}.</span>
+        ${isFee ? '' : `<input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')" aria-label="Mark done: ${escapeForHtml(t.name)}">`}
+        <div class="task-body">
+          <div class="task-top">
+            <div class="task-name">${escapeForHtml(t.name)}</div>${amount}
+            <button type="button" class="act del" onclick="deleteTask('${t.id}')" title="Remove">${ICON.x}</button>
+          </div>
+          ${sub}
+          ${t.remark ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
+          ${meta ? `<div class="task-meta">${meta}</div>` : ''}
+        </div>
+      </div>
+    `;
+  };
+
+  let html = '';
+  let shownCount = 0;
+
+  if (filtered.length === 0) {
+    html = `<div class="empty">No tasks match your selection.</div>`;
+  } else {
+    groupDefs.forEach(g => {
+      const groupTasks = filtered.filter(g.match);
+      if (groupTasks.length === 0) return;
+      shownCount += groupTasks.length;
+
+      const open = groupTasks.filter(t => !t.done).sort((a, b) => {
+        const aOver = isOverdue(a), bOver = isOverdue(b);
+        if (aOver !== bOver) return aOver ? -1 : 1;
+        if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
+        if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate);
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return 0;
+      });
+
+      const closed = groupTasks.filter(t => t.done);
+      const isFolded = !!uiState.collapsed[g.key];
+      const hasPending = open.length > 0;
+
+      html += `
+        <div class="cat-section${isFolded ? ' collapsed' : ''}">
+          <div class="cat-heading fold" onclick="toggleGroup('${escapeForHtml(g.key)}')">
+            ${ICON.chev}
+            <span class="dot" style="background:${g.color}"></span>
+            <span class="title"><span>${escapeForHtml(g.label)}</span></span>
+            <span class="count ${hasPending ? 'has-pending' : ''}"><b>${open.length} pending</b>${closed.length ? ' &bull; ' + closed.length + ' done' : ''}</span>
+          </div>
+      `;
+
+      if (!isFolded) {
+        html += `<div class="task-grid">`;
+        open.forEach((t, i) => { html += renderCard(t, i, g); });
+        
+        if (closed.length) {
+          const isDoneOpen = filter === 'done' || !!doneOpen[g.key];
+          if (filter !== 'done') {
+            html += `<button class="done-toggle" onclick="toggleDone('${escapeForHtml(g.key)}')">${isDoneOpen ? '▴ Hide completed' : '✓ ' + closed.length + ' completed &bull; show'}</button>`;
+          }
+          if (isDoneOpen) {
+            closed.forEach((t, i) => { html += renderCard(t, open.length + i, g); });
+          }
+        }
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+  }
+
+  app.innerHTML = html;
+  const info = document.getElementById('searchInfo');
+  if (info) info.textContent = searchActive ? shownCount + ' of ' + tasks.length + ' tasks' : '';
+}
+
+let finViewMode = 'all';
+
+function switchPage(page) {
+  activePage = page;
+  const tasksView = document.getElementById('tasksView');
+  const finView = document.getElementById('financialsView');
+  const btnTasks = document.getElementById('tabTasks');
+  const btnFin = document.getElementById('tabFinancials');
+
+  if (page === 'financials') {
+    tasksView.style.display = 'none';
+    finView.style.display = 'block';
+    btnTasks.classList.remove('active');
+    btnFin.classList.add('active');
+    renderFinancialsPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    tasksView.style.display = 'block';
+    finView.style.display = 'none';
+    btnTasks.classList.add('active');
+    btnFin.classList.remove('active');
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function setFinViewMode(mode) {
+  finViewMode = mode;
+  renderFinancialsPage();
+}
+
+function renderFinancialsPage() {
+  const finContainer = document.getElementById('financialsView');
+  if (!finContainer) return;
+
+  const ledger = getFinLedger();
+
+  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !t.name.includes('Juzer Presswala'));
+  const grossFeesBilled = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
+  const feesReceivedCash = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
+  const discountsAllowed = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
+  const netDebtorsDue = grossFeesBilled - feesReceivedCash - discountsAllowed;
+
+  const juzerNet = ledger.loansGiven.juzer.base - (ledger.loansGiven.juzer.adjustments || 0);
+  const mhjNet = ledger.loansTaken.mhj.base - (ledger.loansTaken.mhj.adjustments || 0);
+  const hatimNet = ledger.loansTaken.hatim.base - (ledger.loansTaken.hatim.adjustments || 0);
+  const totalLoansTaken = mhjNet + hatimNet;
+
+  const expensesList = ledger.expenses || [];
+  const totalOperatingExpenses = expensesList
+    .filter(e => !e.category.includes('Loan Repayment') && !e.category.includes('Personal Drawings') && !e.category.includes('Kathiyawad'))
+    .reduce((s, e) => s + (e.amount || 0), 0);
+
+  const netProfit = (grossFeesBilled - discountsAllowed) - totalOperatingExpenses;
+
+  const trip = ledger.kathiyawadTrip || defaultFinLedger.kathiyawadTrip;
+  const tripPayments = trip.payments || [];
+  const tripContributions = trip.contributions || [];
+  const totalTripPayments = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const totalTripContributions = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
+  const netTripOutflow = totalTripPayments - totalTripContributions;
+
+  // Family breakdowns
+  const filPayments = tripPayments.filter(p => /father-in-law/i.test(p.family || '') || /father-in-law/i.test(p.desc || '')).reduce((s, p) => s + p.amount, 0);
+  const filContrib = tripContributions.filter(c => /father-in-law/i.test(c.family || '') || /father-in-law/i.test(c.member || '')).reduce((s, c) => s + c.amount, 0);
+
+  const silPayments = tripPayments.filter(p => /sister-in-law/i.test(p.family || '') || /sister-in-law/i.test(p.desc || '')).reduce((s, p) => s + p.amount, 0);
+  const silContrib = tripContributions.filter(c => /sister-in-law/i.test(c.family || '') || /sister-in-law/i.test(c.member || '')).reduce((s, c) => s + c.amount, 0);
+
+  const minePayments = tripPayments.filter(p => /mustansir|mine/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
+  const mineContrib = tripContributions.filter(c => /mustansir|mine|self/i.test(c.family || '') || /self/i.test(c.member || '')).reduce((s, c) => s + c.amount, 0);
+
+  const sharedJoint = tripPayments.filter(p => /joint/i.test(p.family || '') || (!/father-in-law/i.test(p.family || '') && !/sister-in-law/i.test(p.family || '') && !/mustansir|mine/i.test(p.family || '') && !/father-in-law/i.test(p.desc || ''))).reduce((s, p) => s + p.amount, 0);
+
+  const cashInHand = Number(ledger.cashInHand !== undefined ? ledger.cashInHand : -6000.00);
+  const bankSlice = Number(ledger.bankSlice !== undefined ? ledger.bankSlice : 17216.83);
+  const totalLiquidCashBank = cashInHand + bankSlice;
+
+  const effectiveTripAsset = Math.max(netTripOutflow, 0);
+  const totalAssets = juzerNet + netDebtorsDue + totalLiquidCashBank + effectiveTripAsset;
+  const totalLiabilities = totalLoansTaken;
+
+  const initialOpeningCapital = totalAssets - totalLiabilities - netProfit;
+  const effectiveCapital = initialOpeningCapital + netProfit;
+
+  document.getElementById('finBadge').textContent = inr(juzerNet + netDebtorsDue);
+
+  let html = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+      <div class="fin-mode-toggle">
+        <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Suite</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')" style="color:#0369A1; font-weight:700;">🕌 Kathiyawad Ziyarat Trip (3 Families)</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet &amp; Capital</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses &amp; Outflows</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Contra</button>
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash Withdrawal</button>
+        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+        <button type="button" class="btn btn-primary" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAddTripPaymentModal()">+ Trip Payment</button>
+        <button type="button" class="btn btn-wa" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAddTripContributionModal()">+ Contribution</button>
+      </div>
+    </div>
+
+    <!-- Liquid Cash & Bank Position Strip -->
+    <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid ${cashInHand >= 0 ? 'var(--green)' : 'var(--amber)'}; border-radius:10px; padding:10px 14px; margin-bottom:14px; box-shadow:var(--shadow-xs); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div>
+          <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">Cash in Hand</span>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div>
+          ${cashInHand < 0 ? '<div style="font-size:10.5px; color:var(--muted);">Paid ₹10k to Father-in-law (tap +ATM to replenish)</div>' : ''}
+        </div>
+        <div style="border-left:1px solid var(--rule); padding-left:16px;">
+          <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">slice Small Finance Bank</span>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:#1E3A8A;">${inr(bankSlice)}</div>
+        </div>
+        <div style="border-left:1px solid var(--rule); padding-left:16px;">
+          <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">Total Liquid Funds</span>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--ink);">${inr(totalLiquidCashBank)}</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + Cash from Bank (ATM)</button>
+        <button type="button" onclick="openEditBalancesModal()" style="background:#F8FAFC; border:1px solid var(--rule); border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:600; color:var(--muted); cursor:pointer;">Edit Balances</button>
+      </div>
+    </div>
+
+    <div class="fin-hero-grid">
+      <div class="fin-card">
+        <div class="f-lbl">Owner's Capital (Net Worth)</div>
+        <div class="f-val" style="color:var(--green);">${inr(effectiveCapital)}</div>
+        <div class="f-sub">Capital + Auto-Transferred Profit (${inr(netProfit)})</div>
+      </div>
+      <div class="fin-card">
+        <div class="f-lbl">Kathiyawad Ziyarat Net Advance</div>
+        <div class="f-val" style="color:#0284C7;">${inr(netTripOutflow)}</div>
+        <div class="f-sub">3 Families &bull; Disbursed ${inr(totalTripPayments)}</div>
+      </div>
+      <div class="fin-card">
+        <div class="f-lbl">Loans &amp; Advances (Asset)</div>
+        <div class="f-val" style="color:var(--red);">${inr(juzerNet)}</div>
+        <div class="f-sub">Juzer Presswala</div>
+      </div>
+      <div class="fin-card">
+        <div class="f-lbl">Loans Taken (Liability)</div>
+        <div class="f-val" style="color:var(--amber);">${inr(totalLoansTaken)}</div>
+        <div class="f-sub">MHJ (${inr(mhjNet)}) + Hatim (${inr(hatimNet)})</div>
+      </div>
+    </div>
+  `;
+
+  // === DEDICATED KATHIYAWAD ZIYARAT TRIP STATEMENT WITH 3 FAMILIES ===
+  if (finViewMode === 'all' || finViewMode === 'trip') {
+    html += `
+      <div class="statement-sheet" style="border-left:4px solid #0284C7; margin-bottom:20px;">
+        <div class="statement-header" style="background:linear-gradient(135deg, #0369A1 0%, #0284C7 100%);">
+          <div>
+            <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Travel &amp; Accounts Ledger</h3>
+            <div style="font-size:11.5px; color:#E0F2FE;">1. Mine &bull; 2. Father-in-law Family &bull; 3. Sister-in-law Family &bull; November 2026</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-quiet" style="height:32px; font-size:12px;" onclick="openAddTripPaymentModal()">+ Record Payment</button>
+            <button type="button" class="btn btn-wa" style="height:32px; font-size:12px;" onclick="openAddTripContributionModal()">+ Add Contribution</button>
+          </div>
+        </div>
+        <div class="statement-body">
+          
+          <!-- 3 Families Group Dashboard Cards -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:16px;">
+            <div style="background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#0369A1; text-transform:uppercase;">1. Mustansir Family (Mine)</span>
+                <span style="font-size:10px; background:#BAE6FD; color:#0369A1; font-weight:700; padding:1px 6px; border-radius:4px;">1 Share</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#0369A1; margin:4px 0 2px;">Paid: ${inr(minePayments)}</div>
+              <div style="font-size:11px; color:#0284C7;">Contributed: ${inr(mineContrib)}</div>
+            </div>
+
+            <div style="background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#B45309; text-transform:uppercase;">2. Father-in-law Family</span>
+                <span style="font-size:10px; background:#FDE68A; color:#B45309; font-weight:700; padding:1px 6px; border-radius:4px;">1 Share</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#B45309; margin:4px 0 2px;">Cash Given: ${inr(filPayments)}</div>
+              <div style="font-size:11px; color:#92400E;">₹10,000 cash given on 07-Nov-2026</div>
+            </div>
+
+            <div style="background:#FDF2F8; border:1.5px solid #FBCFE8; border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#9D174D; text-transform:uppercase;">3. Sister-in-law Family</span>
+                <span style="font-size:10px; background:#FBCFE8; color:#9D174D; font-weight:700; padding:1px 6px; border-radius:4px;">1 Share</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#9D174D; margin:4px 0 2px;">Paid: ${inr(silPayments)}</div>
+              <div style="font-size:11px; color:#9D174D;">Contributed: ${inr(silContrib)}</div>
+            </div>
+
+            <div style="background:#F8FAFC; border:1.5px solid var(--rule); border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Joint Tour Pool</span>
+                <span style="font-size:10px; background:#E2E8F0; color:var(--ink); font-weight:700; padding:1px 6px; border-radius:4px;">All 3</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:var(--ink); margin:4px 0 2px;">Advance: ${inr(sharedJoint)}</div>
+              <div style="font-size:11px; color:var(--muted);">Advance to tour operator</div>
+            </div>
+          </div>
+
+          <!-- Summary Metric Ribbon -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:16px;">
+            <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px;">
+              <span style="font-size:11px; font-weight:700; color:#0369A1; text-transform:uppercase;">Total Disbursements Paid Out</span>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:#0369A1; margin:2px 0;">${inr(totalTripPayments)}</div>
+              <div style="font-size:11px; color:#0284C7;">₹10k cash to Father-in-law + ₹3k tour operator</div>
+            </div>
+            <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:8px; padding:10px 12px;">
+              <span style="font-size:11px; font-weight:700; color:var(--green); text-transform:uppercase;">Total Contributions Inflow</span>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--green); margin:2px 0;">${inr(totalTripContributions)}</div>
+              <div style="font-size:11px; color:#047857;">Pooled from families</div>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:8px; padding:10px 12px;">
+              <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Net Prepaid Asset (Balance Sheet)</span>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:#1E3A8A; margin:2px 0;">${inr(netTripOutflow)}</div>
+              <div style="font-size:11px; color:var(--muted);">Carried as Current Asset</div>
+            </div>
+          </div>
+
+          <!-- Section 1: Payments & Advances Paid Out -->
+          <div style="margin-bottom:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-weight:700; font-size:13.5px; color:#0369A1;">1. Payments &amp; Cash Disbursements Paid Out</span>
+              <button type="button" class="act" onclick="openAddTripPaymentModal()">+ Add Payment</button>
+            </div>
+            <table class="stmt-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Family / Target</th>
+                  <th>Particulars &amp; Details</th>
+                  <th>Payment Source</th>
+                  <th>Reference</th>
+                  <th class="text-right">Amount (₹)</th>
+                  <th style="width:40px; text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tripPayments.length === 0 ? `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:14px;">No payments recorded yet.</td></tr>` : ''}
+                ${tripPayments.map(p => `
+                  <tr>
+                    <td>${p.date}</td>
+                    <td><span style="font-size:11px; font-weight:700; padding:2px 6px; background:#E0F2FE; color:#0369A1; border-radius:4px;">${escapeForHtml(p.family || 'Joint Pool')}</span></td>
+                    <td><strong>${escapeForHtml(p.desc)}</strong></td>
+                    <td><span style="font-size:11px; padding:2px 6px; background:${p.mode === 'Cash' ? '#ECFDF5; color:var(--green); font-weight:700;' : '#F1F5F9; color:#1E3A8A;'}; border-radius:4px;">${escapeForHtml(p.mode)}</span></td>
+                    <td style="color:var(--muted); font-size:11.5px;">${escapeForHtml(p.ref || '-')}</td>
+                    <td class="text-right stmt-mono" style="color:#0369A1; font-weight:700;">${inr(p.amount)}</td>
+                    <td style="text-align:center;">
+                      <button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')" title="Delete payment entry" aria-label="Delete entry">${ICON.x}</button>
+                    </td>
+                  </tr>
+                `).join('')}
+                <tr style="font-weight:700; background:#F0F9FF;">
+                  <td colspan="5">Total Trip Disbursements Discharged</td>
+                  <td class="text-right stmt-mono" style="color:#0369A1; font-size:14px;">${inr(totalTripPayments)}</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 2: Contributions Inflows -->
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-weight:700; font-size:13.5px; color:var(--green);">2. Family Contributions &amp; Pooled Inflows</span>
+              <button type="button" class="act wa" onclick="openAddTripContributionModal()">+ Add Contribution</button>
+            </div>
+            <table class="stmt-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Family</th>
+                  <th>Member / Contributor</th>
+                  <th>Received In</th>
+                  <th>Notes</th>
+                  <th class="text-right">Amount (₹)</th>
+                  <th style="width:40px; text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tripContributions.length === 0 ? `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:14px;">No member contributions recorded yet. Tap "+ Add Contribution" above when funds are pooled.</td></tr>` : ''}
+                ${tripContributions.map(c => `
+                  <tr>
+                    <td>${c.date}</td>
+                    <td><span style="font-size:11px; font-weight:600; padding:2px 6px; background:#ECFDF5; color:var(--green); border-radius:4px;">${escapeForHtml(c.family || 'Family')}</span></td>
+                    <td><strong style="color:var(--green);">${escapeForHtml(c.member)}</strong></td>
+                    <td><span style="font-size:11px; padding:2px 6px; background:#ECFDF5; border-radius:4px; font-weight:600;">${escapeForHtml(c.mode)}</span></td>
+                    <td style="color:var(--muted); font-size:11.5px;">${escapeForHtml(c.note || '-')}</td>
+                    <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">+ ${inr(c.amount)}</td>
+                    <td style="text-align:center;">
+                      <button type="button" class="act del" onclick="deleteTripEntry('contribution', '${c.id}')" title="Delete contribution entry" aria-label="Delete entry">${ICON.x}</button>
+                    </td>
+                  </tr>
+                `).join('')}
+                ${tripContributions.length > 0 ? `
+                  <tr style="font-weight:700; background:#ECFDF5;">
+                    <td colspan="5">Total Contributions Received</td>
+                    <td class="text-right stmt-mono" style="color:var(--green); font-size:14px;">+ ${inr(totalTripContributions)}</td>
+                    <td></td>
+                  </tr>
+                ` : ''}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
+  // === PROFIT & LOSS STATEMENT ===
+  if (finViewMode === 'all' || finViewMode === 'pl') {
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header">
+          <div>
+            <h3>Profit &amp; Loss Statement</h3>
+            <div style="font-size:11.5px; color:#94A3B8;">Mustannsirr Mallik &bull; FY 2026-27 &bull; Accrual &amp; Cash Realization</div>
+          </div>
+          <span style="font-size:12px; font-weight:600; color:#F8FAFC;">Net Profit: ${inr(netProfit)}</span>
+        </div>
+        <div class="statement-body">
+          <table class="stmt-table">
+            <thead>
+              <tr>
+                <th>Particulars / Account Head</th>
+                <th class="text-right">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>A. Professional Revenue &amp; Retainers Billed</strong></td>
+                <td class="text-right stmt-mono">${inr(grossFeesBilled)}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted); padding-left:24px;">Less: Discounts &amp; Concessions Allowed</td>
+                <td class="text-right stmt-mono" style="color:var(--muted);">&minus; ${inr(discountsAllowed)}</td>
+              </tr>
+              <tr style="font-weight:700; background:#FAFCFE;">
+                <td><strong>B. Less: Direct Operating Expenses &amp; Challans</strong></td>
+                <td class="text-right stmt-mono" style="color:var(--red);">&minus; ${inr(totalOperatingExpenses)}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted); padding-left:24px;">&bull; Govt Portal Challan — Royal Consultancy Services (Gumasta)</td>
+                <td class="text-right stmt-mono" style="color:var(--muted);">&minus; ${inr(224.00)}</td>
+              </tr>
+              <tr>
+                <td style="color:var(--muted); padding-left:24px;">&bull; Payment Gateway Charge — Razorpay (Royal Consultancy)</td>
+                <td class="text-right stmt-mono" style="color:var(--muted);">&minus; ${inr(18.18)}</td>
+              </tr>
+              <tr style="font-weight:700; background:#ECFDF5; border-top:1.5px solid var(--green);">
+                <td><strong style="color:var(--green);">NET PROFESSIONAL PROFIT (Transferred to Capital Account)</strong></td>
+                <td class="text-right stmt-mono" style="color:var(--green); font-size:16px;">${inr(netProfit)}</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="font-size:11.5px; color:var(--muted); font-style:italic; padding-top:6px;">
+                  * System Rule: Net practice profit of ${inr(netProfit)} is automatically posted into the Capital Account on the Balance Sheet.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // === BALANCE SHEET STATEMENT ===
+  if (finViewMode === 'all' || finViewMode === 'bs') {
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header" style="background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%);">
+          <div>
+            <h3>Balance Sheet Statement (With Auto-Transferred Profit)</h3>
+            <div style="font-size:11.5px; color:#94A3B8;">Position of Assets, Liabilities &amp; Owner's Capital &bull; As at 07-Nov-2026</div>
+          </div>
+          <span style="font-size:12px; font-weight:600; color:#F8FAFC;">Total: ${inr(totalAssets)}</span>
+        </div>
+        <div class="statement-body">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px;">
+            <!-- Liabilities & Capital -->
+            <div style="border:1px solid var(--rule); border-radius:10px; overflow:hidden;">
+              <table class="stmt-table">
+                <thead>
+                  <tr><th>Liabilities &amp; Capital</th><th class="text-right">Amount (₹)</th></tr>
+                </thead>
+                <tbody>
+                  <tr style="background:#F8FAFC; font-weight:700;"><td colspan="2" style="color:var(--accent);">I. OWNER'S CAPITAL ACCOUNT</td></tr>
+                  <tr>
+                    <td>Base / Opening Capital Balance</td>
+                    <td class="text-right stmt-mono">${inr(initialOpeningCapital)}</td>
+                  </tr>
+                  <tr style="background:#ECFDF5;">
+                    <td style="color:var(--green); font-weight:600;">
+                      Add: Net Practice Profit Transferred from P&amp;L
+                      <div style="font-size:11px; color:var(--muted); font-weight:400;">Auto-credited from current period professional surplus</div>
+                    </td>
+                    <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">+ ${inr(netProfit)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#FAFCFE; border-top:1px dashed var(--rule);">
+                    <td>Total Capital Account &amp; Net Worth</td>
+                    <td class="text-right stmt-mono" style="color:var(--green); font-size:15px;">${inr(effectiveCapital)}</td>
+                  </tr>
+
+                  <tr style="background:#F8FAFC; font-weight:700;"><td colspan="2" style="color:var(--amber); padding-top:12px;">II. CURRENT LIABILITIES (LOANS TAKEN)</td></tr>
+                  <tr>
+                    <td>Loan Taken — MHJ (Mufazzal Husain Johar)</td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td>
+                  </tr>
+                  <tr>
+                    <td>Loan Taken — Hatim Bhai (Advocate)</td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#FAFCFE;">
+                    <td>Total Current Liabilities</td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(totalLoansTaken)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#F1F5F9; border-top:2px solid var(--ink);">
+                    <td><strong>TOTAL LIABILITIES &amp; CAPITAL</strong></td>
+                    <td class="text-right stmt-mono" style="font-size:15px;">${inr(effectiveCapital + totalLoansTaken)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Assets -->
+            <div style="border:1px solid var(--rule); border-radius:10px; overflow:hidden;">
+              <table class="stmt-table">
+                <thead>
+                  <tr><th>Assets &amp; Properties</th><th class="text-right">Amount (₹)</th></tr>
+                </thead>
+                <tbody>
+                  <tr style="background:#F8FAFC; font-weight:700;"><td colspan="2" style="color:var(--accent);">I. CURRENT ASSETS &amp; ADVANCES</td></tr>
+                  <tr>
+                    <td>Loans &amp; Advances Given — Juzer Presswala</td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td>
+                  </tr>
+                  <tr>
+                    <td>Sundry Debtors (Active Client Fees Receivable)</td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(netDebtorsDue)}</td>
+                  </tr>
+                  <tr style="background:#F0F9FF;">
+                    <td style="color:#0369A1; font-weight:600;">
+                      Kathiyawad Ziyarat Trip Net Advance / Asset
+                      <div style="font-size:11px; color:#0284C7; font-weight:400;">3 Families &bull; Disbursed (${inr(totalTripPayments)}) &minus; Received (${inr(totalTripContributions)})</div>
+                    </td>
+                    <td class="text-right stmt-mono" style="color:#0369A1; font-weight:700;">${inr(effectiveTripAsset)}</td>
+                  </tr>
+
+                  <tr style="background:#F8FAFC; font-weight:700;"><td colspan="2" style="color:var(--green); padding-top:12px;">II. LIQUID CASH &amp; BANK BALANCES</td></tr>
+                  <tr>
+                    <td>Cash in Hand (Physical Vault)</td>
+                    <td class="text-right stmt-mono" style="color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'}; font-weight:700;">${inr(cashInHand)}</td>
+                  </tr>
+                  <tr>
+                    <td>slice Small Finance Bank (A/c: 033311501064738)</td>
+                    <td class="text-right stmt-mono" style="color:#1E3A8A; font-weight:700;">${inr(bankSlice)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#FAFCFE;">
+                    <td>Total Current Assets &amp; Bank Balances</td>
+                    <td class="text-right stmt-mono">${inr(totalAssets)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#F1F5F9; border-top:2px solid var(--ink);">
+                    <td><strong>TOTAL ASSETS</strong></td>
+                    <td class="text-right stmt-mono" style="font-size:15px;">${inr(totalAssets)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // === EXPENSES & OUTFLOWS SCHEDULE ===
+  if (finViewMode === 'all' || finViewMode === 'expenses') {
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header" style="background:linear-gradient(135deg, #334155 0%, #1E293B 100%);">
+          <div>
+            <h3>Expenses &amp; Outflows Ledger (2-Way Double Entry)</h3>
+            <div style="font-size:11.5px; color:#94A3B8;">Bank debit SMS parser, cash payments, portal filing challans &amp; operating costs</div>
+          </div>
+          <button type="button" class="btn btn-quiet" style="height:32px; font-size:12px;" onclick="openAddExpenseModal()">+ Record / Parse Expense</button>
+        </div>
+        <div class="statement-body">
+          <table class="stmt-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Paid To / Beneficiary</th>
+                <th>Paid From (2nd Effect)</th>
+                <th>Category</th>
+                <th>Details &amp; Reference</th>
+                <th class="text-right">Amount (₹)</th>
+                <th style="width:48px; text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${expensesList.length === 0 ? `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">No operating expenses recorded yet.</td></tr>` : ''}
+              ${expensesList.map(e => `
+                <tr>
+                  <td>${e.date}</td>
+                  <td><strong>${escapeForHtml(e.payee)}</strong></td>
+                  <td><span style="font-size:11px; font-weight:600; padding:2px 7px; background:${e.source === 'Cash' ? '#ECFDF5; color:var(--green); border:1px solid #A7F3D0;' : '#EFF6FF; color:#1E3A8A; border:1px solid #BFDBFE;'}; border-radius:4px;">${escapeForHtml(e.source || 'slice SFB')}</span></td>
+                  <td><span style="font-size:11px; padding:2px 6px; background:#F1F5F9; border-radius:4px;">${escapeForHtml(e.category)}</span></td>
+                  <td style="color:var(--muted); font-size:12px;">${escapeForHtml(e.note || '-')}</td>
+                  <td class="text-right stmt-mono" style="color:var(--red); font-weight:700;">&minus; ${inr(e.amount)}</td>
+                  <td style="text-align:center;">
+                    <button type="button" class="act del" onclick="deleteExpenseEntry('${e.id}')" title="Delete & revert expense entry" aria-label="Delete entry">${ICON.x}</button>
+                  </td>
+                </tr>
+              `).join('')}
+              <tr style="font-weight:700; background:#FAFCFE;">
+                <td colspan="5">Total Operating Expenses Deducted from P&amp;L</td>
+                <td class="text-right stmt-mono" style="color:var(--red); font-size:15px;">&minus; ${inr(totalOperatingExpenses)}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  // === MUTUAL CONTRA ADJUSTMENTS ===
+  if (finViewMode === 'all' || finViewMode === 'adjust') {
+    const adjLogs = ledger.adjustmentsLog || [];
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header" style="background:linear-gradient(135deg, #1E3A8A 0%, #0F172A 100%);">
+          <div>
+            <h3>Mutual Contra &amp; Loan Adjustment History</h3>
+            <div style="font-size:11.5px; color:#94A3B8;">Audit log of offsets between fees, loans taken, and loans given</div>
+          </div>
+        </div>
+        <div class="statement-body">
+          <table class="stmt-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Adjustment Description</th>
+                <th class="text-right">Amount Offset (₹)</th>
+                <th style="width:48px; text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${adjLogs.length === 0 ? `<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">No contra adjustments recorded yet.</td></tr>` : ''}
+              ${adjLogs.map((a, idx) => `
+                <tr>
+                  <td>${a.date}</td>
+                  <td>${escapeForHtml(a.desc)}</td>
+                  <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">${inr(a.amount)}</td>
+                  <td style="text-align:center;">
+                    <button type="button" class="act del" onclick="deleteAdjustmentEntry(${idx})" title="Delete adjustment log" aria-label="Delete log entry">${ICON.x}</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  finContainer.innerHTML = html;
+}
+
+const DASHBOARD_PASSWORD = 'Mustansir@2026';
+const AUTH_KEY = 'dashboard-auth-ok';
+
+function checkAuth() {
+  const input = document.getElementById('authInput');
+  if (input.value === DASHBOARD_PASSWORD) {
+    localStorage.setItem(AUTH_KEY, 'yes');
+    document.getElementById('authGate').style.display = 'none';
+    startDashboard();
+    if (location.hash === '#financials') switchPage('financials');
+  } else {
+    document.getElementById('authError').style.display = 'block';
+    input.value = '';
+  }
+}
+
+function startDashboard() {
+  syncCloudFinLedger().then(() => {
+    loadTasks().then(() => {
+      pullFromCalendar();
+    });
+  });
+}
+
+if (localStorage.getItem(AUTH_KEY) === 'yes') {
+  document.getElementById('authGate').style.display = 'none';
+  startDashboard();
+} else {
+  document.getElementById('authInput').focus();
+}
 </script>
 </body>
 </html>
+```
