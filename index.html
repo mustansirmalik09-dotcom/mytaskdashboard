@@ -366,6 +366,18 @@
     display: block; width: 100%; height: 38px; margin-bottom: 12px; padding: 0 10px; background: #FFFFFF; color: var(--ink);
     border: 1px solid var(--field); border-radius: 8px; font: 400 13.5px var(--sans);
   }
+  #modalFields .check-row {
+    display: flex; align-items: center; gap: 8px; margin: 8px 0 2px;
+    font-size: 13px; font-weight: 600; color: var(--green); cursor: pointer; text-transform: none; letter-spacing: normal;
+  }
+  #modalFields .check-row input[type=checkbox] {
+    width: 17px; height: 17px; margin: 0; flex: none; accent-color: var(--green);
+  }
+  .receipt-preview {
+    white-space: pre-wrap; word-break: break-word; background: var(--green-soft);
+    border: 1px solid var(--green-border); border-radius: 8px; padding: 10px 12px;
+    font-size: 12.5px; line-height: 1.45; max-height: 220px; overflow-y: auto; color: var(--ink);
+  }
   .hint { font-size: 12px; line-height: 1.45; color: var(--muted); margin-bottom: 10px; }
   .presets { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
   .preset { padding: 4px 10px; border: 1px solid var(--rule); border-radius: 999px; background: #FFFFFF; color: var(--ink); font: 500 11.5px var(--sans); cursor: pointer; }
@@ -895,14 +907,12 @@ function deleteExpenseEntry(id) {
   if (!e) return;
 
   confirmDeleteFinancialEntry('Expense Entry', id, e.payee + (e.note ? ' — ' + e.note : ''), e.amount, () => {
-    // Revert double-entry effect
     if (e.source === 'Cash' || e.paymentMode === 'Cash') {
       ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + e.amount) * 100) / 100;
     } else if (e.source === 'slice SFB' || !e.source || e.paymentMode === 'Bank') {
       ledger.bankSlice = Math.round(((ledger.bankSlice || 0) + e.amount) * 100) / 100;
     }
 
-    // Revert loan adjustments if applicable
     if (e.category === 'Loan Repayment - MHJ') {
       ledger.loansTaken.mhj.adjustments = Math.max(0, (ledger.loansTaken.mhj.adjustments || 0) - e.amount);
     } else if (e.category === 'Loan Repayment - Hatim') {
@@ -1088,6 +1098,10 @@ function inr(n) {
   return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN', { minimumFractionDigits: (v % 1 !== 0 ? 2 : 0), maximumFractionDigits: 2 });
 }
 
+function moneyText(n) {
+  return String(Math.round((Number(n) || 0) * 100) / 100);
+}
+
 function escapeForHtml(s) {
   return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -1139,6 +1153,225 @@ window.addEventListener('scroll', () => {
   const b = document.getElementById('toTop');
   if (b) b.classList.toggle('show', window.scrollY > 400);
 }, { passive: true });
+
+// ==========================================
+// RECEIPT GENERATION & WHATSAPP DISPATCH
+// ==========================================
+const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
+const CAT_PHONES_KEY = 'dash-cat-phones-v1';
+const DEFAULT_CATEGORY_PHONES = {
+  SHK: '9425320184',
+  HATIM_BHAI_ADV: '9826768052',
+  MHJ: '9425054543',
+  OWN: ''
+};
+
+function getCategoryPhones() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CAT_PHONES_KEY) || '{}');
+    return Object.assign({}, DEFAULT_CATEGORY_PHONES, saved);
+  } catch (e) {
+    return Object.assign({}, DEFAULT_CATEGORY_PHONES);
+  }
+}
+
+function saveCategoryPhone(catKey, phone) {
+  try {
+    const current = getCategoryPhones();
+    current[catKey] = (phone || '').replace(/[^0-9]/g, '');
+    localStorage.setItem(CAT_PHONES_KEY, JSON.stringify(current));
+  } catch (e) {}
+}
+
+function detectFeeCategory(t) {
+  if (t.feeCat) return t.feeCat;
+  const targetName = (t.linked || t.name || '').trim().toLowerCase();
+  const linkedTask = tasks.find(x => x.type === 'professional' && x.cat && (
+    x.name.trim().toLowerCase() === targetName ||
+    targetName.includes(x.name.trim().toLowerCase()) ||
+    x.name.trim().toLowerCase().includes(targetName)
+  ));
+  if (linkedTask && linkedTask.cat) return linkedTask.cat;
+  if (t.cat && t.cat !== 'FEES') return t.cat;
+  return 'SHK';
+}
+
+function getCatDisplayName(k) {
+  const map = {
+    SHK: 'SHK Husain Arif',
+    MHJ: 'MHJ (Mufazzal Husain Johar)',
+    OWN: 'Professional — OWN',
+    HATIM_BHAI_ADV: 'Hatim Bhai (Adv)'
+  };
+  return map[k] || k.replace(/_/g, ' ');
+}
+
+function buildReceiptMessage(t, paidNow) {
+  const label = t.linked || t.name;
+  const payable = Number(t.payable) || 0;
+  const received = Number(t.received) || 0;
+  const discount = Number(t.discount) || 0;
+  const balance = Math.max(Math.round((payable - received - discount) * 100) / 100, 0);
+  const amount = (paidNow && paidNow > 0) ? paidNow : received;
+  const invoiceNumber = String(t.invoice || '').split('|')[0].trim();
+
+  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${moneyText(amount)}`;
+  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${moneyText(discount)}`;
+  if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${moneyText(balance)}` : `\n✅ *Status:* Fully settled`;
+  if (invoiceNumber) msg += `\n\n📄 *Invoice ${invoiceNumber}:*\n${INVOICE_PAGE_BASE}${encodeURIComponent(invoiceNumber)}`;
+  msg += `\n\nThank you for your payment and your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
+  return msg.replace(/&/g, 'and');
+}
+
+function openReceiptWhatsApp(phone, message, useRegular) {
+  let clean = (phone || '').replace(/[^0-9]/g, '');
+  if (clean.length === 10) clean = '91' + clean;
+  const encoded = encodeURIComponent(message);
+  const phonePart = clean ? 'phone=' + clean + '&' : '';
+  const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encoded;
+  const waBusinessIntent = 'intent://send?' + phonePart + 'text=' + encoded +
+    '#Intent;scheme=https;package=com.whatsapp.w4b;S.browser_fallback_url=' + encodeURIComponent(waUrl) + ';end';
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid && !useRegular) {
+    window.location.href = waBusinessIntent;
+  } else {
+    window.open(waUrl, '_blank');
+  }
+}
+
+function sendReceiptToClient(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
+  openReceiptWhatsApp(t.phone || '', message, useRegular);
+  const btn = document.getElementById('btnReceiptClient');
+  if (btn) {
+    btn.style.background = 'var(--muted)';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '✓ Opened for Client';
+  }
+}
+
+function sendReceiptToCategory(taskId, paidNow) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const catSelect = document.getElementById('receiptCatSelect');
+  const catKey = catSelect ? catSelect.value : 'SHK';
+  const phoneInput = document.getElementById('receiptCatPhone');
+  const catPhone = phoneInput ? phoneInput.value.trim() : '';
+  if (catPhone) saveCategoryPhone(catKey, catPhone);
+  const message = buildReceiptMessage(t, paidNow || 0);
+  const useRegular = document.getElementById('receiptUseRegular') && document.getElementById('receiptUseRegular').checked;
+  openReceiptWhatsApp(catPhone, message, useRegular);
+  const btn = document.getElementById('btnReceiptCat');
+  if (btn) {
+    btn.style.background = 'var(--muted)';
+    const span = btn.querySelector('span');
+    if (span) span.textContent = '✓ Opened for ' + getCatDisplayName(catKey);
+  }
+}
+
+function onReceiptCatChange(taskId) {
+  const catSelect = document.getElementById('receiptCatSelect');
+  if (!catSelect) return;
+  const catKey = catSelect.value;
+  const phones = getCategoryPhones();
+  const phone = phones[catKey] || '';
+  const phoneInput = document.getElementById('receiptCatPhone');
+  if (phoneInput) phoneInput.value = phone;
+  const phoneTag = document.getElementById('catPhoneTag');
+  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
+  const btnText = document.getElementById('btnReceiptCatText');
+  if (btnText) btnText.textContent = 'Send to ' + getCatDisplayName(catKey);
+  const btn = document.getElementById('btnReceiptCat');
+  if (btn) btn.style.background = 'var(--green)';
+}
+
+function onReceiptCatPhoneInput(taskId) {
+  const catSelect = document.getElementById('receiptCatSelect');
+  const phoneInput = document.getElementById('receiptCatPhone');
+  if (!catSelect || !phoneInput) return;
+  const catKey = catSelect.value;
+  const phone = phoneInput.value.trim();
+  saveCategoryPhone(catKey, phone);
+  const phoneTag = document.getElementById('catPhoneTag');
+  if (phoneTag) phoneTag.textContent = phone || 'Enter phone';
+}
+
+function offerReceipt(taskId, paidNow, afterSave) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const clientPhone = (t.phone || '').trim();
+  const clientLabel = t.linked || t.name;
+  const message = buildReceiptMessage(t, paidNow || 0);
+
+  const detectedCat = detectFeeCategory(t);
+  const catPhones = getCategoryPhones();
+
+  const extraCats = [...new Set(tasks.filter(x => x.type === 'professional' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(x.cat)).map(x => x.cat))];
+  const allCatKeys = [...new Set(['SHK', 'MHJ', 'OWN', ...extraCats])];
+  let currentCatKey = detectedCat || 'SHK';
+  if (!allCatKeys.includes(currentCatKey)) allCatKeys.unshift(currentCatKey);
+
+  const currentCatPhone = catPhones[currentCatKey] || '';
+  const currentCatLabel = getCatDisplayName(currentCatKey);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  const savedNotice = !afterSave ? ''
+    : paidNow > 0 ? `✓ Payment of ${inr(paidNow)} recorded successfully. `
+    : '✓ Payment recorded. ';
+
+  const catOptionsHtml = allCatKeys.map(k =>
+    `<option value="${k}" ${k === currentCatKey ? 'selected' : ''}>${escapeForHtml(getCatDisplayName(k))}</option>`
+  ).join('');
+
+  const modalHtml = `
+    <div class="hint">${savedNotice}Choose who to send the receipt to via WhatsApp:</div>
+    <div class="receipt-preview">${escapeForHtml(message)}</div>
+
+    <div style="margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px;">
+      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+          <span style="font-weight: 600; font-size: 13px; color: var(--ink);">1. Client (${escapeForHtml(clientLabel)})</span>
+          <span style="font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums;">${clientPhone ? clientPhone : 'No number'}</span>
+        </div>
+        <div style="font-size: 11.5px; color: var(--muted); margin-bottom: 8px;">
+          ${clientPhone ? 'Sends directly to client\'s WhatsApp chat with invoice link.' : 'No phone saved — WhatsApp will prompt you to pick contact.'}
+        </div>
+        <button type="button" id="btnReceiptClient" class="btn btn-wa" style="width: 100%; height: 36px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToClient('${t.id}', ${paidNow || 0})">
+          ${ICON.chat} <span>Send to Client</span>
+        </button>
+      </div>
+
+      <div style="background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+          <span style="font-weight: 600; font-size: 13px; color: var(--ink);">2. Category Head / Principal</span>
+          <span id="catPhoneTag" style="font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums;">${currentCatPhone || 'Enter phone'}</span>
+        </div>
+        <div style="display: flex; gap: 6px; margin: 6px 0 8px;">
+          <select id="receiptCatSelect" onchange="onReceiptCatChange('${t.id}')" style="flex: 1.2; height: 34px; padding: 0 6px; font-size: 12.5px; border: 1px solid var(--field); border-radius: 6px; background: var(--sheet); color: var(--ink); margin-bottom:0;">
+            ${catOptionsHtml}
+          </select>
+          <input type="tel" id="receiptCatPhone" placeholder="Mobile number" value="${currentCatPhone}" oninput="onReceiptCatPhoneInput('${t.id}')" style="flex: 1; height: 34px; padding: 0 8px; font-size: 12.5px; border: 1px solid var(--field); border-radius: 6px; background: var(--sheet); color: var(--ink); margin-bottom:0;">
+        </div>
+        <button type="button" id="btnReceiptCat" class="btn btn-wa" style="width: 100%; height: 36px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" onclick="sendReceiptToCategory('${t.id}', ${paidNow || 0})">
+          ${ICON.chat} <span id="btnReceiptCatText">Send to ${escapeForHtml(currentCatLabel)}</span>
+        </button>
+      </div>
+    </div>
+
+    ${isAndroid ? `
+    <div style="margin-top: 8px; text-align: center; font-size: 12px;">
+      <label style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px; color: var(--muted);">
+        <input type="checkbox" id="receiptUseRegular" style="accent-color: var(--accent);">
+        Use regular WhatsApp instead of WhatsApp Business
+      </label>
+    </div>` : ''}
+  `;
+
+  showModal('Send Payment Receipt', modalHtml, () => {}, 'Done', 'Close');
+}
 
 const seedTasks = [
   {
@@ -1438,7 +1671,7 @@ function recordPayment(id) {
 
   showModal('Record payment — ' + t.name, `
     <div class="hint">Total Payable: <strong>${inr(payable)}</strong> &bull; Received so far: <strong>${inr(currentRec)}</strong></div>
-    <label>Amount Received Now (₹)</label>
+    <label>Total Amount Received so far (₹)</label>
     <input type="number" id="modalReceivedAmt" value="${currentRec}" oninput="checkShortfall(${payable})">
     <label>Deposit To Account (Double-Entry Debit)</label>
     <select id="modalPayMode">
@@ -1448,7 +1681,13 @@ function recordPayment(id) {
     <label>Discount / Concession (₹)</label>
     <input type="number" id="modalDiscountAmt" placeholder="0" value="${t.discount || 0}" oninput="checkShortfall(${payable})">
     
-    <div id="shortfallCard" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px; margin-bottom:12px;">
+    <label class="check-row">
+      <input type="checkbox" id="modalSendReceipt" checked>
+      Offer a WhatsApp payment receipt after saving
+    </label>
+    <div id="modalReceiptHint" class="hint" style="margin-top:4px;"></div>
+
+    <div id="shortfallCard" style="display:none; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:10px; margin-top:10px; margin-bottom:12px;">
       <div style="font-weight:700; color:#B45309; font-size:12px;" id="shortfallTitle">Shortfall Detected</div>
       <div style="font-size:11.5px; color:#78350F; margin:4px 0 8px;" id="shortfallDesc"></div>
       <label style="font-size:11px; font-weight:700; color:#B45309;">Action for Remaining Balance:</label>
@@ -1464,6 +1703,7 @@ function recordPayment(id) {
     const entered = parseFloat(document.getElementById('modalReceivedAmt').value) || 0;
     const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
     const payMode = document.getElementById('modalPayMode').value;
+    const wantReceipt = document.getElementById('modalSendReceipt') ? document.getElementById('modalSendReceipt').checked : false;
     const shortfallActionEl = document.getElementById('shortfallAction');
     const shortfallAction = shortfallActionEl ? shortfallActionEl.value : 'pending';
 
@@ -1521,7 +1761,31 @@ function recordPayment(id) {
     render();
     if (activePage === 'financials') renderFinancialsPage();
     if (t.id.startsWith('cal_')) updateFeeOnCalendar(t.id, t.received, t.discount);
+
+    // Offer receipt immediately on modal close
+    const paidNow = Math.round(diff * 100) / 100;
+    if (wantReceipt && entered > 0 && !t.name.includes('Advance Credit Balance')) {
+      setTimeout(() => offerReceipt(t.id, paidNow > 0 ? paidNow : entered, true), 50);
+    }
   });
+
+  const amtEl = document.getElementById('modalReceivedAmt');
+  const boxEl = document.getElementById('modalSendReceipt');
+  const hintEl = document.getElementById('modalReceiptHint');
+  const updateReceiptHint = () => {
+    if (!boxEl || !hintEl) return;
+    if (!boxEl.checked) { hintEl.textContent = 'No receipt prompt will open.'; return; }
+    const val = parseFloat(amtEl.value) || 0;
+    const addl = Math.round((val - currentRec) * 100) / 100;
+    hintEl.textContent = addl > 0
+      ? `Receipt will be generated for new payment of ${inr(addl)}.`
+      : `Receipt will show total received so far (${inr(val)}).`;
+  };
+  if (amtEl && boxEl) {
+    amtEl.addEventListener('input', updateReceiptHint);
+    boxEl.addEventListener('change', updateReceiptHint);
+    updateReceiptHint();
+  }
 }
 
 function checkShortfall(payable) {
@@ -1735,6 +1999,7 @@ function render(listOnly) {
     
     const actions = [
       isFee && !t.done ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : '',
+      isFee && t.received > 0 && !t.name.includes('Advance Credit Balance') ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}', 0, false)">${ICON.doc} Send receipt</button>` : '',
       /Kathiyawad/i.test(t.name) ? `<button type="button" class="act" onclick="switchPage('financials'); setFinViewMode('trip');" style="color:#0284C7; font-weight:700;">🕌 Open Trip Statement</button>` : '',
       !t.done && !isNamaz ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">${t.dueDate ? 'Due' : 'Set due'}</button>` : '',
       !t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">${t.remark ? 'Note' : '+ Note'}</button>` : ''
