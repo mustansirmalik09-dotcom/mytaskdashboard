@@ -565,7 +565,7 @@ function getWebhook() {
 
 const defaultFinLedger = {
   openingCapital: 111000.00,
-  cashInHand: 4000.00,
+  cashInHand: -6000.00, // ₹4,000 opening less ₹10,000 cash given to Father-in-law for Kathiyawad Trip
   bankSlice: 17216.83,
   loansGiven: {
     juzer: {
@@ -592,13 +592,26 @@ const defaultFinLedger = {
   },
   kathiyawadTrip: {
     title: 'Kathiyawad Ziyarat Trip',
-    tourOperator: 'Tour Operator',
-    phone: '',
-    estimatedBudget: 15000.00,
+    families: [
+      { id: 'fam_mine', name: 'Mustansir Family (Mine)', members: 'Self & Family', shareRatio: 1 },
+      { id: 'fam_fil', name: 'Father-in-law Family', members: 'Father-in-law & Family', shareRatio: 1 },
+      { id: 'fam_sil', name: 'Sister-in-law Family', members: 'Sister-in-law & Family', shareRatio: 1 }
+    ],
+    estimatedBudget: 35000.00,
     payments: [
+      {
+        id: 'kz_p_fil_cash_10k',
+        date: '2026-11-07',
+        family: 'Father-in-law Family',
+        desc: 'Cash given to Father-in-law for Kathiyawad Ziyarat trip expenses & arrangements',
+        amount: 10000.00,
+        mode: 'Cash',
+        ref: 'Handed in Cash to Father-in-law'
+      },
       {
         id: 'kz_adv_1',
         date: '2026-11-06',
+        family: 'Joint Pool',
         desc: 'Advance given to tour operator for booking & travel arrangements',
         amount: 3000.00,
         mode: 'slice SFB',
@@ -633,7 +646,6 @@ const defaultFinLedger = {
 let currentLedger = null;
 
 function sanitizeLedger(parsed) {
-  if (parsed.cashInHand === undefined) parsed.cashInHand = 4000.00;
   if (parsed.bankSlice === undefined) parsed.bankSlice = 17216.83;
   if (parsed.openingCapital === undefined) parsed.openingCapital = 111000.00;
   
@@ -643,44 +655,44 @@ function sanitizeLedger(parsed) {
   if (!parsed.kathiyawadTrip) {
     parsed.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
   } else {
+    if (!parsed.kathiyawadTrip.families || parsed.kathiyawadTrip.families.length === 0) {
+      parsed.kathiyawadTrip.families = defaultFinLedger.kathiyawadTrip.families;
+    }
     if (!parsed.kathiyawadTrip.payments) parsed.kathiyawadTrip.payments = [];
     if (!parsed.kathiyawadTrip.contributions) parsed.kathiyawadTrip.contributions = [];
-    if (parsed.kathiyawadTrip.payments.length === 0) {
-      parsed.kathiyawadTrip.payments = [
-        {
-          id: 'kz_adv_1',
-          date: '2026-11-06',
-          desc: 'Advance given to tour operator for booking & travel arrangements',
-          amount: 3000.00,
-          mode: 'slice SFB',
-          ref: '2026-11-06-Vendor-Contact'
-        }
-      ];
+    
+    // Ensure the 10,000 cash entry to Father-in-law is present
+    if (!parsed.kathiyawadTrip.payments.some(p => p.id === 'kz_p_fil_cash_10k' || (p.amount === 10000 && /father-in-law/i.test(p.desc || '')))) {
+      parsed.kathiyawadTrip.payments.unshift({
+        id: 'kz_p_fil_cash_10k',
+        date: '2026-11-07',
+        family: 'Father-in-law Family',
+        desc: 'Cash given to Father-in-law for Kathiyawad Ziyarat trip expenses & arrangements',
+        amount: 10000.00,
+        mode: 'Cash',
+        ref: 'Handed in Cash to Father-in-law'
+      });
+      // Deduct 10,000 cash from cashInHand if it wasn't yet deducted
+      if (parsed.cashInHand === 4000) {
+        parsed.cashInHand = -6000.00;
+      }
+    }
+
+    if (!parsed.kathiyawadTrip.payments.some(p => p.amount === 3000)) {
+      parsed.kathiyawadTrip.payments.push({
+        id: 'kz_adv_1',
+        date: '2026-11-06',
+        family: 'Joint Pool',
+        desc: 'Advance given to tour operator for booking & travel arrangements',
+        amount: 3000.00,
+        mode: 'slice SFB',
+        ref: '2026-11-06-Vendor-Contact'
+      });
     }
   }
 
-  if (!parsed.expenses.some(e => e.id === 'exp_challan_royal' || (e.amount === 224 && /Royal consultancy/i.test(e.note || '')))) {
-    parsed.expenses.unshift({
-      id: 'exp_challan_royal',
-      date: '2026-11-06',
-      payee: 'MP Government Portal (Gumasta Challan)',
-      amount: 224.00,
-      source: 'slice SFB',
-      category: 'Portal Filing & Challan',
-      note: 'Portal challan paid against Royal consultancy services gumasta application'
-    });
-  }
-
-  if (!parsed.expenses.some(e => e.id === 'exp_rzp_royal' || /Royal consultancy/i.test(e.note || ''))) {
-    parsed.expenses.push({
-      id: 'exp_rzp_royal',
-      date: '2026-11-04',
-      payee: 'Razorpay Payment Gateway',
-      amount: 18.18,
-      source: 'slice SFB',
-      category: 'Gateway / Merchant Fee',
-      note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application (Net credited ₹681.82)'
-    });
+  if (parsed.cashInHand === undefined) {
+    parsed.cashInHand = -6000.00;
   }
 
   return Object.assign({}, defaultFinLedger, parsed);
@@ -741,9 +753,12 @@ function openEditBalancesModal() {
   showModal('Update Cash & Bank Balances', `
     <div class="hint">Adjust your physical cash in hand and slice Small Finance Bank liquid funds.</div>
     <label>Cash in Hand Balance (₹)</label>
-    <input type="number" step="0.01" id="modalCashBal" value="${ledger.cashInHand !== undefined ? ledger.cashInHand : 4000.00}">
+    <input type="number" step="0.01" id="modalCashBal" value="${ledger.cashInHand !== undefined ? ledger.cashInHand : -6000.00}">
     <label>Bank Balance — slice SFB (₹)</label>
     <input type="number" step="0.01" id="modalBankBal" value="${ledger.bankSlice !== undefined ? ledger.bankSlice : 17216.83}">
+    <div style="font-size:12px; color:var(--muted); margin-top:4px;">
+      * Note: If you withdrew cash from your slice SFB ATM to pay the ₹10,000 cash to your Father-in-law, you can use the "+ ATM Cash Withdrawal" button to transfer from Bank to Cash.
+    </div>
   `, () => {
     const cashVal = parseFloat(document.getElementById('modalCashBal').value);
     const bankVal = parseFloat(document.getElementById('modalBankBal').value);
@@ -755,22 +770,54 @@ function openEditBalancesModal() {
   }, 'Update Balances', 'Cancel');
 }
 
+function openAtmCashWithdrawalModal() {
+  showModal('Contra Transfer: ATM Cash Withdrawal', `
+    <div class="hint">Transfer liquid funds from slice Small Finance Bank to Cash in Hand (Self ATM Withdrawal).</div>
+    <label>Withdrawal Amount (₹)</label>
+    <input type="number" step="0.01" id="atmWithdrawalAmt" value="10000" placeholder="10000">
+    <label>Date</label>
+    <input type="date" id="atmWithdrawalDate" value="${new Date().toISOString().slice(0, 10)}">
+  `, () => {
+    const amt = parseFloat(document.getElementById('atmWithdrawalAmt').value) || 0;
+    if (amt <= 0) return;
+    const ledger = getFinLedger();
+    ledger.bankSlice = Math.round(((ledger.bankSlice || 0) - amt) * 100) / 100;
+    ledger.cashInHand = Math.round(((ledger.cashInHand || 0) + amt) * 100) / 100;
+    ledger.adjustmentsLog.unshift({
+      date: document.getElementById('atmWithdrawalDate').value,
+      desc: `Self ATM Cash Withdrawal: ${inr(amt)} withdrawn from slice SFB to Cash in Hand`,
+      amount: amt
+    });
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Record Transfer', 'Cancel');
+}
+
 function openAddTripPaymentModal() {
   showModal('Add Payment / Expense to Kathiyawad Ziyarat Trip', `
-    <div class="hint">Record advance payments, tickets, accommodation, or tour operator disbursements.</div>
+    <div class="hint">Record advance payments, tickets, accommodation, or travel disbursements for the 3 families.</div>
+    <label>Family Allocated To</label>
+    <select id="tripPayFamily">
+      <option value="Father-in-law Family">Father-in-law Family</option>
+      <option value="Sister-in-law Family">Sister-in-law Family</option>
+      <option value="Mustansir Family (Mine)">Mustansir Family (Mine)</option>
+      <option value="Joint Pool">Joint Pool (Shared by all 3 families)</option>
+    </select>
     <label>Payment Description / Beneficiary</label>
-    <input type="text" id="tripPayDesc" placeholder="e.g. Tour Operator Installment, Train tickets, Hotel Booking">
+    <input type="text" id="tripPayDesc" placeholder="e.g. Cash given for expenses, Train tickets, Hotel booking">
     <label>Amount Paid (₹)</label>
     <input type="number" step="0.01" id="tripPayAmount" placeholder="Amount (₹)">
     <label>Payment Mode / Account Debited (Double-Entry Source)</label>
     <select id="tripPaySource">
-      <option value="slice SFB">slice Small Finance Bank (Instantly reduces Bank)</option>
       <option value="Cash">Cash in Hand (Instantly reduces Cash)</option>
+      <option value="slice SFB">slice Small Finance Bank (Instantly reduces Bank)</option>
       <option value="Direct / External">Direct / Other Account (No local cash/bank deduction)</option>
     </select>
-    <label>Reference / Transaction Note</label>
-    <input type="text" id="tripPayRef" placeholder="e.g. UPI Ref / Receipt # / Operator Mob">
+    <label>Reference / Note</label>
+    <input type="text" id="tripPayRef" placeholder="e.g. Cash given directly / UPI ref">
   `, () => {
+    const family = document.getElementById('tripPayFamily').value;
     const desc = document.getElementById('tripPayDesc').value.trim() || 'Trip Payment';
     const amt = parseFloat(document.getElementById('tripPayAmount').value) || 0;
     const source = document.getElementById('tripPaySource').value;
@@ -781,9 +828,10 @@ function openAddTripPaymentModal() {
     if (!ledger.kathiyawadTrip) ledger.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
     if (!ledger.kathiyawadTrip.payments) ledger.kathiyawadTrip.payments = [];
 
-    ledger.kathiyawadTrip.payments.push({
+    ledger.kathiyawadTrip.payments.unshift({
       id: 'kz_p_' + Date.now(),
       date: new Date().toISOString().slice(0, 10),
+      family: family,
       desc: desc,
       amount: amt,
       mode: source,
@@ -803,22 +851,29 @@ function openAddTripPaymentModal() {
 }
 
 function openAddTripContributionModal() {
-  showModal('Add Traveler Contribution / Inflow', `
-    <div class="hint">Record money received or pooled from family, fellow pilgrims, or trip members.</div>
+  showModal('Add Family Contribution / Inflow', `
+    <div class="hint">Record money pooled or contributed by Father-in-law, Sister-in-law, or your family.</div>
+    <label>Contributing Family</label>
+    <select id="tripContribFamily">
+      <option value="Father-in-law Family">Father-in-law Family</option>
+      <option value="Sister-in-law Family">Sister-in-law Family</option>
+      <option value="Mustansir Family (Mine)">Mustansir Family (Mine)</option>
+    </select>
     <label>Member / Contributor Name</label>
-    <input type="text" id="tripContribMember" placeholder="e.g. Self, Brother, Co-traveler">
+    <input type="text" id="tripContribMember" placeholder="e.g. Father-in-law, Sister-in-law, Self">
     <label>Amount Contributed / Received (₹)</label>
     <input type="number" step="0.01" id="tripContribAmount" placeholder="Amount (₹)">
     <label>Received Into (Account / Cash)</label>
     <select id="tripContribTarget">
-      <option value="slice SFB">slice Small Finance Bank (Instantly increases Bank Balance)</option>
       <option value="Cash">Cash in Hand (Instantly increases Cash)</option>
+      <option value="slice SFB">slice Small Finance Bank (Instantly increases Bank Balance)</option>
       <option value="Direct to Operator">Paid directly to Tour Operator (No local cash addition)</option>
     </select>
     <label>Note / Remarks</label>
-    <input type="text" id="tripContribNote" placeholder="e.g. Share for travel / Part advance">
+    <input type="text" id="tripContribNote" placeholder="e.g. Contribution for travel / Part advance">
   `, () => {
-    const member = document.getElementById('tripContribMember').value.trim() || 'Contributor';
+    const family = document.getElementById('tripContribFamily').value;
+    const member = document.getElementById('tripContribMember').value.trim() || family;
     const amt = parseFloat(document.getElementById('tripContribAmount').value) || 0;
     const target = document.getElementById('tripContribTarget').value;
     const note = document.getElementById('tripContribNote').value.trim() || 'Trip Contribution';
@@ -828,9 +883,10 @@ function openAddTripContributionModal() {
     if (!ledger.kathiyawadTrip) ledger.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
     if (!ledger.kathiyawadTrip.contributions) ledger.kathiyawadTrip.contributions = [];
 
-    ledger.kathiyawadTrip.contributions.push({
+    ledger.kathiyawadTrip.contributions.unshift({
       id: 'kz_c_' + Date.now(),
       date: new Date().toISOString().slice(0, 10),
+      family: family,
       member: member,
       amount: amt,
       mode: target,
@@ -947,12 +1003,21 @@ function recordManualExpense(payee, amount, category, note, paymentSource) {
 
   const source = paymentSource || 'slice SFB';
 
-  if (/ziyarat|kathiyawad|tour operator/i.test(category) || /ziyarat|kathiyawad/i.test(note)) {
+  if (/ziyarat|kathiyawad|tour operator|father-in-law/i.test(category) || /ziyarat|kathiyawad/i.test(note)) {
     if (!ledger.kathiyawadTrip) ledger.kathiyawadTrip = Object.assign({}, defaultFinLedger.kathiyawadTrip);
     if (!ledger.kathiyawadTrip.payments) ledger.kathiyawadTrip.payments = [];
-    ledger.kathiyawadTrip.payments.push({
+    
+    let fam = 'Joint Pool';
+    if (/father-in-law/i.test(payee) || /father-in-law/i.test(note) || /father-in-law/i.test(category)) {
+      fam = 'Father-in-law Family';
+    } else if (/sister-in-law/i.test(payee) || /sister-in-law/i.test(note)) {
+      fam = 'Sister-in-law Family';
+    }
+
+    ledger.kathiyawadTrip.payments.unshift({
       id: 'kz_p_' + Date.now(),
       date: new Date().toISOString().slice(0, 10),
+      family: fam,
       desc: note || ('Payment to ' + payee),
       amount: amt,
       mode: source,
@@ -1047,13 +1112,13 @@ function openAddExpenseModal() {
       }
     "></textarea>
     <label>Paid To (Person / Vendor / Description)</label>
-    <input type="text" id="expPayee" placeholder="e.g. Tour Operator, MP Treasury, Stationery, Tea & Refreshments">
+    <input type="text" id="expPayee" placeholder="e.g. Father-in-law, Tour Operator, MP Treasury, Stationery">
     <label>Amount Paid (₹)</label>
     <input type="number" step="0.01" id="expAmount" placeholder="Amount (₹)">
     <label>Classification / Ledger</label>
     <select id="expCategory">
       <option value="Office Expense">Office Operating Expense (Deducts from P&amp;L Profit)</option>
-      <option value="Kathiyawad Ziyarat Trip Advance">Kathiyawad Ziyarat Trip (Advance / Tour Operator)</option>
+      <option value="Kathiyawad Ziyarat Trip Advance">Kathiyawad Ziyarat Trip (Advance / Expenses)</option>
       <option value="Portal Filing & Challan">Government Portal / Challan Charges (Gumasta, GST, MCA)</option>
       <option value="Gateway / Merchant Fee">Payment Gateway / Merchant Charges (Razorpay etc.)</option>
       <option value="Loan Repayment - MHJ">Repayment to MHJ (Reduces ₹86k Loan Taken)</option>
@@ -1062,7 +1127,7 @@ function openAddExpenseModal() {
       <option value="Personal Drawings">Personal Drawings (Direct Owner Withdrawal)</option>
     </select>
     <label>Remarks / Notes</label>
-    <input type="text" id="expNote" placeholder="e.g. Paid online">
+    <input type="text" id="expNote" placeholder="e.g. Paid online or given in cash">
   `, () => {
     const payee = document.getElementById('expPayee').value.trim() || 'Paid';
     const amount = parseFloat(document.getElementById('expAmount').value) || 0;
@@ -1423,14 +1488,14 @@ const seedTasks = [
   },
   {
     id: 'cal_kathiyawad_ziyarat_trip',
-    name: 'Kathiyawad Ziyarat Trip (₹3,000 Advance Paid)',
+    name: 'Kathiyawad Ziyarat Trip (₹13,000 Total Advance Paid across 3 Families)',
     type: 'personal',
     cat: null,
     due: '',
-    dueDate: '2026-11-06T10:00:00.000Z',
+    dueDate: '2026-11-07T10:00:00.000Z',
     done: false,
     urgent: false,
-    remark: 'Advance ₹3,000 given to tour operator for Kathiyawad Ziyarat booking. Tracked in Financials.'
+    remark: '3 Families: Mine, Father-in-law Family, Sister-in-law Family. ₹10,000 cash given to Father-in-law + ₹3,000 operator advance. Tracked in Financials.'
   },
   {
     id: 'cal_royal_gumasta_settled',
@@ -1464,6 +1529,12 @@ async function loadTasks() {
   const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
   tasks = saved.concat(newFromSeed);
 
+  const tripTask = tasks.find(t => /Kathiyawad/i.test(t.name));
+  if (tripTask) {
+    tripTask.name = 'Kathiyawad Ziyarat Trip (₹13,000 Total Advance Paid across 3 Families)';
+    tripTask.remark = '3 Families: Mine, Father-in-law Family, Sister-in-law Family. ₹10,000 cash given to Father-in-law + ₹3,000 operator advance. Tracked in Financials.';
+  }
+
   const royalTask = tasks.find(t => /Royal consultancy/i.test(t.name) || /Royal consultancy/i.test(t.linked || ''));
   if (royalTask) {
     royalTask.payable = 700;
@@ -1471,10 +1542,6 @@ async function loadTasks() {
     royalTask.discount = 0;
     royalTask.done = true;
     royalTask.remark = 'Fee ₹700 settled via Razorpay (bank net ₹681.82, fee ₹18.18). Govt portal challan ₹224 paid. Net profit: ₹457.82';
-  }
-
-  if (!tasks.some(t => /Kathiyawad Ziyarat/i.test(t.name))) {
-    tasks.unshift(seedTasks[4]);
   }
 
   tasks = tasks.filter(t => !/Monthly Salary Receivable/i.test(t.name) && !/Salary Receivable - Hakimi Vihar/i.test(t.name));
@@ -1611,7 +1678,7 @@ function fireConfetti() {
 }
 
 // =========================================================================
-// COMPLETION TO FEE PROMPT LOGIC (UNCONDITIONAL & RELIABLE PROMPT)
+// COMPLETION TO FEE PROMPT LOGIC
 // =========================================================================
 function toggleTask(id) {
   const t = tasks.find(x => x.id === id);
@@ -2153,7 +2220,7 @@ function render(listOnly) {
           <div class="loan-pill-item"><b>Juzer Presswala:</b> <span class="red">₹1,07,690</span> (Adv Given)</div>
           <div class="loan-pill-item"><b>MHJ:</b> <span class="amber">₹86,000</span> (Loan Taken)</div>
           <div class="loan-pill-item"><b>Hatim Bhai:</b> <span class="amber">₹5,000</span> (Loan Taken)</div>
-          <div class="loan-pill-item"><b>Kathiyawad Ziyarat:</b> <span style="color:#0284C7; font-weight:700;">Trip Ledger</span></div>
+          <div class="loan-pill-item"><b>Kathiyawad Ziyarat:</b> <span style="color:#0284C7; font-weight:700;">₹13,000 Disbursed (3 Families)</span></div>
         </div>
         <button type="button" onclick="switchPage('financials')" style="background:none; border:0; color:var(--accent); font-weight:700; font-size:12px; cursor:pointer;">Financials Page &rarr;</button>
       </div>
@@ -2350,7 +2417,19 @@ function renderFinancialsPage() {
   const totalTripContributions = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
   const netTripOutflow = totalTripPayments - totalTripContributions;
 
-  const cashInHand = Number(ledger.cashInHand !== undefined ? ledger.cashInHand : 4000.00);
+  // Family breakdowns
+  const filPayments = tripPayments.filter(p => /father-in-law/i.test(p.family || '') || /father-in-law/i.test(p.desc || '')).reduce((s, p) => s + p.amount, 0);
+  const filContrib = tripContributions.filter(c => /father-in-law/i.test(c.family || '') || /father-in-law/i.test(c.member || '')).reduce((s, c) => s + c.amount, 0);
+
+  const silPayments = tripPayments.filter(p => /sister-in-law/i.test(p.family || '') || /sister-in-law/i.test(p.desc || '')).reduce((s, p) => s + p.amount, 0);
+  const silContrib = tripContributions.filter(c => /sister-in-law/i.test(c.family || '') || /sister-in-law/i.test(c.member || '')).reduce((s, c) => s + c.amount, 0);
+
+  const minePayments = tripPayments.filter(p => /mustansir|mine/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
+  const mineContrib = tripContributions.filter(c => /mustansir|mine|self/i.test(c.family || '') || /self/i.test(c.member || '')).reduce((s, c) => s + c.amount, 0);
+
+  const sharedJoint = tripPayments.filter(p => /joint/i.test(p.family || '') || (!/father-in-law/i.test(p.family || '') && !/sister-in-law/i.test(p.family || '') && !/mustansir|mine/i.test(p.family || '') && !/father-in-law/i.test(p.desc || ''))).reduce((s, p) => s + p.amount, 0);
+
+  const cashInHand = Number(ledger.cashInHand !== undefined ? ledger.cashInHand : -6000.00);
   const bankSlice = Number(ledger.bankSlice !== undefined ? ledger.bankSlice : 17216.83);
   const totalLiquidCashBank = cashInHand + bankSlice;
 
@@ -2358,7 +2437,6 @@ function renderFinancialsPage() {
   const totalAssets = juzerNet + netDebtorsDue + totalLiquidCashBank + effectiveTripAsset;
   const totalLiabilities = totalLoansTaken;
 
-  // Strict Balanced Double-Entry Capital Equation
   const initialOpeningCapital = totalAssets - totalLiabilities - netProfit;
   const effectiveCapital = initialOpeningCapital + netProfit;
 
@@ -2368,26 +2446,27 @@ function renderFinancialsPage() {
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
       <div class="fin-mode-toggle">
         <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Suite</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')" style="color:#0369A1; font-weight:700;">🕌 Kathiyawad Ziyarat Trip</button>
+        <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')" style="color:#0369A1; font-weight:700;">🕌 Kathiyawad Ziyarat Trip (3 Families)</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet &amp; Capital</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses &amp; Outflows</button>
         <button type="button" class="fin-mode-btn ${finViewMode === 'adjust' ? 'active' : ''}" onclick="setFinViewMode('adjust')">⚖️ Adjust Contra</button>
       </div>
-      <div style="display:flex; gap:6px;">
-        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Update Cash &amp; Bank</button>
-        <button type="button" class="btn btn-primary" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddTripPaymentModal()">+ Record Trip Payment</button>
-        <button type="button" class="btn btn-wa" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddTripContributionModal()">+ Add Contribution</button>
-        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="window.print()">Print</button>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash Withdrawal</button>
+        <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+        <button type="button" class="btn btn-primary" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAddTripPaymentModal()">+ Trip Payment</button>
+        <button type="button" class="btn btn-wa" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAddTripContributionModal()">+ Contribution</button>
       </div>
     </div>
 
     <!-- Liquid Cash & Bank Position Strip -->
-    <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid var(--green); border-radius:10px; padding:10px 14px; margin-bottom:14px; box-shadow:var(--shadow-xs); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-left:4px solid ${cashInHand >= 0 ? 'var(--green)' : 'var(--amber)'}; border-radius:10px; padding:10px 14px; margin-bottom:14px; box-shadow:var(--shadow-xs); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
       <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
         <div>
           <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">Cash in Hand</span>
-          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--green);">${inr(cashInHand)}</div>
+          <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div>
+          ${cashInHand < 0 ? '<div style="font-size:10.5px; color:var(--muted);">Paid ₹10k to Father-in-law (tap +ATM to replenish)</div>' : ''}
         </div>
         <div style="border-left:1px solid var(--rule); padding-left:16px;">
           <span style="font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:0.04em;">slice Small Finance Bank</span>
@@ -2399,7 +2478,7 @@ function renderFinancialsPage() {
         </div>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
-        <span style="font-size:11px; color:var(--muted); background:#F1F5F9; padding:3px 8px; border-radius:6px; font-weight:600;">Double-Entry Live</span>
+        <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + Cash from Bank (ATM)</button>
         <button type="button" onclick="openEditBalancesModal()" style="background:#F8FAFC; border:1px solid var(--rule); border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:600; color:var(--muted); cursor:pointer;">Edit Balances</button>
       </div>
     </div>
@@ -2411,9 +2490,9 @@ function renderFinancialsPage() {
         <div class="f-sub">Capital + Auto-Transferred Profit (${inr(netProfit)})</div>
       </div>
       <div class="fin-card">
-        <div class="f-lbl">Kathiyawad Ziyarat Net Outflow</div>
+        <div class="f-lbl">Kathiyawad Ziyarat Net Advance</div>
         <div class="f-val" style="color:#0284C7;">${inr(netTripOutflow)}</div>
-        <div class="f-sub">Paid ${inr(totalTripPayments)} &minus; Contrib ${inr(totalTripContributions)}</div>
+        <div class="f-sub">3 Families &bull; Disbursed ${inr(totalTripPayments)}</div>
       </div>
       <div class="fin-card">
         <div class="f-lbl">Loans &amp; Advances (Asset)</div>
@@ -2428,14 +2507,14 @@ function renderFinancialsPage() {
     </div>
   `;
 
-  // === DEDICATED KATHIYAWAD ZIYARAT TRIP STATEMENT WITH CONTRIBUTIONS ===
+  // === DEDICATED KATHIYAWAD ZIYARAT TRIP STATEMENT WITH 3 FAMILIES ===
   if (finViewMode === 'all' || finViewMode === 'trip') {
     html += `
       <div class="statement-sheet" style="border-left:4px solid #0284C7; margin-bottom:20px;">
         <div class="statement-header" style="background:linear-gradient(135deg, #0369A1 0%, #0284C7 100%);">
           <div>
-            <h3>🕌 Kathiyawad Ziyarat Trip — Travel, Payments &amp; Contributions Ledger</h3>
-            <div style="font-size:11.5px; color:#E0F2FE;">Tour Operator Advances, Pilgrim Contributions &amp; Pooled Expenses &bull; November 2026</div>
+            <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Travel &amp; Accounts Ledger</h3>
+            <div style="font-size:11.5px; color:#E0F2FE;">1. Mine &bull; 2. Father-in-law Family &bull; 3. Sister-in-law Family &bull; November 2026</div>
           </div>
           <div style="display:flex; gap:6px;">
             <button type="button" class="btn btn-quiet" style="height:32px; font-size:12px;" onclick="openAddTripPaymentModal()">+ Record Payment</button>
@@ -2443,49 +2522,92 @@ function renderFinancialsPage() {
           </div>
         </div>
         <div class="statement-body">
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom:18px;">
-            <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 14px;">
-              <span style="font-size:11px; font-weight:700; color:#0369A1; text-transform:uppercase;">Total Payments &amp; Advances</span>
-              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:#0369A1; margin:2px 0;">${inr(totalTripPayments)}</div>
-              <div style="font-size:11px; color:#0284C7;">Paid to tour operator &amp; travel vendors</div>
+          
+          <!-- 3 Families Group Dashboard Cards -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:16px;">
+            <div style="background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#0369A1; text-transform:uppercase;">1. Mustansir Family (Mine)</span>
+                <span style="font-size:10px; background:#BAE6FD; color:#0369A1; font-weight:700; padding:1px 6px; border-radius:4px;">1 Share</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#0369A1; margin:4px 0 2px;">Paid: ${inr(minePayments)}</div>
+              <div style="font-size:11px; color:#0284C7;">Contributed: ${inr(mineContrib)}</div>
             </div>
-            <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:8px; padding:10px 14px;">
-              <span style="font-size:11px; font-weight:700; color:var(--green); text-transform:uppercase;">Total Member Contributions</span>
-              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--green); margin:2px 0;">${inr(totalTripContributions)}</div>
-              <div style="font-size:11px; color:#047857;">Received from co-travelers / pilgrims</div>
+
+            <div style="background:#FFFBEB; border:1.5px solid #FDE68A; border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#B45309; text-transform:uppercase;">2. Father-in-law Family</span>
+                <span style="font-size:10px; background:#FDE68A; color:#B45309; font-weight:700; padding:1px 6px; border-radius:4px;">1 Share</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#B45309; margin:4px 0 2px;">Cash Given: ${inr(filPayments)}</div>
+              <div style="font-size:11px; color:#92400E;">₹10,000 cash given on 07-Nov-2026</div>
             </div>
-            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:8px; padding:10px 14px;">
-              <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Net Out-of-Pocket Outflow</span>
-              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:${netTripOutflow >= 0 ? '#1E3A8A' : 'var(--green)'}; margin:2px 0;">${inr(netTripOutflow)}</div>
-              <div style="font-size:11px; color:var(--muted);">${netTripOutflow >= 0 ? 'Prepaid balance carried as trip asset' : 'Surplus funds collected'}</div>
+
+            <div style="background:#FDF2F8; border:1.5px solid #FBCFE8; border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:#9D174D; text-transform:uppercase;">3. Sister-in-law Family</span>
+                <span style="font-size:10px; background:#FBCFE8; color:#9D174D; font-weight:700; padding:1px 6px; border-radius:4px;">1 Share</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#9D174D; margin:4px 0 2px;">Paid: ${inr(silPayments)}</div>
+              <div style="font-size:11px; color:#9D174D;">Contributed: ${inr(silContrib)}</div>
+            </div>
+
+            <div style="background:#F8FAFC; border:1.5px solid var(--rule); border-radius:10px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Joint Tour Pool</span>
+                <span style="font-size:10px; background:#E2E8F0; color:var(--ink); font-weight:700; padding:1px 6px; border-radius:4px;">All 3</span>
+              </div>
+              <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:var(--ink); margin:4px 0 2px;">Advance: ${inr(sharedJoint)}</div>
+              <div style="font-size:11px; color:var(--muted);">Advance to tour operator</div>
             </div>
           </div>
 
-          <!-- Section 1: Payments & Outflows Table -->
+          <!-- Summary Metric Ribbon -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:16px;">
+            <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 12px;">
+              <span style="font-size:11px; font-weight:700; color:#0369A1; text-transform:uppercase;">Total Disbursements Paid Out</span>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:#0369A1; margin:2px 0;">${inr(totalTripPayments)}</div>
+              <div style="font-size:11px; color:#0284C7;">₹10k cash to Father-in-law + ₹3k tour operator</div>
+            </div>
+            <div style="background:#ECFDF5; border:1px solid #A7F3D0; border-radius:8px; padding:10px 12px;">
+              <span style="font-size:11px; font-weight:700; color:var(--green); text-transform:uppercase;">Total Contributions Inflow</span>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:var(--green); margin:2px 0;">${inr(totalTripContributions)}</div>
+              <div style="font-size:11px; color:#047857;">Pooled from families</div>
+            </div>
+            <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:8px; padding:10px 12px;">
+              <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Net Prepaid Asset (Balance Sheet)</span>
+              <div style="font-family:var(--serif); font-size:22px; font-weight:700; color:#1E3A8A; margin:2px 0;">${inr(netTripOutflow)}</div>
+              <div style="font-size:11px; color:var(--muted);">Carried as Current Asset</div>
+            </div>
+          </div>
+
+          <!-- Section 1: Payments & Advances Paid Out -->
           <div style="margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-weight:700; font-size:14px; color:#0369A1;">1. Payments &amp; Advances Paid Out</span>
+              <span style="font-weight:700; font-size:13.5px; color:#0369A1;">1. Payments &amp; Cash Disbursements Paid Out</span>
               <button type="button" class="act" onclick="openAddTripPaymentModal()">+ Add Payment</button>
             </div>
             <table class="stmt-table">
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Particulars &amp; Vendor</th>
-                  <th>Mode / Account Debited</th>
+                  <th>Family / Target</th>
+                  <th>Particulars &amp; Details</th>
+                  <th>Payment Source</th>
                   <th>Reference</th>
                   <th class="text-right">Amount (₹)</th>
-                  <th style="width:48px; text-align:center;">Action</th>
+                  <th style="width:40px; text-align:center;">Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${tripPayments.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:14px;">No payments recorded yet.</td></tr>` : ''}
+                ${tripPayments.length === 0 ? `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:14px;">No payments recorded yet.</td></tr>` : ''}
                 ${tripPayments.map(p => `
                   <tr>
                     <td>${p.date}</td>
+                    <td><span style="font-size:11px; font-weight:700; padding:2px 6px; background:#E0F2FE; color:#0369A1; border-radius:4px;">${escapeForHtml(p.family || 'Joint Pool')}</span></td>
                     <td><strong>${escapeForHtml(p.desc)}</strong></td>
-                    <td><span style="font-size:11px; padding:2px 6px; background:#F1F5F9; border-radius:4px; font-weight:600;">${escapeForHtml(p.mode)}</span></td>
-                    <td style="color:var(--muted); font-size:12px;">${escapeForHtml(p.ref || '-')}</td>
+                    <td><span style="font-size:11px; padding:2px 6px; background:${p.mode === 'Cash' ? '#ECFDF5; color:var(--green); font-weight:700;' : '#F1F5F9; color:#1E3A8A;'}; border-radius:4px;">${escapeForHtml(p.mode)}</span></td>
+                    <td style="color:var(--muted); font-size:11.5px;">${escapeForHtml(p.ref || '-')}</td>
                     <td class="text-right stmt-mono" style="color:#0369A1; font-weight:700;">${inr(p.amount)}</td>
                     <td style="text-align:center;">
                       <button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')" title="Delete payment entry" aria-label="Delete entry">${ICON.x}</button>
@@ -2493,7 +2615,7 @@ function renderFinancialsPage() {
                   </tr>
                 `).join('')}
                 <tr style="font-weight:700; background:#F0F9FF;">
-                  <td colspan="4">Total Trip Payments Disbursed</td>
+                  <td colspan="5">Total Trip Disbursements Discharged</td>
                   <td class="text-right stmt-mono" style="color:#0369A1; font-size:14px;">${inr(totalTripPayments)}</td>
                   <td></td>
                 </tr>
@@ -2501,31 +2623,33 @@ function renderFinancialsPage() {
             </table>
           </div>
 
-          <!-- Section 2: Contributions & Inflows Table -->
+          <!-- Section 2: Contributions Inflows -->
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-weight:700; font-size:14px; color:var(--green);">2. Traveler Contributions &amp; Pooled Inflows</span>
+              <span style="font-weight:700; font-size:13.5px; color:var(--green);">2. Family Contributions &amp; Pooled Inflows</span>
               <button type="button" class="act wa" onclick="openAddTripContributionModal()">+ Add Contribution</button>
             </div>
             <table class="stmt-table">
               <thead>
                 <tr>
                   <th>Date</th>
+                  <th>Family</th>
                   <th>Member / Contributor</th>
                   <th>Received In</th>
                   <th>Notes</th>
                   <th class="text-right">Amount (₹)</th>
-                  <th style="width:48px; text-align:center;">Action</th>
+                  <th style="width:40px; text-align:center;">Action</th>
                 </tr>
               </thead>
               <tbody>
-                ${tripContributions.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:14px;">No member contributions recorded yet. Tap "+ Add Contribution" above to log received funds.</td></tr>` : ''}
+                ${tripContributions.length === 0 ? `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:14px;">No member contributions recorded yet. Tap "+ Add Contribution" above when funds are pooled.</td></tr>` : ''}
                 ${tripContributions.map(c => `
                   <tr>
                     <td>${c.date}</td>
+                    <td><span style="font-size:11px; font-weight:600; padding:2px 6px; background:#ECFDF5; color:var(--green); border-radius:4px;">${escapeForHtml(c.family || 'Family')}</span></td>
                     <td><strong style="color:var(--green);">${escapeForHtml(c.member)}</strong></td>
-                    <td><span style="font-size:11px; padding:2px 6px; background:#ECFDF5; border:1px solid #A7F3D0; border-radius:4px; color:var(--green); font-weight:600;">${escapeForHtml(c.mode)}</span></td>
-                    <td style="color:var(--muted); font-size:12px;">${escapeForHtml(c.note || '-')}</td>
+                    <td><span style="font-size:11px; padding:2px 6px; background:#ECFDF5; border-radius:4px; font-weight:600;">${escapeForHtml(c.mode)}</span></td>
+                    <td style="color:var(--muted); font-size:11.5px;">${escapeForHtml(c.note || '-')}</td>
                     <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">+ ${inr(c.amount)}</td>
                     <td style="text-align:center;">
                       <button type="button" class="act del" onclick="deleteTripEntry('contribution', '${c.id}')" title="Delete contribution entry" aria-label="Delete entry">${ICON.x}</button>
@@ -2534,7 +2658,7 @@ function renderFinancialsPage() {
                 `).join('')}
                 ${tripContributions.length > 0 ? `
                   <tr style="font-weight:700; background:#ECFDF5;">
-                    <td colspan="4">Total Contributions Received</td>
+                    <td colspan="5">Total Contributions Received</td>
                     <td class="text-right stmt-mono" style="color:var(--green); font-size:14px;">+ ${inr(totalTripContributions)}</td>
                     <td></td>
                   </tr>
@@ -2604,14 +2728,14 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === BALANCE SHEET STATEMENT WITH AUTO-TRANSFERRED PROFIT ===
+  // === BALANCE SHEET STATEMENT ===
   if (finViewMode === 'all' || finViewMode === 'bs') {
     html += `
       <div class="statement-sheet">
         <div class="statement-header" style="background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%);">
           <div>
             <h3>Balance Sheet Statement (With Auto-Transferred Profit)</h3>
-            <div style="font-size:11.5px; color:#94A3B8;">Position of Assets, Liabilities &amp; Owner's Capital &bull; As at 06-Nov-2026</div>
+            <div style="font-size:11.5px; color:#94A3B8;">Position of Assets, Liabilities &amp; Owner's Capital &bull; As at 07-Nov-2026</div>
           </div>
           <span style="font-size:12px; font-weight:600; color:#F8FAFC;">Total: ${inr(totalAssets)}</span>
         </div>
@@ -2681,7 +2805,7 @@ function renderFinancialsPage() {
                   <tr style="background:#F0F9FF;">
                     <td style="color:#0369A1; font-weight:600;">
                       Kathiyawad Ziyarat Trip Net Advance / Asset
-                      <div style="font-size:11px; color:#0284C7; font-weight:400;">Payments (${inr(totalTripPayments)}) &minus; Contributions (${inr(totalTripContributions)})</div>
+                      <div style="font-size:11px; color:#0284C7; font-weight:400;">3 Families &bull; Disbursed (${inr(totalTripPayments)}) &minus; Received (${inr(totalTripContributions)})</div>
                     </td>
                     <td class="text-right stmt-mono" style="color:#0369A1; font-weight:700;">${inr(effectiveTripAsset)}</td>
                   </tr>
@@ -2689,7 +2813,7 @@ function renderFinancialsPage() {
                   <tr style="background:#F8FAFC; font-weight:700;"><td colspan="2" style="color:var(--green); padding-top:12px;">II. LIQUID CASH &amp; BANK BALANCES</td></tr>
                   <tr>
                     <td>Cash in Hand (Physical Vault)</td>
-                    <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">${inr(cashInHand)}</td>
+                    <td class="text-right stmt-mono" style="color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'}; font-weight:700;">${inr(cashInHand)}</td>
                   </tr>
                   <tr>
                     <td>slice Small Finance Bank (A/c: 033311501064738)</td>
@@ -2712,14 +2836,14 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === EXPENSES & OUTFLOWS SCHEDULE WITH SECOND EFFECT AUDIT ===
+  // === EXPENSES & OUTFLOWS SCHEDULE ===
   if (finViewMode === 'all' || finViewMode === 'expenses') {
     html += `
       <div class="statement-sheet">
         <div class="statement-header" style="background:linear-gradient(135deg, #334155 0%, #1E293B 100%);">
           <div>
             <h3>Expenses &amp; Outflows Ledger (2-Way Double Entry)</h3>
-            <div style="font-size:11.5px; color:#94A3B8;">Automatic bank debit sync, cash payments, portal filing challans &amp; operating costs</div>
+            <div style="font-size:11.5px; color:#94A3B8;">Bank debit SMS parser, cash payments, portal filing challans &amp; operating costs</div>
           </div>
           <button type="button" class="btn btn-quiet" style="height:32px; font-size:12px;" onclick="openAddExpenseModal()">+ Record / Parse Expense</button>
         </div>
