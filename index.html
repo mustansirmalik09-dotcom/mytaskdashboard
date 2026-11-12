@@ -23,44 +23,44 @@
 --field: #CBD5E1;
 --rule: #E2E8F0;
 --rule-soft: #F1F5F9;
---accent: #1E3A8A;
+​--accent: #1E3A8A;
 --accent-hover: #1D4ED8;
 --accent-soft: #EFF6FF;
 --accent-border: #BFDBFE;
---red: #BE123C;
+​--red: #BE123C;
 --red-soft: #FFF1F2;
 --red-border: #FECDD3;
---green: #047857;
+​--green: #047857;
 --green-soft: #ECFDF5;
 --green-border: #A7F3D0;
---amber: #B45309;
+​--amber: #B45309;
 --amber-soft: #FFFBEB;
 --amber-border: #FDE68A;
---c-mhj: #2563EB;
+​--c-mhj: #2563EB;
 --c-shk: #6D28D9;
 --c-own: #0F766E;
 --c-personal: #BE185D;
 --c-fees: #D97706;
---serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+​--serif: 'Newsreader', Georgia, 'Times New Roman', serif;
 --sans: 'Plus Jakarta Sans', 'Public Sans', system-ui, -apple-system, sans-serif;
---shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+​--shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
 --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
 --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
 --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
 --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
 }
-{ box-sizing: border-box; }
+​{ box-sizing: border-box; }
 html { background: var(--bg); overflow-x: hidden; width: 100%; max-width: 100vw; -webkit-text-size-adjust: 100%; }
-body {
+​body {
 font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--ink);
 background: var(--bg); margin: 0 auto; max-width: 1120px; padding: 14px 10px 72px;
 overflow-x: hidden; width: 100%; -webkit-font-smoothing: antialiased;
 }
-button, input, select { font-family: var(--sans); }
+​button, input, select { font-family: var(--sans); }
 button, [role=button] { -webkit-tap-highlight-color: transparent; }
 :where(button, input, select, a, [role=button]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-/* Masthead */
+​/* Masthead */
 .masthead {
 display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
 gap: 10px; margin-bottom: 14px; padding: 14px 16px;
@@ -78,7 +78,7 @@ box-shadow: 0 2px 5px rgba(15, 23, 42, 0.15);
 h1 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.15; margin: 0; color: var(--ink); }
 .sub { color: var(--muted); font-size: 12px; font-weight: 500; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
 .sub-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted-light); }
-.masthead .status { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); flex-wrap: wrap; }
+​.masthead .status { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); flex-wrap: wrap; }
 .sync-badge {
 display: inline-flex; align-items: center; gap: 6px;
 background: #F8FAFC; border: 1px solid var(--rule); border-radius: 999px;
@@ -91,7 +91,7 @@ background: transparent; border: 1px solid var(--rule); border-radius: 6px;
 padding: 4px 8px; font: 600 11px var(--sans); color: var(--muted); cursor: pointer;
 }
 #syncNowBtn { color: var(--accent); border-color: var(--accent-border); background: var(--accent-soft); }
-/* Summary Sheet */
+​/* Summary Sheet */
 .summary-sheet {
 background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px;
 margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow-sm);
@@ -102,7 +102,7 @@ margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow-sm);
 .hero-card .l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 2px; }
 .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
 .hero-card.alert .n { color: var(--red); }
-.totals { border-top: 1px solid var(--rule-soft); padding: 6px 0 4px; background: #FAFCFE; }
+​.totals { border-top: 1px solid var(--rule-soft); padding: 6px 0 4px; background: #FAFCFE; }
 .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 4px 14px; }
 .totals .l { font-size: 12.5px; font-weight: 500; color: var(--muted); }
 .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; color: var(--ink); }
@@ -110,7 +110,7 @@ margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow-sm);
 .totals > .tot.sum { margin: 4px 14px 0; padding: 6px 0 4px; border-top: 1px dashed var(--rule); }
 .totals .fig.out { color: var(--red); font-size: 18px; border-bottom: 2px solid var(--red); }
 .totals .fig.out.clear { color: var(--green); border-bottom-color: var(--green); }
-/* Search & Inputs */
+​/* Search & Inputs */
 #searchRow { margin: 0 0 10px; }
 #searchWrap { position: relative; }
 #searchWrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 16px; height: 16px; }
@@ -119,7 +119,7 @@ width: 100%; height: 42px; background: #FFFFFF; border: 1px solid var(--field); 
 padding: 0 36px 0 36px; border-radius: 10px; font: 400 13.5px var(--sans); box-shadow: var(--shadow-xs);
 }
 #searchClear { display: none; position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
-.add-box { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+​.add-box { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
 .add-box input, .add-box select {
 height: 40px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
 padding: 0 10px; border-radius: 8px; font: 400 13px var(--sans); max-width: 100%; min-width: 0;
@@ -130,7 +130,7 @@ padding: 0 10px; border-radius: 8px; font: 400 13px var(--sans); max-width: 100%
 height: 40px; padding: 0 18px; background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
 color: #FFFFFF; border: 0; border-radius: 8px; font: 600 13px var(--sans); cursor: pointer;
 }
-/* Tasks List */
+​/* Tasks List */
 .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
 .task {
 display: flex; align-items: flex-start; gap: 8px; padding: 11px 12px 10px;
@@ -159,7 +159,7 @@ background: var(--amber-soft); border: 1px solid var(--amber-border); color: #92
 .act.wa { color: var(--green); }
 .act.del { flex: none; justify-content: center; width: 26px; height: 26px; color: var(--icon); border: 0; background: none; }
 .act.del:hover { color: var(--red); }
-/* Page Nav */
+​/* Page Nav */
 .page-nav {
 display: flex; gap: 6px; margin: 0 0 14px; padding: 3px;
 background: #EEF2F6; border: 1px solid var(--rule); border-radius: 12px; width: 100%;
@@ -172,7 +172,7 @@ color: var(--muted); font: 600 12.5px var(--sans); cursor: pointer;
 .page-nav-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
 .page-nav-btn .nav-badge { background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
 .page-nav-btn.active .nav-badge { background: var(--accent); color: #FFFFFF; }
-/* Financials Page & Mobile Responsive Tables */
+​/* Financials Page & Mobile Responsive Tables */
 #financialsView { display: none; width: 100%; max-width: 100%; }
 .fin-mode-toggle {
 display: flex; gap: 3px; padding: 3px; background: #EEF2F6; border: 1px solid var(--rule);
@@ -184,12 +184,12 @@ flex: 0 0 auto; border: 0; background: transparent; padding: 6px 10px; border-ra
 font: 600 11.5px var(--sans); color: var(--muted); cursor: pointer; white-space: nowrap;
 }
 .fin-mode-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
-.fin-hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; width: 100%; }
+​.fin-hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; width: 100%; }
 .fin-card { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow-xs); }
 .fin-card .f-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .fin-card .f-val { font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 1px; }
 .fin-card .f-sub { font-size: 10.5px; color: var(--muted); }
-.statement-sheet {
+​.statement-sheet {
 background: #FFFFFF; border: 1px solid var(--rule); border-radius: 12px;
 box-shadow: var(--shadow-sm); margin-bottom: 16px; overflow: hidden; width: 100%;
 }
@@ -199,7 +199,7 @@ padding: 14px 14px; display: flex; justify-content: space-between; align-items: 
 }
 .statement-header h3 { font-family: var(--serif); font-size: 16px; font-weight: 600; margin: 0; }
 .statement-body { padding: 12px 10px; width: 100%; }
-.table-responsive {
+​.table-responsive {
 width: 100%;
 overflow-x: auto;
 -webkit-overflow-scrolling: touch;
@@ -225,7 +225,7 @@ overflow-wrap: break-word; word-break: break-word;
 }
 .stmt-table tr:last-child td { border-bottom: 0; }
 .stmt-mono { font-family: var(--serif); font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-/* Modal */
+​/* Modal */
 #modalOverlay {
 position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
 z-index: 1000; align-items: center; justify-content: center; padding: 12px;
@@ -249,7 +249,7 @@ border: 1px solid var(--field); border-radius: 8px; font: 400 13.5px var(--sans)
 .btn-quiet { background: #FFFFFF; color: #334155; border-color: var(--field); }
 .btn-danger { background: #BE123C; color: #fff; }
 .receipt-preview { white-space: pre-wrap; word-break: break-word; background: var(--green-soft); border: 1px solid var(--green-border); border-radius: 8px; padding: 10px; font-size: 12px; max-height: 220px; overflow-y: auto; }
-/* Auth Gate */
+​/* Auth Gate */
 #authGate {
 position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px;
 background: radial-gradient(circle at 50% 35%, #1E293B 0%, #0F172A 100%);
@@ -262,7 +262,7 @@ border-radius: 16px; padding: 28px 20px; backdrop-filter: blur(12px);
 .auth-crest { width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 10px; background: linear-gradient(135deg, #1E3A8A, #2563EB); color: #fff; display: grid; place-content: center; font-family: var(--serif); font-size: 19px; }
 .auth-title { font-family: var(--serif); font-weight: 600; font-size: 22px; color: #FFFFFF; }
 #authInput { width: 100%; height: 44px; margin: 16px 0 10px; padding: 0 14px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; text-align: center; font-size: 15px; }
-@media (min-width: 720px) {
+​@media (min-width: 720px) {
 body { padding: 24px 24px 80px; }
 h1 { font-size: 28px; }
 .hero-stats { grid-template-columns: repeat(4, 1fr); }
@@ -274,7 +274,7 @@ h1 { font-size: 28px; }
 </style>
 </head>
 <body>
-<header class="masthead">
+​<header class="masthead">
 <div class="masthead-brand">
 <div class="masthead-crest">MM</div>
 <div>
@@ -288,7 +288,7 @@ h1 { font-size: 28px; }
 <button id="resetBtn" type="button" onclick="resetData()" title="Reload data">Reset</button>
 </div>
 </header>
-<nav class="page-nav" role="tablist">
+​<nav class="page-nav" role="tablist">
 <button type="button" id="tabTasks" class="page-nav-btn active" onclick="switchPage('tasks')">
 <svg class="ic" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 <span>Tasks</span>
@@ -299,7 +299,7 @@ h1 { font-size: 28px; }
 <span class="nav-badge" id="finBadge">₹1.07L</span>
 </button>
 </nav>
-<div id="modalOverlay" style="display:none;">
+​<div id="modalOverlay" style="display:none;">
 <div class="modal" role="dialog" aria-labelledby="modalTitle">
 <div id="modalTitle"></div>
 <div id="modalFields"></div>
@@ -309,9 +309,9 @@ h1 { font-size: 28px; }
 </div>
 </div>
 </div>
-<div id="tasksView">
+​<div id="tasksView">
 <div id="summaryArea"></div>
-<div id="searchRow">
+​<div id="searchRow">
 <div id="searchWrap">
 <svg class="ic ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
 <input type="text" id="searchBox" placeholder="Search tasks, clients, amounts…" autocomplete="off" oninput="onSearch(this.value)">
@@ -319,7 +319,7 @@ h1 { font-size: 28px; }
 </div>
 <div id="searchInfo"></div>
 </div>
-<div class="add-box">
+​<div class="add-box">
 <select id="newCat" onchange="onCategoryChange()">
 <option value="PERSONAL">Personal</option>
 <option value="OWN">Professional — OWN</option>
@@ -338,15 +338,1117 @@ h1 { font-size: 28px; }
 <input type="text" id="feeLinked" placeholder="Linked client name" style="flex:1.5;">
 <input type="tel" id="feePhone" placeholder="Client phone" style="flex:1.5;">
 </div>
-<div id="app">
+​<div id="app">
 <div class="loading" style="text-align:center; padding:30px; color:var(--muted);">Loading tasks...</div>
 </div>
 </div>
-<div id="financialsView"></div>
-<div id="authGate">
+​<div id="financialsView"></div>
+​<div id="authGate">
 <div class="auth-card">
 <div class="auth-crest">MM</div>
 <div class="auth-title">Mustannsirr Mallik</div>
 <div style="font-size:12px; color:#94A3B8; margin-top:3px;">Tax & Accounts Consultant • Indore</div>
 <input type="password" id="authInput" placeholder="Enter password" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
-<b
+<button type="button" class="btn btn-primary" style="width:100%; height:42px;" onclick="checkAuth()">Unlock Dashboard</button>
+<div id="authError" style="display:none; color:#FB7185; margin-top:10px; font-size:12.5px; font-weight:600;">Incorrect password</div>
+</div>
+</div>
+​<button type="button" id="toTop" style="display:none; position:fixed; bottom:20px; right:20px; width:40px; height:40px; border-radius:50%; background:#0F172A; color:#fff; border:0; cursor:pointer;" onclick="scrollToTop()">↑</button>
+​<script>
+var tasks = [];
+var filter = 'all';
+var activePage = 'tasks';
+var finViewMode = 'all';
+var isFamilyPublicView = false;
+var cloudBackendReady = false;
+​const STORAGE_KEY = 'tasks-v2';
+const FIN_LEDGER_KEY = 'mm_fin_ledger_v3';
+const WEBHOOK_KEY = 'webhookUrl';
+const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLydQae2ORcc_AL9_UM-2km5hQYUMR0y1grw24D42SQB6RGrUnEo68NZCg/exec';
+​const ICON = {
+chat: '<svg class="ic" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
+doc: '<svg class="ic" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
+note: '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+wallet: '<svg class="ic" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>',
+x: '<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+chev: '<svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>'
+};
+​function inr(n) {
+const v = Math.round((Number(n) || 0) * 100) / 100;
+return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
+}
+​function getWebhook() {
+return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
+}
+​function updateSyncBadge(statusText, isWarning) {
+const el = document.getElementById('lastSync');
+const dot = document.getElementById('syncDot');
+if (el) el.textContent = statusText;
+if (dot) {
+if (isWarning) dot.classList.add('warn');
+else dot.classList.remove('warn');
+}
+}
+​// Master Double-Entry Ledger Baseline
+function getDefaultFinLedger() {
+return {
+updatedAt: 1730900000000,
+deletedIds: [],
+openingCapital: 111000.00,
+cashInHand: -6000.00, // ₹4,000 opening less ₹10,000 cash given to Father-in-law
+bankSlice: 17216.83,
+loansGiven: {
+juzer: {
+name: 'Juzer Presswala',
+phone: '7869282535',
+address: 'Shivalaya',
+base: 107690,
+adjustments: 0
+}
+},
+loansTaken: {
+mhj: {
+name: 'MHJ (Mufazzal Husain Johar)',
+phone: '9425054543',
+base: 86000,
+adjustments: 0
+},
+hatim: {
+name: 'Hatim Bhai (Advocate)',
+phone: '9826768052',
+base: 5000,
+adjustments: 0
+}
+},
+kathiyawadTrip: {
+title: 'Kathiyawad Ziyarat Trip',
+families: [
+{ id: 'fam_mine', name: 'Mustannsirr Family (Mine)', members: 'Self & Family', shareRatio: 1 },
+{ id: 'fam_fil', name: 'Father-in-law Family', members: 'Father-in-law & Family', shareRatio: 1 },
+{ id: 'fam_sil', name: 'Sister-in-law Family', members: 'Sister-in-law & Family', shareRatio: 1 }
+],
+estimatedBudget: 35000.00,
+payments: [
+{
+id: 'kz_p_fil_cash_10k',
+date: '2026-11-07',
+family: 'Father-in-law Family',
+desc: 'Cash given to Father-in-law for Kathiyawad Ziyarat trip expenses & arrangements',
+amount: 10000.00,
+mode: 'Cash',
+ref: 'Handed in Cash to Father-in-law'
+},
+{
+id: 'kz_adv_1',
+date: '2026-11-06',
+family: 'Mustannsirr Family (Mine)',
+desc: 'Advance given to tour operator for booking & travel arrangements',
+amount: 3000.00,
+mode: 'slice SFB',
+ref: '2026-11-06-Vendor-Contact'
+}
+],
+contributions: []
+},
+expenses: [
+{
+id: 'exp_challan_royal',
+date: '2026-11-06',
+payee: 'MP Government Portal (Gumasta Challan)',
+amount: 224.00,
+source: 'slice SFB',
+category: 'Portal Filing & Challan',
+note: 'Portal challan paid against Royal consultancy services gumasta application'
+},
+{
+id: 'exp_rzp_royal',
+date: '2026-11-04',
+payee: 'Razorpay Payment Gateway',
+amount: 18.18,
+source: 'slice SFB',
+category: 'Gateway / Merchant Fee',
+note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application'
+}
+],
+adjustmentsLog: []
+};
+}
+​function getFinLedger() {
+try {
+const raw = localStorage.getItem(FIN_LEDGER_KEY);
+if (!raw) {
+const def = getDefaultFinLedger();
+localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(def));
+return def;
+}
+const parsed = JSON.parse(raw);
+if (!parsed.kathiyawadTrip) parsed.kathiyawadTrip = getDefaultFinLedger().kathiyawadTrip;
+if (!parsed.expenses) parsed.expenses = getDefaultFinLedger().expenses;
+if (!parsed.deletedIds) parsed.deletedIds = [];
+if (!parsed.adjustmentsLog) parsed.adjustmentsLog = [];
+return parsed;
+} catch (e) {
+return getDefaultFinLedger();
+}
+}
+​function saveFinLedger(ledger, skipCloudPush) {
+try {
+ledger.updatedAt = Date.now();
+localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(ledger));
+} catch (e) {}
+​if (skipCloudPush) return;
+​const url = getWebhook();
+if (url) {
+try {
+const payloadStr = JSON.stringify({ action: 'savefinledger', ledger: ledger });
+fetch(url, {
+method: 'POST',
+headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+body: payloadStr,
+redirect: 'follow'
+}).then(r => r.json()).then(res => {
+if (res && res.status === 'ok') {
+cloudBackendReady = true;
+updateSyncBadge('Cloud Synced ✓ ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }), false);
+} else {
+updateSyncBadge('Local Saved (Tap Sync)', true);
+}
+}).catch(() => {
+const getUrl = url + '?action=savefinledger&data=' + encodeURIComponent(JSON.stringify(ledger));
+new Image().src = getUrl;
+updateSyncBadge('Saved (Tap Sync)', true);
+});
+} catch (err) {}
+}
+}
+​function mergeFinLedgers(local, cloud) {
+if (!cloud || typeof cloud !== 'object') return local;
+​const localTs = Number(local.updatedAt) || 0;
+const cloudTs = Number(cloud.updatedAt) || 0;
+const newer = cloudTs > localTs ? cloud : local;
+​// Combine deleted IDs from both devices so deleted entries never come back
+const allDeleted = new Set([...(local.deletedIds || []), ...(cloud.deletedIds || [])]);
+​const merged = Object.assign({}, newer);
+merged.deletedIds = Array.from(allDeleted);
+merged.cashInHand = Number(newer.cashInHand);
+merged.bankSlice = Number(newer.bankSlice);
+merged.updatedAt = Math.max(localTs, cloudTs);
+​// Merge Payments excluding deleted
+const pMap = new Map();
+((cloud.kathiyawadTrip && cloud.kathiyawadTrip.payments) || []).forEach(p => {
+if (p && p.id && !allDeleted.has(p.id)) pMap.set(p.id, p);
+});
+((local.kathiyawadTrip && local.kathiyawadTrip.payments) || []).forEach(p => {
+if (p && p.id && !allDeleted.has(p.id)) pMap.set(p.id, p);
+});
+merged.kathiyawadTrip = Object.assign({}, newer.kathiyawadTrip);
+merged.kathiyawadTrip.payments = Array.from(pMap.values());
+​// Merge Contributions excluding deleted
+const cMap = new Map();
+((cloud.kathiyawadTrip && cloud.kathiyawadTrip.contributions) || []).forEach(c => {
+if (c && c.id && !allDeleted.has(c.id)) cMap.set(c.id, c);
+});
+((local.kathiyawadTrip && local.kathiyawadTrip.contributions) || []).forEach(c => {
+if (c && c.id && !allDeleted.has(c.id)) cMap.set(c.id, c);
+});
+merged.kathiyawadTrip.contributions = Array.from(cMap.values());
+​// Merge Expenses excluding deleted
+const eMap = new Map();
+(cloud.expenses || []).forEach(e => {
+if (e && e.id && !allDeleted.has(e.id)) eMap.set(e.id, e);
+});
+(local.expenses || []).forEach(e => {
+if (e && e.id && !allDeleted.has(e.id)) eMap.set(e.id, e);
+});
+merged.expenses = Array.from(eMap.values());
+​return merged;
+}
+​async function syncCloudFinLedger() {
+const url = getWebhook();
+if (!url) return;
+try {
+const res = await fetch(url + '?action=getfinledger');
+const data = await res.json();
+if (data && data.status === 'ok' && data.ledger) {
+cloudBackendReady = true;
+const current = getFinLedger();
+const merged = mergeFinLedgers(current, data.ledger);
+localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(merged));
+updateSyncBadge('Cloud Synced ✓ ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }), false);
+​// If local had newer items not yet in cloud, push the merged result up
+if ((current.updatedAt || 0) > (data.ledger.updatedAt || 0)) {
+saveFinLedger(merged, false);
+}
+​if (activePage === 'financials') renderFinancialsPage();
+else render();
+} else {
+cloudBackendReady = false;
+updateSyncBadge('Local Mode (Tap Sync)', true);
+}
+} catch (err) {
+cloudBackendReady = false;
+updateSyncBadge('Local Mode (Tap Sync)', true);
+}
+}
+​// Instant Cross-Device Sync & Transfer Modal (Works even without laptop / Google Script update)
+function openCloudSyncDiagnostic() {
+const ledger = getFinLedger();
+const compactData = btoa(unescape(encodeURIComponent(JSON.stringify({ l: ledger, t: tasks }))));
+const transferUrl = 'https://mustansirrmalikworkdashboard.netlify.app/?syncdata=' + encodeURIComponent(compactData);
+const waShareUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent('🔄 Sync My Dashboard to This Device:\n' + transferUrl);
+​const statusHtml = cloudBackendReady
+? <div style="background:var(--green-soft); border:1px solid var(--green-border); padding:8px 10px; border-radius:8px; font-size:12px; color:var(--green); margin-bottom:10px;"> <strong>✓ Automatic Google Cloud Sync is Active</strong><br>All devices using your Google Script automatically merge and stay updated. </div>
+: <div style="background:var(--amber-soft); border:1px solid var(--amber-border); padding:8px 10px; border-radius:8px; font-size:12px; color:#92400E; margin-bottom:10px;"> <strong>⚠️ Google Script Backend Needs Update for Auto-Sync</strong><br>Your live Google Apps Script is still running an older version. Use the <b>1-Tap Device Sync Link</b> below to mirror your exact figures onto any other phone or PC immediately! </div>;
+​showModal('☁️ Cross-Device Sync & Transfer', `
+${statusHtml}
+<label>Option 1: 1-Tap Instant Sync to Another Device</label>
+<div class="hint" style="font-size:12px; margin-bottom:8px;">Send this link to yourself on WhatsApp and open it on your other phone or PC to transfer all figures, Ziyarat entries, and tasks immediately:</div>
+<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+<a href="${waShareUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+📲 Send Instant Sync Link via WhatsApp
+</a>
+<button type="button" class="btn btn-quiet" onclick="navigator.clipboard.writeText('${transferUrl}'); this.textContent='✓ Sync Link Copied!';">
+📋 Copy Instant Sync Link
+</button>
+</div>
+​<label>Option 2: Force Re-check Google Cloud</label>
+<button type="button" class="btn btn-primary" style="width:100%;" onclick="syncCloudFinLedger(); pullFromCalendar(); closeModal();">
+🔄 Pull & Merge From Google Cloud Now
+</button>
+`, () => {}, 'Done', 'Close');
+}
+​function checkIncomingSyncPayload() {
+const urlParams = new URLSearchParams(window.location.search);
+const syncB64 = urlParams.get('syncdata');
+if (!syncB64) return false;
+​try {
+const decodedStr = decodeURIComponent(escape(atob(syncB64)));
+const payload = JSON.parse(decodedStr);
+if (payload && payload.l) {
+const current = getFinLedger();
+const merged = mergeFinLedgers(current, payload.l);
+merged.updatedAt = Date.now();
+localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(merged));
+}
+if (payload && Array.isArray(payload.t) && payload.t.length > 0) {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.t));
+}
+// Clean URL without reloading
+window.history.replaceState({}, document.title, window.location.pathname);
+setTimeout(() => {
+alert('✓ Synced! All figures, cash balances, and Kathiyawad Ziyarat entries have been updated on this device.');
+}, 300);
+return true;
+} catch (err) {
+return false;
+}
+}
+​// Calendar Tasks Pull & Sync
+async function pullFromCalendar() {
+const url = getWebhook();
+if (!url) return;
+try {
+const res = await fetch(url);
+const events = await res.json();
+if (!Array.isArray(events)) return;
+​const existingIds = new Set(tasks.map(t => t.id));
+let changed = false;
+​events.forEach(ev => {
+if (/Monthly Salary Receivable/i.test(ev.title) || /Hakimi Vihar Society/i.test(ev.title)) return;
+if (existingIds.has(ev.id)) {
+const local = tasks.find(x => x.id === ev.id);
+if (local && local.done !== ev.done) {
+local.done = ev.done;
+changed = true;
+}
+} else {
+const tag = ev.tag;
+tasks.push({
+id: ev.id,
+name: ev.title,
+type: tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional'),
+cat: tag === 'PERSONAL' ? 'PERSONAL' : tag,
+dueDate: ev.dueDate || null,
+done: ev.done,
+payable: ev.payable || 0,
+received: ev.received || 0,
+discount: ev.discount || 0,
+linked: ev.linked || '',
+phone: ev.phone || '',
+invoice: ev.invoice || '',
+remark: ev.remark || ''
+});
+changed = true;
+}
+});
+​if (changed) {
+saveTasks();
+if (activePage === 'tasks') render();
+}
+} catch (e) {}
+}
+​const seedTasks = [
+{
+id: 'cal_lghida9k5kgvrvqamrebcdv18c',
+name: 'Loan & Advances - Juzer Presswala',
+type: 'fee',
+cat: 'FEES',
+feeCat: 'PERSONAL',
+due: '',
+dueDate: '2026-11-05T08:40:00.000Z',
+done: false,
+urgent: false,
+payable: 107690,
+received: 0,
+discount: 0,
+linked: 'Juzer Presswala (Loan & Advances)',
+phone: '7869282535',
+invoice: '',
+remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues ₹1,07,690'
+},
+{
+id: 'cal_ed85ko32qqb708i2pvumghm51c',
+name: 'Loan & Advance Taken - MHJ (₹86,000)',
+type: 'personal',
+cat: 'MHJ',
+due: '',
+dueDate: '2026-11-05T10:00:00.000Z',
+done: false,
+urgent: true,
+remark: 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000.'
+},
+{
+id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc',
+name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)',
+type: 'personal',
+cat: 'PERSONAL',
+due: '',
+dueDate: '2026-11-05T09:15:00.000Z',
+done: false,
+urgent: false,
+remark: 'Payable to Hatim Bhai (Mob: 9826768052). Pending ₹5,000.'
+},
+{
+id: 'cal_trip_kz_2026',
+name: 'Kathiyawad Ziyarat Trip (3 Families Equal Division)',
+type: 'personal',
+cat: 'PERSONAL',
+due: '',
+dueDate: '2026-11-15T09:00:00.000Z',
+done: false,
+urgent: false,
+remark: 'Mustannsirr Family + Father-in-law Family + Sister-in-law Family.'
+},
+{
+id: 'cal_fee_gumasta_royal',
+name: 'Royal consultancy services gumasta application',
+type: 'fee',
+cat: 'FEES',
+feeCat: 'OWN',
+due: '',
+dueDate: '2026-11-04T12:00:00.000Z',
+done: true,
+urgent: false,
+payable: 700,
+received: 700,
+discount: 0,
+linked: 'Royal Consultancy Services',
+phone: '',
+invoice: 'INV-2026-11-001',
+remark: 'Gross ₹700 received via Razorpay. Net credited ₹681.82. Gateway fee ₹18.18. Portal challan ₹224. Net profit ₹457.82'
+}
+];
+​function loadTasks() {
+let saved = [];
+try {
+const raw = localStorage.getItem(STORAGE_KEY);
+if (raw) saved = JSON.parse(raw);
+} catch (e) { saved = []; }
+​const savedIds = new Set(saved.map(t => t.id));
+const missingSeed = seedTasks.filter(t => !savedIds.has(t.id));
+tasks = saved.concat(missingSeed);
+​tasks = tasks.filter(t => !/Monthly Salary Receivable/i.test(t.name) && !/Hakimi Vihar Society/i.test(t.name));
+​const jpFee = tasks.find(x => x.id === 'cal_lghida9k5kgvrvqamrebcdv18c' || (x.type === 'fee' && /juzer presswala/i.test(x.name)));
+if (jpFee) {
+jpFee.payable = 107690;
+jpFee.received = 0;
+}
+const mhjPers = tasks.find(x => x.id === 'cal_ed85ko32qqb708i2pvumghm51c');
+if (mhjPers) {
+mhjPers.name = 'Loan & Advance Taken - MHJ (₹86,000)';
+mhjPers.cat = 'MHJ';
+}
+​saveTasks();
+render();
+}
+​function saveTasks() {
+try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch (e) {}
+}
+​function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
+document.getElementById('modalTitle').textContent = title;
+document.getElementById('modalFields').innerHTML = fieldsHtml;
+document.getElementById('modalOverlay').style.display = 'flex';
+const btn = document.getElementById('modalConfirmBtn');
+const newBtn = btn.cloneNode(true);
+btn.parentNode.replaceChild(newBtn, btn);
+newBtn.textContent = confirmLabel || 'Save';
+newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
+newBtn.onclick = () => { onConfirm(); closeModal(); };
+document.querySelector('#modalOverlay button[onclick="closeModal()"]').textContent = skipLabel || 'Skip';
+}
+​function closeModal() {
+document.getElementById('modalOverlay').style.display = 'none';
+}
+​function escapeForHtml(s) {
+return String(s || '').replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
+}
+​function toggleTask(id) {
+const t = tasks.find(x => x.id === id);
+if (!t) return;
+t.done = !t.done;
+saveTasks();
+render();
+​if (t.id.startsWith('cal_')) {
+const url = getWebhook();
+if (url) fetch(url + '?action=toggle&id=' + encodeURIComponent(t.id) + '&done=' + (t.done ? 'true' : 'false')).catch(() => {});
+}
+​if (t.done && t.type !== 'fee') {
+const existingFee = tasks.find(x => x.type === 'fee' && (x.name === t.name || x.linked === t.name));
+if (!existingFee) {
+setTimeout(() => {
+showModal('Record Fee & Payment — ' + t.name, <div class="hint">Task complete! Log the fee and payment mode directly into your books.</div> <label>Total Billable Fee (₹)</label> <input type="number" id="mPromptPayable" placeholder="₹ Total billable"> <label>Amount Received Now (₹)</label> <input type="number" id="mPromptReceived" placeholder="₹ Received" value="0"> <label>Deposit To / Payment Mode</label> <select id="mPromptMode"> <option value="Cash">Cash in Hand</option> <option value="slice SFB">slice Small Finance Bank</option> </select> <label class="check-row" style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:12.5px; font-weight:600; color:var(--green); cursor:pointer;"> <input type="checkbox" id="mPromptReceipt" checked> Offer WhatsApp payment receipt after saving </label>, () => {
+const payable = parseFloat(document.getElementById('mPromptPayable').value) || 0;
+const received = parseFloat(document.getElementById('mPromptReceived').value) || 0;
+const mode = document.getElementById('mPromptMode').value;
+const wantReceipt = document.getElementById('mPromptReceipt').checked;
+​if (payable > 0) {
+const localId = 'fee_' + Date.now();
+const feeTask = {
+id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || 'OWN',
+due: '', done: received >= payable, urgent: false,
+payable: payable, received: received, discount: 0,
+linked: t.name, phone: ''
+};
+tasks.push(feeTask);
+saveTasks();
+​if (received > 0) {
+const ledger = getFinLedger();
+if (mode === 'Cash') ledger.cashInHand += received;
+else ledger.bankSlice += received;
+saveFinLedger(ledger);
+}
+render();
+if (activePage === 'financials') renderFinancialsPage();
+​if (wantReceipt && received > 0) {
+setTimeout(() => offerReceipt(feeTask.id, received, true), 100);
+}
+}
+}, 'Save & Record', 'Skip Fee');
+}, 100);
+}
+}
+}
+​function offerReceipt(taskId, paidNow, afterSave) {
+const t = tasks.find(x => x.id === taskId);
+if (!t) return;
+const payable = Number(t.payable) || 0;
+const received = Number(t.received) || 0;
+const discount = Number(t.discount) || 0;
+const balance = Math.max(Math.round((payable - received - discount) * 100) / 100, 0);
+const amount = paidNow > 0 ? paidNow : received;
+const invNumber = String(t.invoice || '').split('|')[0].trim();
+​let msg = 🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${t.linked || t.name}"*. Thank you!\n\n✅ *Amount Received:* ₹${amount};
+if (discount > 0) msg += \n🏷️ *Discount Allowed:* ₹${discount};
+msg += balance > 0 ? \n💰 *Balance Due:* ₹${balance} : \n✅ *Status:* Fully settled;
+if (invNumber) msg += \n\n📄 *Invoice ${invNumber}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNumber)};
+msg += \n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_.replace(/&/g, 'and');
+​const waUrl = 'https://api.whatsapp.com/send?phone=' + (t.phone || '').replace(/[^0-9]/g, '') + '&text=' + encodeURIComponent(msg);
+​showModal('WhatsApp Payment Receipt', <div class="receipt-preview">${escapeForHtml(msg)}</div> <div style="margin-top:10px;"> <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="width:100%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;"> 📲 Open WhatsApp &amp; Send Receipt </a> </div>, () => {}, 'Done', 'Close');
+}
+​function switchPage(page) {
+activePage = page;
+const tasksView = document.getElementById('tasksView');
+const finView = document.getElementById('financialsView');
+const btnTasks = document.getElementById('tabTasks');
+const btnFin = document.getElementById('tabFinancials');
+​if (page === 'financials') {
+if (tasksView) tasksView.style.display = 'none';
+if (finView) { finView.style.display = 'block'; renderFinancialsPage(); }
+if (btnTasks) btnTasks.classList.remove('active');
+if (btnFin) btnFin.classList.add('active');
+window.scrollTo({ top: 0, behavior: 'smooth' });
+} else {
+if (tasksView) tasksView.style.display = 'block';
+if (finView) finView.style.display = 'none';
+if (btnTasks) btnTasks.classList.add('active');
+if (btnFin) btnFin.classList.remove('active');
+render();
+window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+}
+​function setFinViewMode(mode) {
+finViewMode = mode;
+renderFinancialsPage();
+}
+​// Financial Ledger Actions & Double-Entry Reversals
+function openAtmCashWithdrawalModal() {
+const ledger = getFinLedger();
+showModal('🏧 Record ATM / Cash Withdrawal', <div class="hint">Transfer liquid funds from <b>slice Small Finance Bank</b> into <b>Cash in Hand</b> to replenish physical cash.</div> <label>Withdrawal Amount (₹)</label> <input type="number" id="mAtmAmount" value="6000" placeholder="₹ Amount"> <label>Date of Withdrawal</label> <input type="date" id="mAtmDate" value="${new Date().toISOString().slice(0, 10)}">, () => {
+const amt = parseFloat(document.getElementById('mAtmAmount').value) || 0;
+if (amt > 0) {
+ledger.bankSlice -= amt;
+ledger.cashInHand += amt;
+saveFinLedger(ledger);
+renderFinancialsPage();
+}
+}, 'Confirm Withdrawal', 'Cancel');
+}
+​function openEditBalancesModal() {
+const ledger = getFinLedger();
+showModal('✏️ Adjust Cash & Bank Balances', <label>Physical Cash in Hand (₹)</label> <input type="number" id="mEditCash" value="${ledger.cashInHand}"> <label>slice Small Finance Bank Balance (₹)</label> <input type="number" id="mEditBank" value="${ledger.bankSlice}">, () => {
+ledger.cashInHand = parseFloat(document.getElementById('mEditCash').value) || 0;
+ledger.bankSlice = parseFloat(document.getElementById('mEditBank').value) || 0;
+saveFinLedger(ledger);
+renderFinancialsPage();
+}, 'Save Balances', 'Cancel');
+}
+​function openAddTripPaymentModal() {
+const ledger = getFinLedger();
+showModal('Add Kathiyawad Ziyarat Payment / Disbursement', <label>Responsible / Disbursing Family</label> <select id="mTripFam"> <option value="Mustannsirr Family (Mine)">1. Mustannsirr Family (Mine)</option> <option value="Father-in-law Family">2. Father-in-law Family</option> <option value="Sister-in-law Family">3. Sister-in-law Family</option> <option value="Joint Pool">Joint Pool (All 3 Families)</option> </select> <label>Description / Beneficiary</label> <input type="text" id="mTripDesc" placeholder="e.g. Hotel advance, bus booking"> <label>Amount (₹)</label> <input type="number" id="mTripAmt" placeholder="₹ Amount"> <label>Payment Mode / Account Paid From</label> <select id="mTripMode"> <option value="Cash">Cash in Hand</option> <option value="slice SFB">slice Small Finance Bank</option> </select>, () => {
+const fam = document.getElementById('mTripFam').value;
+const desc = document.getElementById('mTripDesc').value.trim() || 'Trip Payment';
+const amt = parseFloat(document.getElementById('mTripAmt').value) || 0;
+const mode = document.getElementById('mTripMode').value;
+if (amt > 0) {
+ledger.kathiyawadTrip.payments.push({
+id: 'kz_p_' + Date.now(),
+date: new Date().toISOString().slice(0, 10),
+family: fam,
+desc: desc,
+amount: amt,
+mode: mode,
+ref: 'Direct Disbursed'
+});
+if (mode === 'Cash') ledger.cashInHand -= amt;
+else ledger.bankSlice -= amt;
+saveFinLedger(ledger);
+renderFinancialsPage();
+}
+}, 'Record Payment', 'Cancel');
+}
+​function openAddTripContributionModal() {
+const ledger = getFinLedger();
+showModal('Add Family Contribution / Inflow', <label>Contributing Family</label> <select id="mContribFam"> <option value="Father-in-law Family">2. Father-in-law Family</option> <option value="Sister-in-law Family">3. Sister-in-law Family</option> <option value="Mustannsirr Family (Mine)">1. Mustannsirr Family (Mine)</option> </select> <label>Member / Contributor Name</label> <input type="text" id="mContribMember" placeholder="e.g. Father-in-law, Sister-in-law"> <label>Amount (₹)</label> <input type="number" id="mContribAmt" placeholder="₹ Amount"> <label>Received In / Payment Mode</label> <select id="mContribMode"> <option value="Cash">Cash in Hand</option> <option value="slice SFB">slice Small Finance Bank</option> </select>, () => {
+const fam = document.getElementById('mContribFam').value;
+const member = document.getElementById('mContribMember').value.trim() || fam;
+const amt = parseFloat(document.getElementById('mContribAmt').value) || 0;
+const mode = document.getElementById('mContribMode').value;
+if (amt > 0) {
+ledger.kathiyawadTrip.contributions.push({
+id: 'kz_c_' + Date.now(),
+date: new Date().toISOString().slice(0, 10),
+family: fam,
+member: member,
+amount: amt,
+mode: mode
+});
+if (mode === 'Cash') ledger.cashInHand += amt;
+else ledger.bankSlice += amt;
+saveFinLedger(ledger);
+renderFinancialsPage();
+}
+}, 'Record Contribution', 'Cancel');
+}
+​function deleteTripEntry(type, id) {
+if (isFamilyPublicView) return;
+const ledger = getFinLedger();
+if (!ledger.deletedIds) ledger.deletedIds = [];
+​if (type === 'payment') {
+const item = ledger.kathiyawadTrip.payments.find(p => p.id === id);
+if (!item) return;
+showModal('Delete Payment: ' + item.desc + '?', <div class="hint">Deleting this ₹${item.amount} payment will reverse the double-entry by restoring ₹${item.amount} back to <b>${item.mode}</b>.</div>, () => {
+if (item.mode === 'Cash') ledger.cashInHand += item.amount;
+else ledger.bankSlice += item.amount;
+ledger.deletedIds.push(id);
+ledger.kathiyawadTrip.payments = ledger.kathiyawadTrip.payments.filter(p => p.id !== id);
+saveFinLedger(ledger);
+renderFinancialsPage();
+}, 'Delete', 'Cancel');
+} else {
+const item = ledger.kathiyawadTrip.contributions.find(c => c.id === id);
+if (!item) return;
+showModal('Delete Contribution from ' + item.member + '?', <div class="hint">Deleting this contribution will deduct ₹${item.amount} from <b>${item.mode}</b>.</div>, () => {
+if (item.mode === 'Cash') ledger.cashInHand -= item.amount;
+else ledger.bankSlice -= item.amount;
+ledger.deletedIds.push(id);
+ledger.kathiyawadTrip.contributions = ledger.kathiyawadTrip.contributions.filter(c => c.id !== id);
+saveFinLedger(ledger);
+renderFinancialsPage();
+}, 'Delete', 'Cancel');
+}
+}
+​function openShareZiyaratModal(total, share, mineP, filP, silP, mineB, filB, silB) {
+const portalUrl = 'https://mustansirrmalikworkdashboard.netlify.app/?view=ziyarat';
+const msg = 🕌 *Kathiyawad Ziyarat Trip — 3 Families Statement*\n\n +
+• *Total Trip Outlay:* ${inr(total)}\n +
+• *Equal 1/3 Share per Family:* ${inr(share)}\n\n +
+📊 *Family Balances:*\n +
+1. *Mustannsirr Family:* Paid ${inr(mineP)} (${mineB >= 0 ? 'Overpaid: ' + inr(mineB) : 'Due: ' + inr(Math.abs(mineB))})\n +
+2. *Father-in-law Family:* Paid ${inr(filP)} (${filB >= 0 ? 'Refund Due: ' + inr(filB) : 'Due: ' + inr(Math.abs(filB))})\n +
+3. *Sister-in-law Family:* Paid ${inr(silP)} (${silB >= 0 ? 'Overpaid: ' + inr(silB) : 'Due: ' + inr(Math.abs(silB))})\n\n +
+🔗 *View Live Trip Statement Portal:*\n${portalUrl}\n\n +
+_Updated in real-time by Mustannsirr Mallik_.replace(/&/g, 'and');
+​const waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(msg);
+​showModal('📲 Share Ziyarat Statement with Families', <div class="receipt-preview">${escapeForHtml(msg)}</div> <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;"> <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;"> 📲 Share via WhatsApp </a> <button type="button" class="btn btn-quiet" onclick="navigator.clipboard.writeText('${portalUrl}'); this.textContent='✓ Link Copied!';"> 📋 Copy Family Portal Link </button> </div>, () => {}, 'Done', 'Close');
+}
+​function renderFinancialsPage() {
+const finContainer = document.getElementById('financialsView');
+if (!finContainer) return;
+const ledger = getFinLedger();
+​const cashInHand = ledger.cashInHand;
+const bankSlice = ledger.bankSlice;
+const totalLiquidCashBank = cashInHand + bankSlice;
+​// Kathiyawad Trip Math
+const tripPayments = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.payments) || [];
+const tripContributions = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.contributions) || [];
+const totalTripPayments = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
+const totalTripContributions = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
+const netTripOutflow = totalTripPayments - totalTripContributions;
+​const equalSharePerFamily = Math.round((totalTripPayments / 3) * 100) / 100;
+​const minePayments = tripPayments.filter(p => /mustannsirr|mustansir|mine|self/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
+const filPayments = tripPayments.filter(p => /father-in-law/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
+const silPayments = tripPayments.filter(p => /sister-in-law/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
+​const mineContrib = tripContributions.filter(c => /mustannsirr|mustansir|mine|self/i.test(c.family || '')).reduce((s, c) => s + c.amount, 0);
+const filContrib = tripContributions.filter(c => /father-in-law/i.test(c.family || '')).reduce((s, c) => s + c.amount, 0);
+const silContrib = tripContributions.filter(c => /sister-in-law/i.test(c.family || '')).reduce((s, c) => s + c.amount, 0);
+​const mineTotalPaid = minePayments + mineContrib;
+const filTotalPaid = filPayments + filContrib;
+const silTotalPaid = silPayments + silContrib;
+​const mineNetBal = Math.round((mineTotalPaid - equalSharePerFamily) * 100) / 100;
+const filNetBal = Math.round((filTotalPaid - equalSharePerFamily) * 100) / 100;
+const silNetBal = Math.round((silTotalPaid - equalSharePerFamily) * 100) / 100;
+​// Realized Practice Revenue & Expenses
+const grossFeeIncome = 700.00;
+const totalExpenses = (ledger.expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
+const netProfit = grossFeeIncome - totalExpenses;
+​const juzerNet = ledger.loansGiven.juzer.base;
+const mhjNet = ledger.loansTaken.mhj.base;
+const hatimNet = ledger.loansTaken.hatim.base;
+const totalLoansTaken = mhjNet + hatimNet;
+​const totalAssets = totalLiquidCashBank + juzerNet + netTripOutflow;
+const effectiveCapital = totalAssets - totalLoansTaken;
+​let html = '';
+​if (isFamilyPublicView) {
+html += <div style="background:#FFFFFF; border:1px solid #BAE6FD; border-left:4px solid #0284C7; border-radius:10px; padding:12px 14px; margin-bottom:12px;"> <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#0369A1;">🕌 Kathiyawad Ziyarat Trip — 3 Families</div> <div style="font-size:12px; color:var(--muted); margin-top:2px;">Equal 3-Way Division &bull; Live Statement Portal</div> </div>;
+} else {
+html += `
+<div class="fin-mode-toggle">
+<button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Suite</button>
+<button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')" style="color:#0284C7; font-weight:700;">🕌 Kathiyawad Ziyarat</button>
+<button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit & Loss</button>
+<button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
+</div>
+​<!-- Liquid Strip -->
+<div style="background:#FFFFFF; border:1px solid var(--rule); border-left:4px solid ${cashInHand >= 0 ? 'var(--green)' : 'var(--amber)'}; border-radius:10px; padding:10px 12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+<div>
+<span style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted);">Cash in Hand</span>
+<div style="font-family:var(--serif); font-size:17px; font-weight:700; color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">{inr(cashInHand)}</div>
+</div>
+<div style="border-left:1px solid var(--rule); padding-left:12px;">
+<span style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted);">slice Bank</span>
+<div style="font-family:var(--serif); font-size:17px; font-weight:700; color:#1E3A8A;">{inr(bankSlice)}</div>
+</div>
+<div style="border-left:1px solid var(--rule); padding-left:12px;">
+<span style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted);">Total Liquid</span>
+<div style="font-family:var(--serif); font-size:17px; font-weight:700; color:var(--ink);">${inr(totalLiquidCashBank)}</div>
+</div>
+</div>
+<div style="display:flex; gap:6px;">
+<button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
+<button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+</div>
+</div>
+​<div class="fin-hero-grid">
+<div class="fin-card">
+<div class="f-lbl">Net Worth / Capital</div>
+<div class="f-val" style="color:var(--green);">{inr(effectiveCapital)}</div>
+<div class="f-sub">Includes P&amp;L profit ${inr(netProfit)}</div>
+</div>
+<div class="fin-card">
+<div class="f-lbl">Trip Advance (Asset)</div>
+<div class="f-val" style="color:#0284C7;">${inr(netTripOutflow)}</div>
+<div class="f-sub">3 Families Outlay</div>
+</div>
+<div class="fin-card">
+<div class="f-lbl">Loans Given (Asset)</div>
+<div class="f-val" style="color:var(--red);">{inr(juzerNet)}</div>
+<div class="f-sub">Juzer Presswala</div>
+</div>
+<div class="fin-card">
+<div class="f-lbl">Loans Taken (Liab.)</div>
+<div class="f-val" style="color:var(--amber);">${inr(totalLoansTaken)}</div>
+<div class="f-sub">MHJ + Hatim Bhai</div>
+</div>
+</div>
+`;
+}
+​// Ziyarat Trip Section
+if (finViewMode === 'all' || finViewMode === 'trip' || isFamilyPublicView) {
+html += <div class="statement-sheet" style="border-left:4px solid #0284C7;"> <div class="statement-header" style="background:linear-gradient(135deg, #075985 0%, #0284C7 100%);"> <div> <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families</h3> <div style="font-size:11px; color:#E0F2FE;">Total: ${inr(totalTripPayments)} &bull; 1/3 Share: ${inr(equalSharePerFamily)} each</div> </div> <div style="display:flex; gap:6px; flex-wrap:wrap;"> ${!isFamilyPublicView ?
+<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 8px;" onclick="openShareZiyaratModal(${totalTripPayments}, ${equalSharePerFamily}, ${mineTotalPaid}, ${filTotalPaid}, ${silTotalPaid}, ${mineNetBal}, ${filNetBal}, ${silNetBal})">📲 Share</button>
+<button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openAddTripPaymentModal()">+ Payment</button>
+<button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openAddTripContributionModal()">+ Inflow</button>
+` : ''}
+</div>
+</div>
+<div class="statement-body">
+​<!-- 3-Way Summary Cards -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px; margin-bottom:12px;">
+<div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:8px 10px;">
+<span style="font-size:10px; font-weight:700; color:#0369A1;">1. MUSTANNSIIR FAMILY</span>
+<div style="font-size:11px; color:#0284C7; margin:2px 0;">Paid: <b>{inr(mineTotalPaid)}</b> &bull; Share: <b>{inr(equalSharePerFamily)}</b></div>
+<div style="font-size:11.5px; font-weight:700; color:${mineNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
+{mineNetBal >= 0 ? '✓ Overpaid: ' + inr(mineNetBal) : '⚠️ Due: ' + inr(Math.abs(mineNetBal))}
+</div>
+</div>
+<div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:8px 10px;">
+<span style="font-size:10px; font-weight:700; color:#B45309;">2. FATHER-IN-LAW FAMILY</span>
+<div style="font-size:11px; color:#92400E; margin:2px 0;">Paid: <b>{inr(filTotalPaid)}</b> • Share: <b>{inr(equalSharePerFamily)}</b></div>
+<div style="font-size:11.5px; font-weight:700; color:${filNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
+${filNetBal >= 0 ? '✓ Refund Due: ' + inr(filNetBal) : '⚠️ Due: ' + inr(Math.abs(filNetBal))}
+</div>
+</div>
+<div style="background:#FDF2F8; border:1px solid #FBCFE8; border-radius:8px; padding:8px 10px;">
+<span style="font-size:10px; font-weight:700; color:#9D174D;">3. SISTER-IN-LAW FAMILY</span>
+<div style="font-size:11px; color:#9D174D; margin:2px 0;">Paid: <b>${inr(silTotalPaid)}</b> &bull; Share: <b>{inr(equalSharePerFamily)}</b></div>
+<div style="font-size:11.5px; font-weight:700; color:${silNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
+${silNetBal >= 0 ? '✓ Overpaid: ' + inr(silNetBal) : '⚠️ Due: ' + inr(Math.abs(silNetBal))}
+</div>
+</div>
+</div>
+​<!-- Equal Split & Settlement Matrix Table -->
+<div style="margin-bottom:14px;">
+<div style="font-weight:700; font-size:12.5px; margin-bottom:6px; color:#0F172A;">📊 Equal Split & Settlement Matrix</div>
+<div class="table-responsive">
+<table class="stmt-table">
+<thead>
+<tr>
+<th>Family</th>
+<th class="text-right">Actual Paid (₹)</th>
+<th class="text-right">1/3 Share (₹)</th>
+<th class="text-right">Net Balance</th>
+<th style="text-align:center;">Settlement Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Mustannsirr Family (Mine)</strong></td>
+<td class="text-right stmt-mono">{inr(mineTotalPaid)}</td>
+<td class="text-right stmt-mono">{inr(equalSharePerFamily)}</td>
+<td class="text-right stmt-mono" style="font-weight:700; color:${mineNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
+{mineNetBal >= 0 ? '+ ' + inr(mineNetBal) : '- ' + inr(Math.abs(mineNetBal))}
+</td>
+<td style="text-align:center;">
+<span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${mineNetBal >= 0 ? 'background:var(--green-soft); color:var(--green);' : 'background:var(--red-soft); color:var(--red);'}">
+${mineNetBal >= 0 ? 'Settled / Overpaid' : 'Has to Pay ' + inr(Math.abs(mineNetBal))}
+</span>
+</td>
+</tr>
+<tr>
+<td><strong>2. Father-in-law Family</strong></td>
+<td class="text-right stmt-mono">${inr(filTotalPaid)}</td>
+<td class="text-right stmt-mono">{inr(equalSharePerFamily)}</td>
+<td class="text-right stmt-mono" style="font-weight:700; color:${filNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
+{filNetBal >= 0 ? '+ ' + inr(filNetBal) : '- ' + inr(Math.abs(filNetBal))}
+</td>
+<td style="text-align:center;">
+<span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${filNetBal >= 0 ? 'background:var(--green-soft); color:var(--green);' : 'background:var(--red-soft); color:var(--red);'}">
+${filNetBal >= 0 ? 'To Receive ' + inr(filNetBal) : 'Has to Pay ' + inr(Math.abs(filNetBal))}
+</span>
+</td>
+</tr>
+<tr>
+<td><strong>3. Sister-in-law Family</strong></td>
+<td class="text-right stmt-mono">${inr(silTotalPaid)}</td>
+<td class="text-right stmt-mono">{inr(equalSharePerFamily)}</td>
+<td class="text-right stmt-mono" style="font-weight:700; color:${silNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
+${silNetBal >= 0 ? '+ ' + inr(silNetBal) : '- ' + inr(Math.abs(silNetBal))}
+</td>
+<td style="text-align:center;">
+<span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${silNetBal >= 0 ? 'background:var(--green-soft); color:var(--green);' : 'background:var(--red-soft); color:var(--red);'}">
+${silNetBal >= 0 ? 'Settled / Overpaid' : 'Has to Pay ' + inr(Math.abs(silNetBal))}
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+​<!-- Disbursements Table -->
+<div style="margin-bottom:14px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+<span style="font-weight:700; font-size:12.5px; color:#0369A1;">Disbursements & Expenses Outflow</span>
+${!isFamilyPublicView ? <button type="button" class="act" onclick="openAddTripPaymentModal()">+ Add Payment</button> : ''}
+</div>
+<div class="table-responsive">
+<table class="stmt-table">
+<thead>
+<tr>
+<th>Date</th>
+<th>Family</th>
+<th>Particulars</th>
+<th>Mode</th>
+<th class="text-right">Amount (₹)</th>
+{!isFamilyPublicView ? `<th style="width:36px; text-align:center;">Del</th>` : ''}
+</tr>
+</thead>
+<tbody>
+${tripPayments.map(p => `
+<tr>
+<td style="white-space:nowrap;">${p.date}</td>
+<td><span style="font-size:10px; font-weight:700; padding:1px 5px; background:#E0F2FE; color:#0369A1; border-radius:4px;">${escapeForHtml(p.family)}</span></td>
+<td><strong>${escapeForHtml(p.desc)}</strong></td>
+<td style="white-space:nowrap;"><span style="font-size:10.5px; padding:1px 5px; background:${p.mode === 'Cash' ? '#ECFDF5; color:var(--green);' : '#F1F5F9; color:#1E3A8A;'}; border-radius:4px;">${escapeForHtml(p.mode)}</span></td>
+<td class="text-right stmt-mono" style="color:#0369A1; font-weight:700;">${inr(p.amount)}</td>
+${!isFamilyPublicView ? `
+<td style="text-align:center;">
+<button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button>
+</td>` : ''}
+</tr>
+`).join('')}
+<tr style="font-weight:700; background:#F0F9FF;">
+<td colspan="4">Total Disbursements</td>
+<td class="text-right stmt-mono" style="color:#0369A1;">{inr(totalTripPayments)}</td>
+${!isFamilyPublicView ? <td></td> : ''}
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+​<!-- Contributions Table -->
+<div>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+<span style="font-weight:700; font-size:12.5px; color:var(--green);">Family Contributions</span>
+${!isFamilyPublicView ? <button type="button" class="act wa" onclick="openAddTripContributionModal()">+ Add Inflow</button> : ''}
+</div>
+<div class="table-responsive">
+<table class="stmt-table">
+<thead>
+<tr>
+<th>Date</th>
+<th>Family</th>
+<th>Member</th>
+<th>Mode</th>
+<th class="text-right">Amount (₹)</th>
+${!isFamilyPublicView ? <th style="width:36px; text-align:center;">Del</th> : ''}
+</tr>
+</thead>
+<tbody>
+${tripContributions.length === 0 ? <tr><td colspan="${!isFamilyPublicView ? 6 : 5}" style="text-align:center; color:var(--muted); padding:10px;">No pooled contributions logged yet.</td></tr> : ''}
+{tripContributions.map(c => `
+<tr>
+<td style="white-space:nowrap;">${c.date}</td>
+<td>${escapeForHtml(c.family)}</td>
+<td><strong style="color:var(--green);">${escapeForHtml(c.member)}</strong></td>
+<td>${escapeForHtml(c.mode)}</td>
+<td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">+ ${inr(c.amount)}</td>
+${!isFamilyPublicView ? `
+<td style="text-align:center;">
+<button type="button" class="act del" onclick="deleteTripEntry('contribution', '${c.id}')">{ICON.x}</button>
+</td>: ''} </tr>).join('')}
+</tbody>
+</table>
+</div>
+</div>
+​</div>
+</div>
+`;
+}
+​// P&L Statement
+if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'pl')) {
+html += <div class="statement-sheet"> <div class="statement-header"> <h3>Profit &amp; Loss Statement</h3> <span style="font-size:11px; color:#E2E8F0;">Net Practice Profit: ${inr(netProfit)}</span> </div> <div class="statement-body"> <div class="table-responsive"> <table class="stmt-table"> <thead> <tr> <th>Particulars</th> <th class="text-right">Amount (₹)</th> </tr> </thead> <tbody> <tr style="background:#F8FAFC; font-weight:700;"> <td colspan="2">A. Revenue &amp; Professional Fees</td> </tr> <tr> <td>Gross Billed Professional Fees (Royal Consultancy Gumasta)</td> <td class="text-right stmt-mono">${inr(grossFeeIncome)}</td> </tr> <tr style="background:#F8FAFC; font-weight:700;"> <td colspan="2">B. Direct Expenses</td> </tr> <tr> <td>Razorpay Gateway Fee (2%)</td> <td class="text-right stmt-mono">18.18</td> </tr> <tr> <td>Government Gumasta Portal Challan</td> <td class="text-right stmt-mono">224.00</td> </tr> <tr style="font-weight:700; background:#FAFCFE; border-top:1.5px solid var(--rule);"> <td>NET PRACTICE PROFIT (A &minus; B)</td> <td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td> </tr> </tbody> </table> </div> </div> </div>;
+}
+​// Balance Sheet Statement
+if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'bs')) {
+html += <div class="statement-sheet"> <div class="statement-header" style="background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%);"> <h3>Balance Sheet Statement</h3> <span style="font-size:11px; color:#E2E8F0;">Assets = Liab. + Equity (${inr(totalAssets)})</span> </div> <div class="statement-body"> <div class="table-responsive"> <table class="stmt-table"> <thead> <tr> <th>Capital &amp; Liabilities</th> <th class="text-right">Amount (₹)</th> <th>Assets &amp; Receivables</th> <th class="text-right">Amount (₹)</th> </tr> </thead> <tbody> <tr> <td><strong>Owner's Capital Account</strong><br><small style="color:var(--muted);">Base Capital + Net Profit</small></td> <td class="text-right stmt-mono" style="color:var(--green);">${inr(effectiveCapital)}</td> <td><strong>Cash &amp; Bank Balances</strong><br><small style="color:var(--muted);">Cash (${inr(cashInHand)}) + slice SFB (${inr(bankSlice)})</small></td> <td class="text-right stmt-mono">${inr(totalLiquidCashBank)}</td> </tr> <tr> <td><strong>Loan Taken &mdash; MHJ</strong></td> <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td> <td><strong>Loans Given &mdash; Juzer Presswala</strong></td> <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td> </tr> <tr> <td><strong>Loan Taken &mdash; Hatim Bhai</strong></td> <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet)}</td> <td><strong>Kathiyawad Ziyarat Advance Asset</strong></td> <td class="text-right stmt-mono" style="color:#0284C7;">${inr(netTripOutflow)}</td> </tr> <tr style="font-weight:700; background:#FAFCFE; border-top:2px solid var(--ink);"> <td>TOTAL LIABILITIES &amp; EQUITY</td> <td class="text-right stmt-mono">${inr(totalAssets)}</td> <td>TOTAL ASSETS</td> <td class="text-right stmt-mono">${inr(totalAssets)}</td> </tr> </tbody> </table> </div> </div> </div>;
+}
+​// Bank Info
+if (!isFamilyPublicView) {
+html += <div style="background:#FFFFFF; border:1px solid var(--rule); border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:12px;"> <div style="font-weight:700; color:var(--ink); margin-bottom:6px;">Official Settlement Bank Account</div> <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px;"> <div><span style="color:var(--muted);">Holder:</span> <b>Mustannsirr Mallik</b></div> <div><span style="color:var(--muted);">Bank:</span> <b>slice Small Finance Bank</b></div> <div><span style="color:var(--muted);">Account:</span> <b style="font-family:var(--serif); color:var(--accent);">033311501064738</b></div> <div><span style="color:var(--muted);">IFSC:</span> <b style="font-family:var(--serif); color:var(--accent);">NESF0000333</b></div> </div> </div>;
+}
+​finContainer.innerHTML = html;
+}
+​function render(listOnly) {
+const summaryEl = document.getElementById('summaryArea');
+const app = document.getElementById('app');
+if (!app) return;
+​const ledger = getFinLedger();
+const cashInHand = ledger.cashInHand;
+const bankSlice = ledger.bankSlice;
+const totalLiquid = cashInHand + bankSlice;
+const tripPayments = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.payments) || [];
+const tripTotal = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
+​const doneCount = tasks.filter(t => t.done).length;
+const pendingCount = tasks.filter(t => !t.done).length;
+​let summaryHtml = <div class="summary-sheet"> <div class="hero-stats"> <div class="hero-card"><div class="n">${doneCount}</div><div class="l">Done</div></div> <div class="hero-card"><div class="n">${pendingCount}</div><div class="l">Pending</div></div> <div class="hero-card"><div class="n" style="color:#0284C7;">${inr(tripTotal)}</div><div class="l">Ziyarat</div></div> <div class="hero-card"><div class="n">${inr(totalLiquid)}</div><div class="l">Liquid</div></div> </div> <div class="totals"> <div class="tot"><div class="l">Cash in Hand</div><div class="fig" style="color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div></div> <div class="tot"><div class="l">slice SFB Bank</div><div class="fig" style="color:#1E3A8A;">${inr(bankSlice)}</div></div> <div class="tot sum"><div class="l">Juzer Presswala Loan Given</div><div class="fig out">₹1,07,690</div></div> </div> </div>;
+​let filtered = tasks;
+const q = (document.getElementById('searchBox') ? document.getElementById('searchBox').value : '').trim().toLowerCase();
+if (q) {
+filtered = filtered.filter(t => (t.name + ' ' + (t.linked || '') + ' ' + (t.remark || '')).toLowerCase().includes(q));
+}
+​let html = '';
+if (filtered.length === 0) {
+html = '<div style="text-align:center; padding:30px; color:var(--muted);">No matching tasks found.</div>';
+} else {
+html = '<div class="task-grid">';
+filtered.forEach((t, i) => {
+const isFee = t.type === 'fee';
+html += <div class="task" style="border-left:3.5px solid ${t.cat === 'FEES' ? 'var(--c-fees)' : (t.cat === 'MHJ' ? 'var(--c-mhj)' : 'var(--c-personal)')};"> <span class="num">${i + 1}.</span> <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')"> <div class="task-body"> <div class="task-top"> <div class="task-name" style="${t.done ? 'text-decoration:line-through; color:var(--muted);' : ''}">${escapeForHtml(t.name)}</div> ${isFee ?<div class="amt ${t.done ? 'clear' : 'owed'}">{inr(t.payable)}</div>` : ''}
+<button type="button" class="act del" onclick="deleteTask('${t.id}')">${ICON.x}</button>
+</div>
+${t.remark ? `<div class="note">{ICON.note}<span>${escapeForHtml(t.remark)}</span></div>: ''} <div class="task-meta"> ${isFee && t.received > 0 ?<button type="button" class="act wa" onclick="offerReceipt('${t.id}', 0)">Send receipt</button>: ''} ${!t.done ?<button type="button" class="act" onclick="setRemark('${t.id}')">Remark</button>: ''} </div> </div> </div>;
+});
+html += '</div>';
+}
+​if (!listOnly && summaryEl) summaryEl.innerHTML = summaryHtml;
+app.innerHTML = html;
+}
+​function onSearch(val) { render(true); }
+function clearSearch() {
+const box = document.getElementById('searchBox');
+if (box) box.value = '';
+render(true);
+}
+​function setRemark(id) {
+const t = tasks.find(x => x.id === id);
+if (!t) return;
+showModal('Edit Remark: ' + t.name, <input type="text" id="mRemark" value="${escapeForHtml(t.remark || '')}" placeholder="Add note or remark">, () => {
+t.remark = document.getElementById('mRemark').value.trim();
+saveTasks();
+render();
+}, 'Save', 'Cancel');
+}
+​function deleteTask(id) {
+const t = tasks.find(x => x.id === id);
+if (!t) return;
+showModal('Delete Task: ' + t.name + '?', <div class="hint">Are you sure you want to remove this item?</div>, () => {
+tasks = tasks.filter(x => x.id !== id);
+saveTasks();
+render();
+if (id.startsWith('cal_')) {
+const url = getWebhook();
+if (url) fetch(url + '?action=delete&id=' + encodeURIComponent(id)).catch(() => {});
+}
+}, 'Delete', 'Cancel');
+}
+​function addTask() {
+const input = document.getElementById('newTask');
+const catVal = document.getElementById('newCat').value;
+const name = input.value.trim();
+if (!name) return;
+​if (catVal === 'FEES') {
+const payable = parseFloat(document.getElementById('feePayable').value) || 0;
+const received = parseFloat(document.getElementById('feeReceived').value) || 0;
+const linked = document.getElementById('feeLinked').value.trim();
+const phone = document.getElementById('feePhone').value.trim();
+const newTaskObj = {
+id: 'fee_' + Date.now(),
+name: name,
+type: 'fee',
+cat: 'FEES',
+feeCat: 'OWN',
+done: received >= payable && payable > 0,
+payable: payable,
+received: received,
+discount: 0,
+linked: linked,
+phone: phone
+};
+tasks.push(newTaskObj);
+input.value = '';
+document.getElementById('feePayable').value = '';
+document.getElementById('feeReceived').value = '';
+} else {
+const dueVal = document.getElementById('newDueDate').value;
+tasks.push({
+id: 'task_' + Date.now(),
+name: name,
+type: catVal === 'PERSONAL' ? 'personal' : 'professional',
+cat: catVal === 'PERSONAL' ? 'PERSONAL' : catVal,
+done: false,
+dueDate: dueVal ? new Date(dueVal + 'T09:00:00').toISOString() : null,
+remark: ''
+});
+input.value = '';
+}
+saveTasks();
+render();
+}
+​function onCategoryChange() {
+const cat = document.getElementById('newCat').value;
+document.getElementById('feeFields').style.display = (cat === 'FEES') ? 'flex' : 'none';
+}
+​function resetData() {
+showModal('Reset Data Cache?', <div class="hint">Reloads the latest task baseline and synchronizes with cloud storage.</div>, () => {
+localStorage.removeItem(STORAGE_KEY);
+localStorage.removeItem(FIN_LEDGER_KEY);
+window.location.reload();
+}, 'Reset', 'Cancel');
+}
+​function checkPublicZiyaratView() {
+const urlParams = new URLSearchParams(window.location.search);
+const isTrip = urlParams.get('view') === 'ziyarat' || window.location.hash === '#ziyarat';
+if (!isTrip) return false;
+​isFamilyPublicView = true;
+const gate = document.getElementById('authGate');
+if (gate) gate.style.display = 'none';
+​const nav = document.querySelector('.page-nav');
+if (nav) nav.style.display = 'none';
+const statusEl = document.querySelector('.masthead .status');
+if (statusEl) statusEl.style.display = 'none';
+​switchPage('financials');
+setFinViewMode('trip');
+return true;
+}
+​const DASHBOARD_PASSWORD = 'Mustansir@2026';
+const AUTH_KEY = 'dashboard-auth-ok';
+​function checkAuth() {
+const input = document.getElementById('authInput');
+if (input.value === DASHBOARD_PASSWORD) {
+localStorage.setItem(AUTH_KEY, 'yes');
+document.getElementById('authGate').style.display = 'none';
+startDashboard();
+} else {
+document.getElementById('authError').style.display = 'block';
+input.value = '';
+}
+}
+​function startDashboard() {
+loadTasks();
+syncCloudFinLedger();
+pullFromCalendar();
+}
+​function boot() {
+checkIncomingSyncPayload();
+if (checkPublicZiyaratView()) {
+syncCloudFinLedger();
+return;
+}
+if (localStorage.getItem(AUTH_KEY) === 'yes') {
+const gate = document.getElementById('authGate');
+if (gate) gate.style.display = 'none';
+startDashboard();
+} else {
+const inp = document.getElementById('authInput');
+if (inp) inp.focus();
+}
+}
+​if (document.readyState === 'loading') {
+document.addEventListener('DOMContentLoaded', boot);
+} else {
+boot();
+}
+</script>
+</body>
+</html>
