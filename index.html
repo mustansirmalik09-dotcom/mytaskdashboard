@@ -1423,13 +1423,21 @@ function openAddExpenseModal() {
       <option value="Cash">Cash in Hand</option>
       <option value="slice SFB">slice Small Finance Bank</option>
     </select>
-    <label>Category</label>
-    <input type="text" id="mExpCat" value="Office / Practice Expense">
+    <label>Expense Category</label>
+    <select id="mExpCatSelect" onchange="const custom = document.getElementById('mExpCat'); if(this.value === '__CUSTOM__'){ custom.style.display='block'; custom.value=''; custom.focus(); } else { custom.style.display='none'; custom.value=this.value; }">
+      <option value="Office / Practice Expense">Office / Practice Expense (P&amp;L)</option>
+      <option value="Personal Drawings">Personal Drawings (Deducted from Capital Account)</option>
+      <option value="Portal Filing & Challan">Portal Filing &amp; Challan (P&amp;L)</option>
+      <option value="Travel & Conveyance">Travel &amp; Conveyance (P&amp;L)</option>
+      <option value="__CUSTOM__">+ Custom Category...</option>
+    </select>
+    <input type="text" id="mExpCat" value="Office / Practice Expense" style="display:none;" placeholder="Enter custom category">
   `, () => {
     const payee = document.getElementById('mExpPayee').value.trim();
     const amt = parseFloat(document.getElementById('mExpAmt').value) || 0;
     const source = document.getElementById('mExpSource').value;
-    const category = document.getElementById('mExpCat').value.trim() || 'General';
+    const selVal = document.getElementById('mExpCatSelect').value;
+    const category = (selVal === '__CUSTOM__' ? document.getElementById('mExpCat').value.trim() : selVal) || 'General';
     if (!payee || amt <= 0) return;
 
     ledger.expenses.push({
@@ -1448,49 +1456,70 @@ function openAddExpenseModal() {
     saveFinLedger(ledger);
     renderFinancialsPage();
     render();
-  }, 'Save Expense', 'Cancel');
+  }, 'Record Expense', 'Cancel');
 }
 
 function deleteExpenseEntry(id) {
+  if (isFamilyPublicView) return;
   const ledger = getFinLedger();
-  const item = ledger.expenses.find(e => e.id === id);
+  const item = (ledger.expenses || []).find(e => e.id === id);
   if (!item) return;
+
   showModal('Delete Expense: ' + item.payee + '?', `
-    <div class="hint">Deleting this ₹${item.amount} expense will restore the amount back to <b>${item.source}</b>.</div>
+    <div class="hint">Deleting this ${inr(item.amount)} entry will restore ${inr(item.amount)} back to <b>${item.source}</b>.</div>
   `, () => {
     if (item.source === 'Cash') ledger.cashInHand += item.amount;
     else ledger.bankSlice += item.amount;
+
     ledger.expenses = ledger.expenses.filter(e => e.id !== id);
     if (!ledger.deletedIds) ledger.deletedIds = [];
     ledger.deletedIds.push(id);
+
     saveFinLedger(ledger);
     renderFinancialsPage();
     render();
   }, 'Delete', 'Cancel');
 }
 
-function openShareZiyaratModal(total, share, mineP, filP, silP, mineB, filB, silB) {
-  const portalUrl = 'https://mustansirrmalikworkdashboard.netlify.app/?view=ziyarat';
-  const msg = `🕌 *Kathiyawad Ziyarat Trip — 3 Families Statement*\n\n` +
-    `• *Total Trip Outlay:* ${inr(total)}\n` +
-    `• *Equal 1/3 Share per Family:* ${inr(share)}\n\n` +
-    `📊 *Family Balances:*\n` +
-    `1. *Mustannsirr Family:* Paid ${inr(mineP)} (${mineB >= 0 ? 'Overpaid: ' + inr(mineB) : 'Due: ' + inr(Math.abs(mineB))})\n` +
-    `2. *Father-in-law Family:* Paid ${inr(filP)} (${filB >= 0 ? 'Refund Due: ' + inr(filB) : 'Due: ' + inr(Math.abs(filB))})\n` +
-    `3. *Sister-in-law Family:* Paid ${inr(silP)} (${silB >= 0 ? 'Overpaid: ' + inr(silB) : 'Due: ' + inr(Math.abs(silB))})\n\n` +
-    `🔗 *View Live Trip Statement Portal:*\n${portalUrl}\n\n` +
-    `_Updated in real-time by Mustannsirr Mallik_`.replace(/&/g, 'and');
+function shareZiyaratWithFamilies() {
+  const ledger = getFinLedger();
+  const payments = ledger.kathiyawadTrip.payments || [];
+  const contributions = ledger.kathiyawadTrip.contributions || [];
+
+  const totalOutlay = payments.reduce((s, p) => s + (p.amount || 0), 0);
+  const equalShare = totalOutlay / 3;
+
+  const getFamPaid = (famName) => {
+    const pSum = payments.filter(p => p.family === famName).reduce((s, p) => s + (p.amount || 0), 0);
+    const cSum = contributions.filter(c => c.family === famName).reduce((s, c) => s + (c.amount || 0), 0);
+    return pSum + cSum;
+  };
+
+  const famLines = (ledger.kathiyawadTrip.families || []).map(f => {
+    const paid = getFamPaid(f.name);
+    const diff = paid - equalShare;
+    const status = diff < -0.5 ? `Due: ${inr(Math.abs(diff))}` : (diff > 0.5 ? `Refund Due: ${inr(diff)}` : 'Settled ✓');
+    return `• *${f.name}*: Paid ${inr(paid)} | Share ${inr(equalShare)} (${status})`;
+  }).join('\n');
+
+  const shareUrl = window.location.origin + window.location.pathname + '?view=ziyarat';
+  const msg = `🕌 *Kathiyawad Ziyarat Trip — Expense & Split Statement*\n\n` +
+    `💰 *Total Trip Outlay:* ${inr(totalOutlay)}\n` +
+    `⚖️ *Equal 1/3 Share per Family:* ${inr(equalShare)}\n\n` +
+    `${famLines}\n\n` +
+    `🔗 *Live Statement Link (Read-Only):*\n${shareUrl}`;
 
   const waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(msg);
 
   showModal('📲 Share Ziyarat Statement with Families', `
+    <div class="hint">Share this live read-only link with your families. Editing &amp; deleting entries are locked to your account.</div>
     <div class="receipt-preview">${escapeForHtml(msg)}</div>
-    <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
-      <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
         📲 Share via WhatsApp
       </a>
-      <button type="button" class="btn btn-quiet" onclick="navigator.clipboard.writeText('${portalUrl}'); this.textContent='✓ Link Copied!';">
-        📋 Copy Family Portal Link
+      <button type="button" class="btn btn-quiet" onclick="const inp = document.createElement('input'); inp.value = '${shareUrl}'; document.body.appendChild(inp); inp.select(); document.execCommand('copy'); inp.remove(); this.textContent='Copied ✓';">
+        📋 Copy Link
       </button>
     </div>
   `, () => {}, 'Done', 'Close');
@@ -1499,418 +1528,288 @@ function openShareZiyaratModal(total, share, mineP, filP, silP, mineB, filB, sil
 function renderFinancialsPage() {
   const finContainer = document.getElementById('financialsView');
   if (!finContainer) return;
-  const ledger = getFinLedger();
 
-  const cashInHand = ledger.cashInHand;
-  const bankSlice = ledger.bankSlice;
+  const ledger = getFinLedger();
+  const cashInHand = Number(ledger.cashInHand) || 0;
+  const bankSlice = Number(ledger.bankSlice) || 0;
   const totalLiquidCashBank = cashInHand + bankSlice;
+
+  const juzerNet = Math.max(0, (ledger.loansGiven.juzer.base || 0) + (ledger.loansGiven.juzer.adjustments || 0));
+  const customGivenList = (ledger.customLoans || []).filter(l => l.type === 'given');
+  const customGivenNet = customGivenList.reduce((s, l) => s + Math.max(0, (l.principal || 0) - (l.repaid || 0)), 0);
+  const totalLoansGiven = juzerNet + customGivenNet;
+
+  const mhjNet = Math.max(0, (ledger.loansTaken.mhj.base || 0) + (ledger.loansTaken.mhj.adjustments || 0));
+  const hatimNet = Math.max(0, (ledger.loansTaken.hatim.base || 0) + (ledger.loansTaken.hatim.adjustments || 0));
+  const customTakenList = (ledger.customLoans || []).filter(l => l.type === 'taken');
+  const customTakenNet = customTakenList.reduce((s, l) => s + Math.max(0, (l.principal || 0) - (l.repaid || 0)), 0);
+  const totalLoansTaken = mhjNet + hatimNet + customTakenNet;
 
   const tripPayments = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.payments) || [];
   const tripContributions = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.contributions) || [];
-  const totalTripPayments = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
-  const totalTripContributions = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
-  const netTripOutflow = totalTripPayments - totalTripContributions;
-
-  const equalSharePerFamily = Math.round((totalTripPayments / 3) * 100) / 100;
-
-  const minePayments = tripPayments.filter(p => /mustannsirr|mustansir|mine|self/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
-  const filPayments = tripPayments.filter(p => /father-in-law/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
-  const silPayments = tripPayments.filter(p => /sister-in-law/i.test(p.family || '')).reduce((s, p) => s + p.amount, 0);
-
-  const mineContrib = tripContributions.filter(c => /mustannsirr|mustansir|mine|self/i.test(c.family || '')).reduce((s, c) => s + c.amount, 0);
-  const filContrib = tripContributions.filter(c => /father-in-law/i.test(c.family || '')).reduce((s, c) => s + c.amount, 0);
-  const silContrib = tripContributions.filter(c => /sister-in-law/i.test(c.family || '')).reduce((s, c) => s + c.amount, 0);
-
-  const mineTotalPaid = minePayments + mineContrib;
-  const filTotalPaid = filPayments + filContrib;
-  const silTotalPaid = silPayments + silContrib;
-
-  const mineNetBal = Math.round((mineTotalPaid - equalSharePerFamily) * 100) / 100;
-  const filNetBal = Math.round((filTotalPaid - equalSharePerFamily) * 100) / 100;
-  const silNetBal = Math.round((silTotalPaid - equalSharePerFamily) * 100) / 100;
-
-  const juzerNet = Math.max(0, ledger.loansGiven.juzer.base + (ledger.loansGiven.juzer.adjustments || 0));
-  const mhjNet = Math.max(0, ledger.loansTaken.mhj.base + (ledger.loansTaken.mhj.adjustments || 0));
-  const hatimNet = Math.max(0, ledger.loansTaken.hatim.base + (ledger.loansTaken.hatim.adjustments || 0));
-
-  const customGivenList = (ledger.customLoans || []).filter(l => l.type === 'given');
-  const customTakenList = (ledger.customLoans || []).filter(l => l.type === 'taken');
-
-  const customGivenNet = customGivenList.reduce((s, l) => s + Math.max(0, l.principal - (l.repaid || 0)), 0);
-  const customTakenNet = customTakenList.reduce((s, l) => s + Math.max(0, l.principal - (l.repaid || 0)), 0);
-
-  const totalLoansGiven = juzerNet + customGivenNet;
-  const totalLoansTaken = mhjNet + hatimNet + customTakenNet;
+  const totalTripOutlay = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const totalTripContrib = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
+  const netTripOutflow = Math.max(0, totalTripOutlay - totalTripContrib);
+  const equalFamilyShare = totalTripOutlay / 3;
 
   const badgeEl = document.getElementById('finBadge');
   if (badgeEl) badgeEl.textContent = inr(totalLoansGiven);
 
+  const isDrawingCategory = (cat) => /drawing|personal/i.test(String(cat || ''));
+  const operatingExpensesList = (ledger.expenses || []).filter(e => !isDrawingCategory(e.category));
+  const personalDrawingsList = (ledger.expenses || []).filter(e => isDrawingCategory(e.category));
+
   const grossFeeIncome = 700.00;
-  const totalExpenses = (ledger.expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
-  const netProfit = grossFeeIncome - totalExpenses;
+  const totalOperatingExpenses = operatingExpensesList.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalPersonalDrawings = personalDrawingsList.reduce((s, e) => s + (e.amount || 0), 0);
+  const netProfit = grossFeeIncome - totalOperatingExpenses;
 
   const totalAssets = totalLiquidCashBank + totalLoansGiven + netTripOutflow;
   const effectiveCapital = totalAssets - totalLoansTaken;
+  const grossCapitalBeforeDrawings = effectiveCapital + totalPersonalDrawings;
 
   let html = '';
 
-  if (isFamilyPublicView) {
+  if (!isFamilyPublicView) {
     html += `
-      <div style="background:#FFFFFF; border:1px solid #BAE6FD; border-left:4px solid #0284C7; border-radius:10px; padding:12px 14px; margin-bottom:12px;">
-        <div style="font-family:var(--serif); font-size:18px; font-weight:700; color:#0369A1;">🕌 Kathiyawad Ziyarat Trip — 3 Families</div>
-        <div style="font-size:12px; color:var(--muted); margin-top:2px;">Equal 3-Way Division &bull; Live Statement Portal</div>
-      </div>
-    `;
-  } else {
-    html += `
-      <div class="fin-mode-toggle">
-        <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">Full Suite</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'loans' ? 'active' : ''}" onclick="setFinViewMode('loans')" style="color:var(--accent); font-weight:700;">🤝 Loans &amp; Advances</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')" style="color:#0284C7; font-weight:700;">🕌 Kathiyawad Ziyarat</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">Profit &amp; Loss</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
-        <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses</button>
-      </div>
-
-      <div style="background:#FFFFFF; border:1px solid var(--rule); border-left:4px solid ${cashInHand >= 0 ? 'var(--green)' : 'var(--amber)'}; border-radius:10px; padding:10px 12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <div>
-            <span style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted);">Cash in Hand</span>
-            <div style="font-family:var(--serif); font-size:17px; font-weight:700; color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div>
-          </div>
-          <div style="border-left:1px solid var(--rule); padding-left:12px;">
-            <span style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted);">slice Bank</span>
-            <div style="font-family:var(--serif); font-size:17px; font-weight:700; color:#1E3A8A;">${inr(bankSlice)}</div>
-          </div>
-          <div style="border-left:1px solid var(--rule); padding-left:12px;">
-            <span style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--muted);">Total Liquid</span>
-            <div style="font-family:var(--serif); font-size:17px; font-weight:700; color:var(--ink);">${inr(totalLiquidCashBank)}</div>
-          </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+        <div class="fin-mode-toggle" role="tablist">
+          <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">All Ledgers</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')">🕌 Ziyarat Trip</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'loans' ? 'active' : ''}" onclick="setFinViewMode('loans')">🤝 Loans</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">P&amp;L</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddLoanModal()">+ Loan / Advance</button>
-          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
-          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+          <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
+          <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+          <button type="button" class="btn btn-primary" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddLoanModal()">+ Loan / Advance</button>
         </div>
       </div>
 
       <div class="fin-hero-grid">
         <div class="fin-card">
-          <div class="f-lbl">Net Worth / Capital</div>
-          <div class="f-val" style="color:var(--green);">${inr(effectiveCapital)}</div>
-          <div class="f-sub">Includes P&amp;L profit ${inr(netProfit)}</div>
+          <div class="f-lbl">Cash in Hand</div>
+          <div class="f-val" style="color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div>
+          <div class="f-sub">Physical Cash</div>
         </div>
         <div class="fin-card">
-          <div class="f-lbl">Trip Advance (Asset)</div>
-          <div class="f-val" style="color:#0284C7;">${inr(netTripOutflow)}</div>
-          <div class="f-sub">3 Families Outlay</div>
+          <div class="f-lbl">slice SFB Bank</div>
+          <div class="f-val" style="color:#1E3A8A;">${inr(bankSlice)}</div>
+          <div class="f-sub">Liquid Total: ${inr(totalLiquidCashBank)}</div>
         </div>
         <div class="fin-card">
           <div class="f-lbl">Loans Given (Asset)</div>
           <div class="f-val" style="color:var(--red);">${inr(totalLoansGiven)}</div>
-          <div class="f-sub">Receivables Portfolio</div>
+          <div class="f-sub">Loans Taken: ${inr(totalLoansTaken)}</div>
         </div>
         <div class="fin-card">
-          <div class="f-lbl">Loans Taken (Liab.)</div>
-          <div class="f-val" style="color:var(--amber);">${inr(totalLoansTaken)}</div>
-          <div class="f-sub">Payables Portfolio</div>
+          <div class="f-lbl">Owner's Net Capital</div>
+          <div class="f-val" style="color:var(--green);">${inr(effectiveCapital)}</div>
+          <div class="f-sub">Net Profit: ${inr(netProfit)}</div>
         </div>
       </div>
     `;
   }
 
-  // === LOANS & ADVANCES MANAGER ===
-  if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'loans')) {
+  // === KATHIYAWAD ZIYARAT TRIP (3 FAMILIES EQUAL DIVISION) ===
+  if (isFamilyPublicView || finViewMode === 'all' || finViewMode === 'trip') {
+    const families = ledger.kathiyawadTrip.families || [];
+    const familyRows = families.map(f => {
+      const pPaid = tripPayments.filter(p => p.family === f.name).reduce((s, p) => s + (p.amount || 0), 0);
+      const cPaid = tripContributions.filter(c => c.family === f.name).reduce((s, c) => s + (c.amount || 0), 0);
+      const totalPaid = pPaid + cPaid;
+      const diff = totalPaid - equalFamilyShare;
+      return { name: f.name, members: f.members, totalPaid, equalShare: equalFamilyShare, diff };
+    });
+
     html += `
-      <div class="statement-sheet" style="border-left:4px solid var(--accent);">
+      <div class="statement-sheet">
         <div class="statement-header">
           <div>
-            <h3>🤝 Loans &amp; Advances Portfolio</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Given (Assets): ${inr(totalLoansGiven)} &bull; Taken (Liabilities): ${inr(totalLoansTaken)}</div>
+            <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Split</h3>
+            <div style="font-size:11px; color:#E2E8F0;">Total Outlay: ${inr(totalTripOutlay)} &bull; Equal 1/3 Share: ${inr(equalFamilyShare)} / family</div>
           </div>
-          <button type="button" class="btn btn-wa" style="height:30px; font-size:11.5px; padding:0 12px;" onclick="openAddLoanModal()">+ Add New Loan / Advance</button>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 10px;" onclick="shareZiyaratWithFamilies()">📲 Share with Families</button>
+            ${!isFamilyPublicView ? `
+              <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddTripPaymentModal()">+ Record Payment</button>
+              <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddTripContributionModal()">+ Add Contribution</button>
+            ` : ''}
+          </div>
+        </div>
+        <div class="statement-body">
+          <div class="table-responsive">
+            <table class="stmt-table">
+              <thead>
+                <tr>
+                  <th>Family Unit</th>
+                  <th class="text-right">Paid / Advanced</th>
+                  <th class="text-right">Equal Share (1/3)</th>
+                  <th class="text-right">Settlement Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${familyRows.map(r => {
+                  const isDue = r.diff < -0.5;
+                  const isRefund = r.diff > 0.5;
+                  return `
+                    <tr>
+                      <td><strong>${escapeForHtml(r.name)}</strong><br><small style="color:var(--muted);">${escapeForHtml(r.members)}</small></td>
+                      <td class="text-right stmt-mono">${inr(r.totalPaid)}</td>
+                      <td class="text-right stmt-mono">${inr(r.equalShare)}</td>
+                      <td class="text-right stmt-mono" style="color:${isDue ? 'var(--red)' : (isRefund ? 'var(--green)' : 'var(--ink)')}; font-weight:700;">
+                        ${isDue ? 'Needs to Pay: ' + inr(Math.abs(r.diff)) : (isRefund ? 'Receivable / Refund: ' + inr(r.diff) : 'Settled ✓')}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div style="font-weight:700; font-size:12px; margin:10px 0 6px; color:var(--ink);">Itemized Trip Disbursements &amp; Payments</div>
+          <div class="table-responsive">
+            <table class="stmt-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Family</th>
+                  <th>Particulars</th>
+                  <th>Mode</th>
+                  <th class="text-right">Amount (₹)</th>
+                  ${!isFamilyPublicView ? '<th style="width:36px; text-align:center;">Del</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${tripPayments.map(p => `
+                  <tr>
+                    <td style="white-space:nowrap;">${p.date}</td>
+                    <td><strong>${escapeForHtml(p.family)}</strong></td>
+                    <td>${escapeForHtml(p.desc)}</td>
+                    <td style="white-space:nowrap;">${escapeForHtml(p.mode)}</td>
+                    <td class="text-right stmt-mono">${inr(p.amount)}</td>
+                    ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button></td>` : ''}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          ${tripContributions.length > 0 ? `
+            <div style="font-weight:700; font-size:12px; margin:10px 0 6px; color:var(--ink);">Family Contributions Received</div>
+            <div class="table-responsive">
+              <table class="stmt-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Family</th>
+                    <th>Contributor</th>
+                    <th>Mode</th>
+                    <th class="text-right">Amount (₹)</th>
+                    ${!isFamilyPublicView ? '<th style="width:36px; text-align:center;">Del</th>' : ''}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tripContributions.map(c => `
+                    <tr>
+                      <td style="white-space:nowrap;">${c.date}</td>
+                      <td><strong>${escapeForHtml(c.family)}</strong></td>
+                      <td>${escapeForHtml(c.member)}</td>
+                      <td style="white-space:nowrap;">${escapeForHtml(c.mode)}</td>
+                      <td class="text-right stmt-mono" style="color:var(--green);">${inr(c.amount)}</td>
+                      ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('contrib', '${c.id}')">${ICON.x}</button></td>` : ''}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // === LOANS & ADVANCES PORTFOLIO ===
+  if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'loans')) {
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header">
+          <div>
+            <h3>🤝 Loans &amp; Advances Manager</h3>
+            <div style="font-size:11px; color:#E2E8F0;">Receivables: ${inr(totalLoansGiven)} &bull; Payables: ${inr(totalLoansTaken)}</div>
+          </div>
+          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddLoanModal()">+ New Loan / Advance</button>
         </div>
         <div class="statement-body">
           <div class="loan-grid">
-            <div class="loan-card" style="border-left:3.5px solid var(--red);">
+            <div class="loan-card" style="border-left:4px solid var(--red);">
               <div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
-                  <div>
-                    <div style="font-weight:700; font-size:14px;">${escapeForHtml(ledger.loansGiven.juzer.name)}</div>
-                    <div style="font-size:11px; color:var(--muted);">Mob: ${ledger.loansGiven.juzer.phone} &bull; ${ledger.loansGiven.juzer.address}</div>
-                  </div>
-                  <span class="loan-pill ${juzerNet > 0 ? 'asset' : 'settled'}">${juzerNet > 0 ? 'Given (Asset)' : 'Settled ✓'}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong>${escapeForHtml(ledger.loansGiven.juzer.name)}</strong>
+                  <span class="loan-pill asset">Given (Asset)</span>
                 </div>
-                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${juzerNet > 0 ? 'var(--red)' : 'var(--green)'}; margin:6px 0 4px;">
-                  ${inr(juzerNet)}
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:10px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
+                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--red); margin:4px 0;">${inr(juzerNet)}</div>
+                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
               </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap; border-top:1px dashed var(--rule); padding-top:8px;">
-                ${juzerNet > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 10px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>` : ''}
-                <a href="https://api.whatsapp.com/send?phone=91${ledger.loansGiven.juzer.phone}" target="_blank" rel="noopener" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">WhatsApp</a>
-                <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>
+                <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
               </div>
             </div>
 
-            <div class="loan-card" style="border-left:3.5px solid var(--amber);">
+            <div class="loan-card" style="border-left:4px solid var(--amber);">
               <div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
-                  <div>
-                    <div style="font-weight:700; font-size:14px;">${escapeForHtml(ledger.loansTaken.mhj.name)}</div>
-                    <div style="font-size:11px; color:var(--muted);">Mob: ${ledger.loansTaken.mhj.phone} &bull; Principal</div>
-                  </div>
-                  <span class="loan-pill ${mhjNet > 0 ? 'liab' : 'settled'}">${mhjNet > 0 ? 'Taken (Liab.)' : 'Settled ✓'}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong>${escapeForHtml(ledger.loansTaken.mhj.name)}</strong>
+                  <span class="loan-pill liab">Taken (Liability)</span>
                 </div>
-                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${mhjNet > 0 ? 'var(--amber)' : 'var(--green)'}; margin:6px 0 4px;">
-                  ${inr(mhjNet)}
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:10px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
+                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--amber); margin:4px 0;">${inr(mhjNet)}</div>
+                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
               </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap; border-top:1px dashed var(--rule); padding-top:8px;">
-                ${mhjNet > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 10px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>` : ''}
-                <a href="https://api.whatsapp.com/send?phone=91${ledger.loansTaken.mhj.phone}" target="_blank" rel="noopener" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">WhatsApp</a>
-                <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>
+                <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
               </div>
             </div>
 
-            <div class="loan-card" style="border-left:3.5px solid var(--amber);">
+            <div class="loan-card" style="border-left:4px solid var(--amber);">
               <div>
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
-                  <div>
-                    <div style="font-weight:700; font-size:14px;">${escapeForHtml(ledger.loansTaken.hatim.name)}</div>
-                    <div style="font-size:11px; color:var(--muted);">Mob: ${ledger.loansTaken.hatim.phone} &bull; Associate</div>
-                  </div>
-                  <span class="loan-pill ${hatimNet > 0 ? 'liab' : 'settled'}">${hatimNet > 0 ? 'Taken (Liab.)' : 'Settled ✓'}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong>${escapeForHtml(ledger.loansTaken.hatim.name)}</strong>
+                  <span class="loan-pill liab">Taken (Liability)</span>
                 </div>
-                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${hatimNet > 0 ? 'var(--amber)' : 'var(--green)'}; margin:6px 0 4px;">
-                  ${inr(hatimNet)}
-                </div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:10px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
+                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--amber); margin:4px 0;">${inr(hatimNet)}</div>
+                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
               </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap; border-top:1px dashed var(--rule); padding-top:8px;">
-                ${hatimNet > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 10px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>` : ''}
-                <a href="https://api.whatsapp.com/send?phone=91${ledger.loansTaken.hatim.phone}" target="_blank" rel="noopener" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">WhatsApp</a>
-                <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>
+                <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
               </div>
             </div>
 
-            ${(ledger.customLoans || []).map(item => {
-              const due = Math.max(0, item.principal - (item.repaid || 0));
-              const isGiven = item.type === 'given';
-              const cleanPhone = (item.phone || '').replace(/[^0-9]/g, '');
+            ${(ledger.customLoans || []).map(cl => {
+              const rem = Math.max(0, (cl.principal || 0) - (cl.repaid || 0));
+              const isGiven = cl.type === 'given';
               return `
-                <div class="loan-card" style="border-left:3.5px solid ${due <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')};">
+                <div class="loan-card" style="border-left:4px solid ${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')};">
                   <div>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
-                      <div>
-                        <div style="font-weight:700; font-size:14px;">${escapeForHtml(item.name)}</div>
-                        <div style="font-size:11px; color:var(--muted);">${item.date} &bull; Mode: ${escapeForHtml(item.mode)}${item.phone ? ' &bull; ' + escapeForHtml(item.phone) : ''}</div>
-                      </div>
-                      <span class="loan-pill ${due <= 0 ? 'settled' : (isGiven ? 'asset' : 'liab')}">
-                        ${due <= 0 ? 'Settled ✓' : (isGiven ? 'Given (Asset)' : 'Taken (Liab.)')}
-                      </span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <strong>${escapeForHtml(cl.name)}</strong>
+                      <span class="loan-pill ${rem <= 0 ? 'settled' : (isGiven ? 'asset' : 'liab')}">${rem <= 0 ? 'Settled' : (isGiven ? 'Given (Asset)' : 'Taken (Liability)')}</span>
                     </div>
-                    <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${due <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:6px 0 2px;">
-                      ${inr(due)} <small style="font-family:var(--sans); font-size:11px; font-weight:500; color:var(--muted);">of ${inr(item.principal)}</small>
-                    </div>
-                    ${item.note ? `<div style="font-size:11px; color:var(--muted); margin-bottom:10px;">${escapeForHtml(item.note)}</div>` : '<div style="margin-bottom:8px;"></div>'}
+                    <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:4px 0;">${inr(rem)}</div>
+                    <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
                   </div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; border-top:1px dashed var(--rule); padding-top:8px;">
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                      ${due > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 10px;" onclick="recordLoanRepayment('${item.id}', false)">Record Repayment</button>` : ''}
-                      ${cleanPhone ? `<a href="https://api.whatsapp.com/send?phone=${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}" target="_blank" rel="noopener" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">WhatsApp</a>` : ''}
-                    </div>
-                    <button type="button" class="act del" onclick="deleteCustomLoan('${item.id}')" title="Delete Entry">${ICON.x}</button>
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                    ${rem > 0 ? `<button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('${cl.id}', false)">Record Repayment</button>` : ''}
+                    <button type="button" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; color:var(--red);" onclick="deleteCustomLoan('${cl.id}')">Delete</button>
                   </div>
                 </div>
               `;
             }).join('')}
           </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // === KATHIYAWAD ZIYARAT TRIP ===
-  if (finViewMode === 'all' || finViewMode === 'trip' || isFamilyPublicView) {
-    html += `
-      <div class="statement-sheet" style="border-left:4px solid #0284C7;">
-        <div class="statement-header" style="background:linear-gradient(135deg, #075985 0%, #0284C7 100%);">
-          <div>
-            <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families</h3>
-            <div style="font-size:11px; color:#E0F2FE;">Total: ${inr(totalTripPayments)} &bull; 1/3 Share: ${inr(equalSharePerFamily)} each</div>
-          </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            ${!isFamilyPublicView ? `
-            <button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 8px;" onclick="openShareZiyaratModal(${totalTripPayments}, ${equalSharePerFamily}, ${mineTotalPaid}, ${filTotalPaid}, ${silTotalPaid}, ${mineNetBal}, ${filNetBal}, ${silNetBal})">📲 Share</button>
-            <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openAddTripPaymentModal()">+ Payment</button>
-            <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="openAddTripContributionModal()">+ Inflow</button>
-            ` : ''}
-          </div>
-        </div>
-        <div class="statement-body">
-
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px; margin-bottom:12px;">
-            <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:8px 10px;">
-              <span style="font-size:10px; font-weight:700; color:#0369A1;">1. MUSTANNSIRR FAMILY</span>
-              <div style="font-size:11px; color:#0284C7; margin:2px 0;">Paid: <b>${inr(mineTotalPaid)}</b> &bull; Share: <b>${inr(equalSharePerFamily)}</b></div>
-              <div style="font-size:11.5px; font-weight:700; color:${mineNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
-                ${mineNetBal >= 0 ? '✓ Overpaid: ' + inr(mineNetBal) : '⚠️ Due: ' + inr(Math.abs(mineNetBal))}
-              </div>
-            </div>
-            <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px; padding:8px 10px;">
-              <span style="font-size:10px; font-weight:700; color:#B45309;">2. FATHER-IN-LAW FAMILY</span>
-              <div style="font-size:11px; color:#92400E; margin:2px 0;">Paid: <b>${inr(filTotalPaid)}</b> &bull; Share: <b>${inr(equalSharePerFamily)}</b></div>
-              <div style="font-size:11.5px; font-weight:700; color:${filNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
-                ${filNetBal >= 0 ? '✓ Refund Due: ' + inr(filNetBal) : '⚠️ Due: ' + inr(Math.abs(filNetBal))}
-              </div>
-            </div>
-            <div style="background:#FDF2F8; border:1px solid #FBCFE8; border-radius:8px; padding:8px 10px;">
-              <span style="font-size:10px; font-weight:700; color:#9D174D;">3. SISTER-IN-LAW FAMILY</span>
-              <div style="font-size:11px; color:#9D174D; margin:2px 0;">Paid: <b>${inr(silTotalPaid)}</b> &bull; Share: <b>${inr(equalSharePerFamily)}</b></div>
-              <div style="font-size:11.5px; font-weight:700; color:${silNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
-                ${silNetBal >= 0 ? '✓ Overpaid: ' + inr(silNetBal) : '⚠️ Due: ' + inr(Math.abs(silNetBal))}
-              </div>
-            </div>
-          </div>
-
-          <div style="margin-bottom:14px;">
-            <div style="font-weight:700; font-size:12.5px; margin-bottom:6px; color:#0F172A;">📊 Equal Split &amp; Settlement Matrix</div>
-            <div class="table-responsive">
-              <table class="stmt-table">
-                <thead>
-                  <tr>
-                    <th>Family</th>
-                    <th class="text-right">Actual Paid (₹)</th>
-                    <th class="text-right">1/3 Share (₹)</th>
-                    <th class="text-right">Net Balance</th>
-                    <th style="text-align:center;">Settlement Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>1. Mustannsirr Family (Mine)</strong></td>
-                    <td class="text-right stmt-mono">${inr(mineTotalPaid)}</td>
-                    <td class="text-right stmt-mono">${inr(equalSharePerFamily)}</td>
-                    <td class="text-right stmt-mono" style="font-weight:700; color:${mineNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
-                      ${mineNetBal >= 0 ? '+ ' + inr(mineNetBal) : '- ' + inr(Math.abs(mineNetBal))}
-                    </td>
-                    <td style="text-align:center;">
-                      <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${mineNetBal >= 0 ? 'background:var(--green-soft); color:var(--green);' : 'background:var(--red-soft); color:var(--red);'}">
-                        ${mineNetBal >= 0 ? 'Settled / Overpaid' : 'Has to Pay ' + inr(Math.abs(mineNetBal))}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>2. Father-in-law Family</strong></td>
-                    <td class="text-right stmt-mono">${inr(filTotalPaid)}</td>
-                    <td class="text-right stmt-mono">${inr(equalSharePerFamily)}</td>
-                    <td class="text-right stmt-mono" style="font-weight:700; color:${filNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
-                      ${filNetBal >= 0 ? '+ ' + inr(filNetBal) : '- ' + inr(Math.abs(filNetBal))}
-                    </td>
-                    <td style="text-align:center;">
-                      <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${filNetBal >= 0 ? 'background:var(--green-soft); color:var(--green);' : 'background:var(--red-soft); color:var(--red);'}">
-                        ${filNetBal >= 0 ? 'To Receive ' + inr(filNetBal) : 'Has to Pay ' + inr(Math.abs(filNetBal))}
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td><strong>3. Sister-in-law Family</strong></td>
-                    <td class="text-right stmt-mono">${inr(silTotalPaid)}</td>
-                    <td class="text-right stmt-mono">${inr(equalSharePerFamily)}</td>
-                    <td class="text-right stmt-mono" style="font-weight:700; color:${silNetBal >= 0 ? 'var(--green)' : 'var(--red)'};">
-                      ${silNetBal >= 0 ? '+ ' + inr(silNetBal) : '- ' + inr(Math.abs(silNetBal))}
-                    </td>
-                    <td style="text-align:center;">
-                      <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${silNetBal >= 0 ? 'background:var(--green-soft); color:var(--green);' : 'background:var(--red-soft); color:var(--red);'}">
-                        ${silNetBal >= 0 ? 'Settled / Overpaid' : 'Has to Pay ' + inr(Math.abs(silNetBal))}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div style="margin-bottom:14px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-weight:700; font-size:12.5px; color:#0369A1;">Disbursements &amp; Expenses Outflow</span>
-              ${!isFamilyPublicView ? `<button type="button" class="act" onclick="openAddTripPaymentModal()">+ Add Payment</button>` : ''}
-            </div>
-            <div class="table-responsive">
-              <table class="stmt-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Family</th>
-                    <th>Particulars</th>
-                    <th>Mode</th>
-                    <th class="text-right">Amount (₹)</th>
-                    ${!isFamilyPublicView ? `<th style="width:36px; text-align:center;">Del</th>` : ''}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${tripPayments.map(p => `
-                    <tr>
-                      <td style="white-space:nowrap;">${p.date}</td>
-                      <td><span style="font-size:10px; font-weight:700; padding:1px 5px; background:#E0F2FE; color:#0369A1; border-radius:4px;">${escapeForHtml(p.family)}</span></td>
-                      <td><strong>${escapeForHtml(p.desc)}</strong></td>
-                      <td style="white-space:nowrap;"><span style="font-size:10.5px; padding:1px 5px; background:${p.mode === 'Cash' ? '#ECFDF5; color:var(--green);' : '#F1F5F9; color:#1E3A8A;'}; border-radius:4px;">${escapeForHtml(p.mode)}</span></td>
-                      <td class="text-right stmt-mono" style="color:#0369A1; font-weight:700;">${inr(p.amount)}</td>
-                      ${!isFamilyPublicView ? `
-                      <td style="text-align:center;">
-                        <button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button>
-                      </td>` : ''}
-                    </tr>
-                  `).join('')}
-                  <tr style="font-weight:700; background:#F0F9FF;">
-                    <td colspan="4">Total Disbursements</td>
-                    <td class="text-right stmt-mono" style="color:#0369A1;">${inr(totalTripPayments)}</td>
-                    ${!isFamilyPublicView ? `<td></td>` : ''}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <span style="font-weight:700; font-size:12.5px; color:var(--green);">Family Contributions</span>
-              ${!isFamilyPublicView ? `<button type="button" class="act wa" onclick="openAddTripContributionModal()">+ Add Inflow</button>` : ''}
-            </div>
-            <div class="table-responsive">
-              <table class="stmt-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Family</th>
-                    <th>Member</th>
-                    <th>Mode</th>
-                    <th class="text-right">Amount (₹)</th>
-                    ${!isFamilyPublicView ? `<th style="width:36px; text-align:center;">Del</th>` : ''}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${tripContributions.length === 0 ? `<tr><td colspan="${!isFamilyPublicView ? 6 : 5}" style="text-align:center; color:var(--muted); padding:10px;">No pooled contributions logged yet.</td></tr>` : ''}
-                  ${tripContributions.map(c => `
-                    <tr>
-                      <td style="white-space:nowrap;">${c.date}</td>
-                      <td>${escapeForHtml(c.family)}</td>
-                      <td><strong style="color:var(--green);">${escapeForHtml(c.member)}</strong></td>
-                      <td>${escapeForHtml(c.mode)}</td>
-                      <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">+ ${inr(c.amount)}</td>
-                      ${!isFamilyPublicView ? `
-                      <td style="text-align:center;">
-                        <button type="button" class="act del" onclick="deleteTripEntry('contribution', '${c.id}')">${ICON.x}</button>
-                      </td>` : ''}
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
         </div>
       </div>
     `;
@@ -1922,10 +1821,10 @@ function renderFinancialsPage() {
       <div class="statement-sheet">
         <div class="statement-header">
           <div>
-            <h3>💸 Expenses &amp; Direct Outflows</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Total Operating &amp; Direct Expenses: ${inr(totalExpenses)}</div>
+            <h3>💸 Expenses &amp; Personal Drawings</h3>
+            <div style="font-size:11px; color:#E2E8F0;">Business Expenses (P&amp;L): ${inr(totalOperatingExpenses)} &bull; Personal Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddExpenseModal()">+ Record Expense</button>
+          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddExpenseModal()">+ Record Expense / Drawing</button>
         </div>
         <div class="statement-body">
           <div class="table-responsive">
@@ -1934,25 +1833,33 @@ function renderFinancialsPage() {
                 <tr>
                   <th>Date</th>
                   <th>Payee / Particular</th>
-                  <th>Category</th>
+                  <th>Category &amp; Treatment</th>
                   <th>Paid From</th>
                   <th class="text-right">Amount (₹)</th>
                   <th style="width:36px; text-align:center;">Del</th>
                 </tr>
               </thead>
               <tbody>
-                ${(ledger.expenses || []).map(exp => `
+                ${(ledger.expenses || []).map(exp => {
+                  const isDrawing = isDrawingCategory(exp.category);
+                  return `
                   <tr>
                     <td style="white-space:nowrap;">${exp.date}</td>
                     <td><strong>${escapeForHtml(exp.payee)}</strong>${exp.note ? `<br><small style="color:var(--muted);">${escapeForHtml(exp.note)}</small>` : ''}</td>
-                    <td>${escapeForHtml(exp.category)}</td>
+                    <td>
+                      <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${isDrawing ? 'background:#FDF2F8; color:#9D174D;' : 'background:#F1F5F9; color:#334155;'}">
+                        ${escapeForHtml(exp.category)}
+                      </span>
+                      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${isDrawing ? '→ Capital A/c (Drawings)' : '→ Profit & Loss A/c'}</div>
+                    </td>
                     <td style="white-space:nowrap;">${escapeForHtml(exp.source)}</td>
                     <td class="text-right stmt-mono" style="color:var(--red);">${inr(exp.amount)}</td>
                     <td style="text-align:center;">
                       <button type="button" class="act del" onclick="deleteExpenseEntry('${exp.id}')">${ICON.x}</button>
                     </td>
                   </tr>
-                `).join('')}
+                `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -1987,11 +1894,12 @@ function renderFinancialsPage() {
                   <td class="text-right stmt-mono">${inr(grossFeeIncome)}</td>
                 </tr>
                 <tr style="background:#F8FAFC; font-weight:700;">
-                  <td colspan="2">B. Direct &amp; Operating Expenses</td>
+                  <td colspan="2">B. Direct &amp; Operating Business Expenses</td>
                 </tr>
-                ${(ledger.expenses || []).map(exp => `
+                ${operatingExpensesList.length === 0 ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
+                ${operatingExpensesList.map(exp => `
                   <tr>
-                    <td>${escapeForHtml(exp.payee)}</td>
+                    <td>${escapeForHtml(exp.payee)} <small style="color:var(--muted);">(${escapeForHtml(exp.category)})</small></td>
                     <td class="text-right stmt-mono">${inr(exp.amount)}</td>
                   </tr>
                 `).join('')}
@@ -2028,8 +1936,14 @@ function renderFinancialsPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td><strong>Owner's Capital Account</strong><br><small style="color:var(--muted);">Base Capital + Net Profit</small></td>
-                  <td class="text-right stmt-mono" style="color:var(--green);">${inr(effectiveCapital)}</td>
+                  <td>
+                    <strong>Owner's Capital Account</strong>
+                    <div style="font-size:11px; color:var(--muted); margin-top:2px;">
+                      Capital &amp; Reserves (incl. Net Profit ${inr(netProfit)}): ${inr(grossCapitalBeforeDrawings)}
+                      ${totalPersonalDrawings > 0 ? `<br><span style="color:#BE185D; font-weight:600;">Less: Personal Drawings: &minus; ${inr(totalPersonalDrawings)}</span>` : ''}
+                    </div>
+                  </td>
+                  <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">${inr(effectiveCapital)}</td>
                   <td><strong>Cash &amp; Bank Balances</strong><br><small style="color:var(--muted);">Cash (${inr(cashInHand)}) + slice SFB (${inr(bankSlice)})</small></td>
                   <td class="text-right stmt-mono">${inr(totalLiquidCashBank)}</td>
                 </tr>
