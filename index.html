@@ -1088,18 +1088,13 @@ function sendWhatsAppReminder(taskId, balance) {
   if (!t) return;
   const clientName = t.linked || t.name;
   const currentPhone = (t.phone || '').replace(/[^0-9]/g, '');
-  const cleanAmt = Math.round((Number(balance) || 0) * 100) / 100;
-  const autoFillRazorpayMe = cleanAmt > 0
-    ? `https://razorpay.me/@mustansirmalik/${cleanAmt}`
-    : 'https://razorpay.me/@mustansirmalik';
 
   const buildReminderUrl = (rawPhone, payUrl, invNumber) => {
     let clean = (rawPhone || '').replace(/[^0-9]/g, '');
     if (clean.length === 10) clean = '91' + clean;
     const invLine = invNumber ? `\n\n📄 *Invoice ${invNumber}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNumber)}` : '';
-    const finalPayLink = payUrl || autoFillRazorpayMe;
-    const linkLine = `\n\n👉 *Pay ₹${cleanAmt} securely here:*\n${finalPayLink}`;
-    const msg = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${cleanAmt}${invLine}${linkLine}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+    const linkLine = payUrl ? `\n\n👉 *Pay securely here:*\n${payUrl}` : `\n\n👉 *Pay securely here (please enter ₹${balance}):*\nhttps://razorpay.me/@mustansirmalik`;
+    const msg = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invLine}${linkLine}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
     return {
       msg,
       waUrl: 'https://api.whatsapp.com/send?' + (clean ? 'phone=' + clean + '&' : '') + 'text=' + encodeURIComponent(msg)
@@ -1107,13 +1102,13 @@ function sendWhatsAppReminder(taskId, balance) {
   };
 
   const initialInv = String(t.invoice || '').split('|')[0].trim();
-  const initialData = buildReminderUrl(currentPhone, autoFillRazorpayMe, initialInv);
+  const initialData = buildReminderUrl(currentPhone, '', initialInv);
 
   showModal('📲 Payment Reminder — ' + clientName, `
-    <div class="hint">Pending Balance: <strong style="color:var(--red);">${inr(cleanAmt)}</strong> (Autofilled in payment link). Verify or enter mobile number below:</div>
+    <div class="hint">Pending Balance: <strong style="color:var(--red);">${inr(balance)}</strong>. Verify or enter mobile number below:</div>
     <label>Client Mobile Number (Optional — leave blank to pick in WhatsApp)</label>
     <input type="tel" id="mRemPhone" value="${escapeForHtml(currentPhone)}" placeholder="e.g. 9876543210">
-    <div id="mRemLinkStatus" style="font-size:11.5px; color:var(--green); margin-bottom:8px; font-weight:600;">✓ Amount ₹${cleanAmt} autofilled in payment link</div>
+    <div id="mRemLinkStatus" style="font-size:11.5px; color:var(--accent); margin-bottom:8px; font-weight:600;">⏳ Generating direct Razorpay payment link...</div>
     <div class="receipt-preview" id="mRemPreview">${escapeForHtml(initialData.msg)}</div>
     <div style="margin-top:12px; display:flex; gap:8px;">
       <a id="mRemWaBtn" href="${initialData.waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
@@ -1132,7 +1127,7 @@ function sendWhatsAppReminder(taskId, balance) {
     }
   }, 'Save Number', 'Close');
 
-  let livePayUrl = autoFillRazorpayMe;
+  let livePayUrl = '';
   let liveInvNum = initialInv;
 
   const phoneInp = document.getElementById('mRemPhone');
@@ -1147,28 +1142,30 @@ function sendWhatsAppReminder(taskId, balance) {
 
   const url = getWebhook();
   if (url) {
-    fetch(url + '?' + new URLSearchParams({ action: 'razorpaylink', amount: cleanAmt, client: clientName, id: taskId }).toString())
+    fetch(url + '?' + new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName, id: taskId }).toString())
       .then(r => r.json())
       .then(data => {
         const stEl = document.getElementById('mRemLinkStatus');
         if (data && data.status === 'ok' && data.shortUrl) {
           livePayUrl = data.shortUrl;
-          if (stEl) { stEl.textContent = '✓ Direct Razorpay Payment Link (₹' + cleanAmt + ' locked) ready!'; stEl.style.color = 'var(--green)'; }
+          if (stEl) { stEl.textContent = '✓ Direct Razorpay payment link ready!'; stEl.style.color = 'var(--green)'; }
           updatePreview();
+        } else if (stEl) {
+          stEl.textContent = 'Using standard Razorpay.me payment link.';
+          stEl.style.color = 'var(--muted)';
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        const stEl = document.getElementById('mRemLinkStatus');
+        if (stEl) { stEl.textContent = 'Using standard Razorpay.me payment link.'; stEl.style.color = 'var(--muted)'; }
+      });
   }
 }
 
 function sendCustomLoanReminder(name, phone, amount) {
   let clean = (phone || '').replace(/[^0-9]/g, '');
   if (clean.length === 10) clean = '91' + clean;
-  const cleanAmt = Math.round((Number(amount) || 0) * 100) / 100;
-  const payLink = cleanAmt > 0
-    ? `https://razorpay.me/@mustansirmalik/${cleanAmt}`
-    : 'https://razorpay.me/@mustansirmalik';
-  const msg = `🧾 *Payment Reminder*\n\nDear ${name},\n\nA gentle reminder regarding the pending advance/loan balance of *${inr(cleanAmt)}*.\n\n👉 *Pay ₹${cleanAmt} securely here:*\n${payLink}\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+  const msg = `🧾 *Payment Reminder*\n\nDear ${name},\n\nA gentle reminder regarding the pending advance/loan balance of *${inr(amount)}*.\n\n👉 *Pay securely here:*\nhttps://razorpay.me/@mustansirmalik\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
   const waUrl = 'https://api.whatsapp.com/send?' + (clean ? 'phone=' + clean + '&' : '') + 'text=' + encodeURIComponent(msg);
 
   showModal('📲 Payment Reminder — ' + name, `
@@ -2038,4 +2035,10 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
+```
+
+### What Has Been Restored:
+1. **Google Calendar Task Sync (`pullFromCalendar`)**: Automatically pulls all your tagged tasks (`[MHJ]`, `[SHK]`, `[OWN]`, `[PERSONAL]`, `[FEES]`) from Google Calendar upon opening the dashboard.
+2. **Two-Way Calendar Actions**: Adding tasks (`addTask`), marking tasks complete (`toggleTask`), editing remarks (`setRemark`), recording fee payments (`recordPayment`), and deleting items (`deleteTask`) now sync directly back to Google Calendar.
+3. **Grouped Category Views**: Restored your collapsible category groups (**MHJ**, **SHK Husain Arif**, **OWN**, **Personal**, **Fees & Receivables**) and filter tabs (`All`, `Personal`, `Professional`, `Pending`, `Done`).
 4. **All Recent Features Preserved**: The new **Loans & Advances Manager** (`+ Loan / Advance`, repayment recording, deletion with balance reversal), **Kathiyawad Ziyarat 3-family equal split & read-only family link (`?view=ziyarat`)**, **mobile table scrolling**, and **double-entry cash/bank accounting** remain completely intact.
