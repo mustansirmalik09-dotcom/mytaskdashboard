@@ -2080,6 +2080,555 @@ function clearSearch() {
   render(true);
 }
 
+function setFinViewMode(mode) {
+  finViewMode = mode;
+  renderFinancialsPage();
+}
+
+function getJournalAccountLabel(code) {
+  const map = {
+    CASH: 'Cash in Hand',
+    BANK_SLICE: 'slice SFB Bank',
+    LOAN_JUZER: 'Juzer Presswala (Loan Given - Asset)',
+    LOAN_MHJ: 'MHJ (Loan Taken - Liability)',
+    LOAN_HATIM: 'Hatim Bhai (Loan Taken - Liability)',
+    INCOME_FEES: 'Professional Fees Income (P&L)',
+    EXPENSE_OP: 'Business Operating Expense (P&L)',
+    DRAWINGS: 'Personal Drawings (Capital Deduction)',
+    CAPITAL: "Owner's Capital Account",
+    ZIYARAT: 'Kathiyawad Ziyarat Trip Advance'
+  };
+  return map[code] || code;
+}
+
+function applyJournalEffect(ledger, debitAcc, creditAcc, amt, sign) {
+  const delta = amt * sign;
+  const adjust = (acc, isDebit) => {
+    const dir = isDebit ? 1 : -1;
+    if (acc === 'CASH') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + delta * dir;
+    else if (acc === 'BANK_SLICE') ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta * dir;
+    else if (acc === 'LOAN_JUZER') ledger.loansGiven.juzer.adjustments = (Number(ledger.loansGiven.juzer.adjustments) || 0) + delta * dir;
+    else if (acc === 'LOAN_MHJ') ledger.loansTaken.mhj.adjustments = (Number(ledger.loansTaken.mhj.adjustments) || 0) - delta * dir;
+    else if (acc === 'LOAN_HATIM') ledger.loansTaken.hatim.adjustments = (Number(ledger.loansTaken.hatim.adjustments) || 0) - delta * dir;
+    else if (acc === 'INCOME_FEES') ledger.journalIncomeAdj = (Number(ledger.journalIncomeAdj) || 0) - delta * dir;
+    else if (acc === 'EXPENSE_OP') ledger.journalExpenseAdj = (Number(ledger.journalExpenseAdj) || 0) + delta * dir;
+    else if (acc === 'DRAWINGS') ledger.journalDrawingsAdj = (Number(ledger.journalDrawingsAdj) || 0) + delta * dir;
+    else if (acc === 'ZIYARAT') ledger.journalZiyaratAdj = (Number(ledger.journalZiyaratAdj) || 0) + delta * dir;
+  };
+  adjust(debitAcc, true);
+  adjust(creditAcc, false);
+}
+
+function openJournalEntryModal() {
+  const opts = `
+    <option value="CASH">Cash in Hand</option>
+    <option value="BANK_SLICE">slice SFB Bank</option>
+    <option value="LOAN_JUZER">Juzer Presswala (Loan Given)</option>
+    <option value="LOAN_MHJ">MHJ (Loan Taken)</option>
+    <option value="LOAN_HATIM">Hatim Bhai (Loan Taken)</option>
+    <option value="INCOME_FEES">Professional Fees Income (P&amp;L)</option>
+    <option value="EXPENSE_OP">Business Operating Expense (P&amp;L)</option>
+    <option value="DRAWINGS">Personal Drawings (Capital Deduction)</option>
+    <option value="CAPITAL">Owner's Capital Account</option>
+    <option value="ZIYARAT">Kathiyawad Ziyarat Trip Advance</option>
+  `;
+  showModal('📒 Pass Double-Entry Journal Voucher', `
+    <label>Voucher Date</label>
+    <input type="date" id="jvDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Debit Account (Dr)</label>
+    <select id="jvDebit">${opts}</select>
+    <label>Credit Account (Cr)</label>
+    <select id="jvCredit">
+      <option value="BANK_SLICE">slice SFB Bank</option>
+      <option value="CASH">Cash in Hand</option>
+      <option value="LOAN_JUZER">Juzer Presswala (Loan Given)</option>
+      <option value="LOAN_MHJ">MHJ (Loan Taken)</option>
+      <option value="LOAN_HATIM">Hatim Bhai (Loan Taken)</option>
+      <option value="INCOME_FEES">Professional Fees Income (P&amp;L)</option>
+      <option value="EXPENSE_OP">Business Operating Expense (P&amp;L)</option>
+      <option value="DRAWINGS">Personal Drawings (Capital Deduction)</option>
+      <option value="CAPITAL">Owner's Capital Account</option>
+      <option value="ZIYARAT">Kathiyawad Ziyarat Trip Advance</option>
+    </select>
+    <label>Amount (₹)</label>
+    <input type="number" id="jvAmount" placeholder="₹ Amount">
+    <label>Narration / Particulars</label>
+    <input type="text" id="jvNarration" placeholder="e.g. Contra transfer / Settlement adjustment">
+  `, () => {
+    const date = document.getElementById('jvDate').value || new Date().toISOString().slice(0, 10);
+    const debitAccount = document.getElementById('jvDebit').value;
+    const creditAccount = document.getElementById('jvCredit').value;
+    const amount = parseFloat(document.getElementById('jvAmount').value) || 0;
+    const narration = document.getElementById('jvNarration').value.trim() || 'Journal Adjustment';
+    if (amount <= 0 || debitAccount === creditAccount) return;
+
+    const ledger = getFinLedger();
+    if (!ledger.journalEntries) ledger.journalEntries = [];
+    const voucherNo = 'JV-' + String(ledger.journalEntries.length + 1).padStart(3, '0');
+    ledger.journalEntries.push({
+      id: 'jv_' + Date.now(),
+      voucherNo,
+      date,
+      debitAccount,
+      creditAccount,
+      amount,
+      narration
+    });
+    applyJournalEffect(ledger, debitAccount, creditAccount, amount, 1);
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Post Voucher', 'Cancel');
+}
+
+function deleteJournalEntry(id) {
+  const ledger = getFinLedger();
+  const idx = (ledger.journalEntries || []).findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const jv = ledger.journalEntries[idx];
+  showModal('Delete Journal Voucher ' + (jv.voucherNo || '') + '?', `
+    <div class="hint">This will reverse both the Debit (${getJournalAccountLabel(jv.debitAccount)}) and Credit (${getJournalAccountLabel(jv.creditAccount)}) of ${inr(jv.amount)}.</div>
+  `, () => {
+    applyJournalEffect(ledger, jv.debitAccount, jv.creditAccount, jv.amount, -1);
+    ledger.journalEntries.splice(idx, 1);
+    if (!ledger.deletedIds) ledger.deletedIds = [];
+    ledger.deletedIds.push(id);
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Delete', 'Cancel');
+}
+
+function openAtmCashWithdrawalModal() {
+  showModal('🏧 ATM Cash Withdrawal (Contra)', `
+    <div class="hint">Transfers funds from <strong>slice SFB Bank</strong> into <strong>Cash in Hand</strong>.</div>
+    <label>Withdrawal Amount (₹)</label>
+    <input type="number" id="atmAmt" placeholder="e.g. 10000" value="10000">
+    <label>Date</label>
+    <input type="date" id="atmDate" value="${new Date().toISOString().slice(0, 10)}">
+  `, () => {
+    const amt = parseFloat(document.getElementById('atmAmt').value) || 0;
+    const date = document.getElementById('atmDate').value || new Date().toISOString().slice(0, 10);
+    if (amt <= 0) return;
+    const ledger = getFinLedger();
+    ledger.cashInHand = (Number(ledger.cashInHand) || 0) + amt;
+    ledger.bankSlice = (Number(ledger.bankSlice) || 0) - amt;
+    if (!ledger.journalEntries) ledger.journalEntries = [];
+    ledger.journalEntries.push({
+      id: 'jv_' + Date.now(),
+      voucherNo: 'JV-' + String(ledger.journalEntries.length + 1).padStart(3, '0'),
+      date,
+      debitAccount: 'CASH',
+      creditAccount: 'BANK_SLICE',
+      amount: amt,
+      narration: 'ATM Cash Withdrawal from slice SFB'
+    });
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Record Withdrawal', 'Cancel');
+}
+
+function openEditBalancesModal() {
+  const ledger = getFinLedger();
+  showModal('✏️ Reconcile Liquid Balances', `
+    <label>Physical Cash in Hand (₹)</label>
+    <input type="number" id="editCashVal" value="${ledger.cashInHand}">
+    <label>slice Small Finance Bank Balance (₹)</label>
+    <input type="number" id="editBankVal" value="${ledger.bankSlice}">
+  `, () => {
+    const c = parseFloat(document.getElementById('editCashVal').value);
+    const b = parseFloat(document.getElementById('editBankVal').value);
+    if (!isNaN(c)) ledger.cashInHand = c;
+    if (!isNaN(b)) ledger.bankSlice = b;
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Update Balances', 'Cancel');
+}
+
+function openAddLoanModal() {
+  showModal('🤝 Add Loan or Advance', `
+    <label>Transaction Type</label>
+    <select id="loanType">
+      <option value="given">Loan / Advance Given (Asset / Receivable)</option>
+      <option value="taken">Loan / Advance Taken (Liability / Payable)</option>
+    </select>
+    <label>Person / Party Name</label>
+    <input type="text" id="loanParty" placeholder="e.g. Ramesh Kumar">
+    <label>Mobile Number (Optional)</label>
+    <input type="tel" id="loanPhone" placeholder="e.g. 9876543210">
+    <label>Amount (₹)</label>
+    <input type="number" id="loanAmount" placeholder="₹ Amount">
+    <label>Account / Mode</label>
+    <select id="loanMode">
+      <option value="slice SFB">slice Small Finance Bank</option>
+      <option value="Cash">Cash in Hand</option>
+    </select>
+    <label>Notes / Reference</label>
+    <input type="text" id="loanNote" placeholder="Optional details">
+  `, () => {
+    const type = document.getElementById('loanType').value;
+    const name = document.getElementById('loanParty').value.trim();
+    const phone = document.getElementById('loanPhone').value.trim();
+    const principal = parseFloat(document.getElementById('loanAmount').value) || 0;
+    const mode = document.getElementById('loanMode').value;
+    const note = document.getElementById('loanNote').value.trim();
+    if (!name || principal <= 0) return;
+
+    const ledger = getFinLedger();
+    if (!ledger.customLoans) ledger.customLoans = [];
+    ledger.customLoans.push({
+      id: 'cl_' + Date.now(),
+      type,
+      name,
+      phone,
+      principal,
+      repaid: 0,
+      mode,
+      note,
+      date: new Date().toISOString().slice(0, 10)
+    });
+
+    const delta = (type === 'given') ? -principal : principal;
+    if (mode === 'Cash') ledger.cashInHand += delta;
+    else ledger.bankSlice += delta;
+
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Save Loan', 'Cancel');
+}
+
+function recordLoanRepayment(id, isBuiltIn) {
+  const ledger = getFinLedger();
+  let title = '';
+  let currentBalance = 0;
+  let isGiven = true;
+
+  if (isBuiltIn) {
+    if (id === 'juzer') {
+      title = ledger.loansGiven.juzer.name;
+      currentBalance = Math.max(0, ledger.loansGiven.juzer.base + (ledger.loansGiven.juzer.adjustments || 0));
+      isGiven = true;
+    } else if (id === 'mhj') {
+      title = ledger.loansTaken.mhj.name;
+      currentBalance = Math.max(0, ledger.loansTaken.mhj.base + (ledger.loansTaken.mhj.adjustments || 0));
+      isGiven = false;
+    } else if (id === 'hatim') {
+      title = ledger.loansTaken.hatim.name;
+      currentBalance = Math.max(0, ledger.loansTaken.hatim.base + (ledger.loansTaken.hatim.adjustments || 0));
+      isGiven = false;
+    }
+  } else {
+    const cl = (ledger.customLoans || []).find(x => x.id === id);
+    if (!cl) return;
+    title = cl.name;
+    currentBalance = Math.max(0, cl.principal - (cl.repaid || 0));
+    isGiven = cl.type === 'given';
+  }
+
+  showModal('Record Repayment — ' + title, `
+    <div class="hint">Pending Balance: <strong>${inr(currentBalance)}</strong></div>
+    <label>Repayment Amount (₹)</label>
+    <input type="number" id="repayAmt" placeholder="₹ Amount">
+    <label>Account / Payment Mode</label>
+    <select id="repayMode">
+      <option value="slice SFB">slice Small Finance Bank</option>
+      <option value="Cash">Cash in Hand</option>
+    </select>
+  `, () => {
+    const amt = parseFloat(document.getElementById('repayAmt').value) || 0;
+    const mode = document.getElementById('repayMode').value;
+    if (amt <= 0) return;
+
+    if (isBuiltIn) {
+      if (id === 'juzer') ledger.loansGiven.juzer.adjustments = (ledger.loansGiven.juzer.adjustments || 0) - amt;
+      else if (id === 'mhj') ledger.loansTaken.mhj.adjustments = (ledger.loansTaken.mhj.adjustments || 0) - amt;
+      else if (id === 'hatim') ledger.loansTaken.hatim.adjustments = (ledger.loansTaken.hatim.adjustments || 0) - amt;
+    } else {
+      const cl = (ledger.customLoans || []).find(x => x.id === id);
+      if (cl) cl.repaid = (cl.repaid || 0) + amt;
+    }
+
+    const cashDelta = isGiven ? amt : -amt;
+    if (mode === 'Cash') ledger.cashInHand += cashDelta;
+    else ledger.bankSlice += cashDelta;
+
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Save Repayment', 'Cancel');
+}
+
+function deleteCustomLoan(id) {
+  const ledger = getFinLedger();
+  const idx = (ledger.customLoans || []).findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const cl = ledger.customLoans[idx];
+  showModal('Delete Loan Entry: ' + cl.name + '?', `
+    <div class="hint">This will remove the loan and reverse its remaining cash/bank impact.</div>
+  `, () => {
+    const rem = Math.max(0, cl.principal - (cl.repaid || 0));
+    const revDelta = (cl.type === 'given') ? rem : -rem;
+    if (cl.mode === 'Cash') ledger.cashInHand += revDelta;
+    else ledger.bankSlice += revDelta;
+
+    ledger.customLoans.splice(idx, 1);
+    if (!ledger.deletedIds) ledger.deletedIds = [];
+    ledger.deletedIds.push(id);
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Delete', 'Cancel');
+}
+
+function shareZiyaratWithFamilies() {
+  const ledger = getFinLedger();
+  const tripPayments = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.payments) || [];
+  const tripContributions = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.contributions) || [];
+  const totalOutlay = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const equalShare = totalOutlay / 3;
+  const families = ledger.kathiyawadTrip.families || [];
+
+  const shareUrl = 'https://mustansirrmalikworkdashboard.netlify.app/?view=ziyarat';
+  let summaryLines = families.map(f => {
+    const pPaid = tripPayments.filter(p => p.family === f.name).reduce((s, p) => s + (p.amount || 0), 0);
+    const cPaid = tripContributions.filter(c => c.family === f.name).reduce((s, c) => s + (c.amount || 0), 0);
+    const paid = pPaid + cPaid;
+    const diff = paid - equalShare;
+    const status = diff < -0.5 ? `Due: ${inr(Math.abs(diff))}` : (diff > 0.5 ? `Refund: ${inr(diff)}` : 'Settled');
+    return `• *${f.name}:* Paid ${inr(paid)} (${status})`;
+  }).join('\n');
+
+  const msg = `🕌 *Kathiyawad Ziyarat Trip — Expense & Share Statement*\n\n` +
+    `💰 *Total Trip Outlay:* ${inr(totalOutlay)}\n` +
+    `⚖️ *Equal 1/3 Share per Family:* ${inr(equalShare)}\n\n` +
+    `*Family Breakdown:*\n${summaryLines}\n\n` +
+    `📊 *Live Statement Link (Read-Only):*\n${shareUrl}`;
+
+  const waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(msg);
+
+  showModal('📲 Share Ziyarat Trip Statement', `
+    <div class="hint">Share this live read-only statement link with all 3 families:</div>
+    <input type="text" id="ziyaratShareLinkInput" readonly value="${shareUrl}">
+    <div class="receipt-preview" style="margin-bottom:10px;">${escapeForHtml(msg)}</div>
+    <div style="display:flex; gap:8px;">
+      <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+        📲 Share on WhatsApp
+      </a>
+      <button type="button" class="btn btn-primary" onclick="const el = document.getElementById('ziyaratShareLinkInput'); el.select(); document.execCommand('copy'); this.textContent='Copied ✓';">
+        📋 Copy Link
+      </button>
+    </div>
+  `, () => {}, 'Done', 'Close');
+}
+
+function openAddTripPaymentModal() {
+  showModal('🕌 Record Ziyarat Trip Payment', `
+    <label>Date</label>
+    <input type="date" id="tpDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Family Unit</label>
+    <select id="tpFamily">
+      <option value="Mustannsirr Family (Mine)">Mustannsirr Family (Mine)</option>
+      <option value="Father-in-law Family">Father-in-law Family</option>
+      <option value="Sister-in-law Family">Sister-in-law Family</option>
+    </select>
+    <label>Description / Particulars</label>
+    <input type="text" id="tpDesc" placeholder="e.g. Hotel / Bus / Food expenses">
+    <label>Amount (₹)</label>
+    <input type="number" id="tpAmount" placeholder="₹ Amount">
+    <label>Paid From (Double-Entry)</label>
+    <select id="tpMode">
+      <option value="Cash">Cash in Hand</option>
+      <option value="slice SFB">slice Small Finance Bank</option>
+      <option value="Paid Directly by Family">Paid Directly by Family (No Cash/Bank Deduction)</option>
+    </select>
+  `, () => {
+    const date = document.getElementById('tpDate').value || new Date().toISOString().slice(0, 10);
+    const family = document.getElementById('tpFamily').value;
+    const desc = document.getElementById('tpDesc').value.trim();
+    const amount = parseFloat(document.getElementById('tpAmount').value) || 0;
+    const mode = document.getElementById('tpMode').value;
+    if (!desc || amount <= 0) return;
+
+    const ledger = getFinLedger();
+    ledger.kathiyawadTrip.payments.push({
+      id: 'kz_p_' + Date.now(),
+      date,
+      family,
+      desc,
+      amount,
+      mode
+    });
+    if (mode === 'Cash') ledger.cashInHand -= amount;
+    else if (mode === 'slice SFB') ledger.bankSlice -= amount;
+
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Save Payment', 'Cancel');
+}
+
+function openAddTripContributionModal() {
+  showModal('🕌 Record Family Contribution', `
+    <label>Date</label>
+    <input type="date" id="tcDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Family Unit</label>
+    <select id="tcFamily">
+      <option value="Sister-in-law Family">Sister-in-law Family</option>
+      <option value="Father-in-law Family">Father-in-law Family</option>
+      <option value="Mustannsirr Family (Mine)">Mustannsirr Family (Mine)</option>
+    </select>
+    <label>Contributor Name</label>
+    <input type="text" id="tcMember" placeholder="e.g. Brother-in-law">
+    <label>Amount Received (₹)</label>
+    <input type="number" id="tcAmount" placeholder="₹ Amount">
+    <label>Deposited To</label>
+    <select id="tcMode">
+      <option value="slice SFB">slice Small Finance Bank</option>
+      <option value="Cash">Cash in Hand</option>
+    </select>
+  `, () => {
+    const date = document.getElementById('tcDate').value || new Date().toISOString().slice(0, 10);
+    const family = document.getElementById('tcFamily').value;
+    const member = document.getElementById('tcMember').value.trim() || family;
+    const amount = parseFloat(document.getElementById('tcAmount').value) || 0;
+    const mode = document.getElementById('tcMode').value;
+    if (amount <= 0) return;
+
+    const ledger = getFinLedger();
+    if (!ledger.kathiyawadTrip.contributions) ledger.kathiyawadTrip.contributions = [];
+    ledger.kathiyawadTrip.contributions.push({
+      id: 'kz_c_' + Date.now(),
+      date,
+      family,
+      member,
+      amount,
+      mode
+    });
+    if (mode === 'Cash') ledger.cashInHand += amount;
+    else ledger.bankSlice += amount;
+
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Save Contribution', 'Cancel');
+}
+
+function deleteTripEntry(kind, id) {
+  const ledger = getFinLedger();
+  showModal('Delete Trip Entry?', `
+    <div class="hint">This will remove the entry and reverse its Cash/Bank balance effect.</div>
+  `, () => {
+    if (kind === 'payment') {
+      const idx = (ledger.kathiyawadTrip.payments || []).findIndex(x => x.id === id);
+      if (idx !== -1) {
+        const item = ledger.kathiyawadTrip.payments[idx];
+        if (item.mode === 'Cash') ledger.cashInHand += item.amount;
+        else if (item.mode === 'slice SFB') ledger.bankSlice += item.amount;
+        ledger.kathiyawadTrip.payments.splice(idx, 1);
+      }
+    } else {
+      const idx = (ledger.kathiyawadTrip.contributions || []).findIndex(x => x.id === id);
+      if (idx !== -1) {
+        const item = ledger.kathiyawadTrip.contributions[idx];
+        if (item.mode === 'Cash') ledger.cashInHand -= item.amount;
+        else if (item.mode === 'slice SFB') ledger.bankSlice -= item.amount;
+        ledger.kathiyawadTrip.contributions.splice(idx, 1);
+      }
+    }
+    if (!ledger.deletedIds) ledger.deletedIds = [];
+    ledger.deletedIds.push(id);
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Delete', 'Cancel');
+}
+
+function openAddExpenseModal() {
+  showModal('💸 Record Expense or Personal Drawing', `
+    <label>Date</label>
+    <input type="date" id="expDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Category &amp; Accounting Treatment</label>
+    <select id="expCat">
+      <option value="Personal Drawings">Personal Drawings (Deducted from Capital A/c)</option>
+      <option value="Portal Filing & Challan">Portal Filing &amp; Challan (P&amp;L Expense)</option>
+      <option value="Office & Documentation">Office &amp; Documentation (P&amp;L Expense)</option>
+      <option value="Travel & Conveyance">Travel &amp; Conveyance (P&amp;L Expense)</option>
+      <option value="Gateway / Merchant Fee">Gateway / Merchant Fee (P&amp;L Expense)</option>
+    </select>
+    <label>Payee / Description</label>
+    <input type="text" id="expPayee" placeholder="e.g. Household / Office supplies">
+    <label>Amount (₹)</label>
+    <input type="number" id="expAmount" placeholder="₹ Amount">
+    <label>Paid From</label>
+    <select id="expSource">
+      <option value="slice SFB">slice Small Finance Bank</option>
+      <option value="Cash">Cash in Hand</option>
+    </select>
+    <label>Note (Optional)</label>
+    <input type="text" id="expNote" placeholder="Optional details">
+  `, () => {
+    const date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
+    const category = document.getElementById('expCat').value;
+    const payee = document.getElementById('expPayee').value.trim();
+    const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+    const source = document.getElementById('expSource').value;
+    const note = document.getElementById('expNote').value.trim();
+    if (!payee || amount <= 0) return;
+
+    const ledger = getFinLedger();
+    if (!ledger.expenses) ledger.expenses = [];
+    ledger.expenses.push({
+      id: 'exp_' + Date.now(),
+      date,
+      payee,
+      category,
+      amount,
+      source,
+      note
+    });
+    if (source === 'Cash') ledger.cashInHand -= amount;
+    else ledger.bankSlice -= amount;
+
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Save Entry', 'Cancel');
+}
+
+function deleteExpenseEntry(id) {
+  const ledger = getFinLedger();
+  const idx = (ledger.expenses || []).findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const exp = ledger.expenses[idx];
+  showModal('Delete Expense: ' + exp.payee + '?', `
+    <div class="hint">This will delete the entry and credit ${inr(exp.amount)} back to ${exp.source}.</div>
+  `, () => {
+    if (exp.source === 'Cash') ledger.cashInHand += exp.amount;
+    else ledger.bankSlice += exp.amount;
+    ledger.expenses.splice(idx, 1);
+    if (!ledger.deletedIds) ledger.deletedIds = [];
+    ledger.deletedIds.push(id);
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Delete', 'Cancel');
+}
+
+async function pushToCalendar(name, tag, dueDate) {
+  const url = getWebhook();
+  if (!url) return null;
+  try {
+    const paramsObj = { action: 'add', name, tag };
+    if (dueDate) paramsObj.dueDate = dueDate;
+    const res = await fetch(url + '?' + new URLSearchParams(paramsObj).toString());
+    const data = await res.json();
+    return data.id || null;
+  } catch (e) { return null; }
+}
+
 function setRemark(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
@@ -2242,10 +2791,3 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
-```
-
-### What Has Been Restored:
-1. **Google Calendar Task Sync (`pullFromCalendar`)**: Automatically pulls all your tagged tasks (`[MHJ]`, `[SHK]`, `[OWN]`, `[PERSONAL]`, `[FEES]`) from Google Calendar upon opening the dashboard.
-2. **Two-Way Calendar Actions**: Adding tasks (`addTask`), marking tasks complete (`toggleTask`), editing remarks (`setRemark`), recording fee payments (`recordPayment`), and deleting items (`deleteTask`) now sync directly back to Google Calendar.
-3. **Grouped Category Views**: Restored your collapsible category groups (**MHJ**, **SHK Husain Arif**, **OWN**, **Personal**, **Fees & Receivables**) and filter tabs (`All`, `Personal`, `Professional`, `Pending`, `Done`).
-4. **All Recent Features Preserved**: The new **Loans & Advances Manager** (`+ Loan / Advance`, repayment recording, deletion with balance reversal), **Kathiyawad Ziyarat 3-family equal split & read-only family link (`?view=ziyarat`)**, **mobile table scrolling**, and **double-entry cash/bank accounting** remain completely intact.
