@@ -733,6 +733,7 @@ function getFinLedger() {
     if (!parsed.expenses) parsed.expenses = def.expenses;
     if (!parsed.adjustmentsLog) parsed.adjustmentsLog = [];
     if (!parsed.customLoans) parsed.customLoans = [];
+    if (!parsed.journalEntries) parsed.journalEntries = [];
     if (!parsed.deletedIds) parsed.deletedIds = [];
     if (!parsed.loansGiven) parsed.loansGiven = def.loansGiven;
     if (!parsed.loansTaken) parsed.loansTaken = def.loansTaken;
@@ -795,6 +796,7 @@ function mergeFinLedgers(local, cloud) {
   );
   merged.expenses = mergeById(local.expenses, cloud.expenses);
   merged.customLoans = mergeById(local.customLoans, cloud.customLoans);
+  merged.journalEntries = mergeById(local.journalEntries, cloud.journalEntries);
 
   return merged;
 }
@@ -806,13 +808,13 @@ async function syncCloudFinLedger() {
     const res = await fetch(url + '?action=getfinledger');
     const data = await res.json();
     if (data && data.status === 'ok' && data.ledger) {
-      const current = getFinLedger();
-      const merged = mergeFinLedgers(current, data.ledger);
+      const local = getFinLedger();
+      const merged = mergeFinLedgers(local, data.ledger);
       localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(merged));
+      render();
       if (activePage === 'financials') renderFinancialsPage();
-      else render();
     }
-  } catch (err) {}
+  } catch (e) {}
 }
 
 const seedTasks = [
@@ -1107,6 +1109,123 @@ function switchPage(page) {
 function setFinViewMode(mode) {
   finViewMode = mode;
   renderFinancialsPage();
+}
+
+// =========================================================================
+// JOURNAL ENTRY TOOL (DOUBLE-ENTRY DR / CR VOUCHERS)
+// =========================================================================
+const JOURNAL_ACCOUNTS = [
+  { id: 'cash', label: 'Cash in Hand (Asset)' },
+  { id: 'bank', label: 'slice SFB Bank (Asset)' },
+  { id: 'juzer', label: 'Juzer Presswala — Loan Given (Asset)' },
+  { id: 'mhj', label: 'MHJ — Loan Taken (Liability)' },
+  { id: 'hatim', label: 'Hatim Bhai — Loan Taken (Liability)' },
+  { id: 'income', label: 'Professional Fees Income (P&L Credit)' },
+  { id: 'expense', label: 'Business Operating Expense (P&L Debit)' },
+  { id: 'drawings', label: 'Personal Drawings (Capital Deduction)' },
+  { id: 'capital', label: "Owner's Capital Account (Equity)" },
+  { id: 'ziyarat', label: 'Kathiyawad Ziyarat Trip (Asset)' }
+];
+
+function getJournalAccountLabel(id) {
+  const found = JOURNAL_ACCOUNTS.find(a => a.id === id);
+  return found ? found.label : id;
+}
+
+function applyJournalEffect(ledger, accountId, amount, isDebit) {
+  const sign = isDebit ? 1 : -1;
+  if (accountId === 'cash') {
+    ledger.cashInHand = (Number(ledger.cashInHand) || 0) + (sign * amount);
+  } else if (accountId === 'bank') {
+    ledger.bankSlice = (Number(ledger.bankSlice) || 0) + (sign * amount);
+  } else if (accountId === 'juzer') {
+    ledger.loansGiven.juzer.adjustments = (Number(ledger.loansGiven.juzer.adjustments) || 0) + (sign * amount);
+  } else if (accountId === 'mhj') {
+    // Liability increases on Credit (-sign) and decreases on Debit (+sign)
+    ledger.loansTaken.mhj.adjustments = (Number(ledger.loansTaken.mhj.adjustments) || 0) - (sign * amount);
+  } else if (accountId === 'hatim') {
+    ledger.loansTaken.hatim.adjustments = (Number(ledger.loansTaken.hatim.adjustments) || 0) - (sign * amount);
+  } else if (accountId === 'income') {
+    ledger.journalIncomeAdj = (Number(ledger.journalIncomeAdj) || 0) - (sign * amount);
+  } else if (accountId === 'expense') {
+    ledger.journalExpenseAdj = (Number(ledger.journalExpenseAdj) || 0) + (sign * amount);
+  } else if (accountId === 'drawings') {
+    ledger.journalDrawingsAdj = (Number(ledger.journalDrawingsAdj) || 0) + (sign * amount);
+  } else if (accountId === 'capital') {
+    ledger.journalCapitalAdj = (Number(ledger.journalCapitalAdj) || 0) - (sign * amount);
+  } else if (accountId === 'ziyarat') {
+    ledger.journalZiyaratAdj = (Number(ledger.journalZiyaratAdj) || 0) + (sign * amount);
+  }
+}
+
+function openJournalEntryModal() {
+  const optionsHtml = JOURNAL_ACCOUNTS.map(a => `<option value="${a.id}">${escapeForHtml(a.label)}</option>`).join('');
+  showModal('📒 Pass Journal Entry (Dr / Cr)', `
+    <div class="hint">Post a double-entry accounting voucher across Cash, Bank, Loans, Income, Expenses, Drawings, or Capital.</div>
+    <label>Debit Account (Dr)</label>
+    <select id="mJvDebit">${optionsHtml}</select>
+    <label>Credit Account (Cr)</label>
+    <select id="mJvCredit">
+      ${JOURNAL_ACCOUNTS.map((a, idx) => `<option value="${a.id}" ${idx === 1 ? 'selected' : ''}>${escapeForHtml(a.label)}</option>`).join('')}
+    </select>
+    <label>Amount (₹)</label>
+    <input type="number" id="mJvAmount" placeholder="₹ Amount">
+    <label>Voucher Date</label>
+    <input type="date" id="mJvDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Narration / Particulars</label>
+    <input type="text" id="mJvNarration" placeholder="e.g. Adjustment entry, contra transfer, loan settlement">
+  `, () => {
+    const dr = document.getElementById('mJvDebit').value;
+    const cr = document.getElementById('mJvCredit').value;
+    const amt = parseFloat(document.getElementById('mJvAmount').value) || 0;
+    const date = document.getElementById('mJvDate').value || new Date().toISOString().slice(0, 10);
+    const narration = document.getElementById('mJvNarration').value.trim() || 'Journal Adjustment';
+
+    if (amt <= 0 || dr === cr) return;
+
+    const ledger = getFinLedger();
+    if (!ledger.journalEntries) ledger.journalEntries = [];
+
+    const entry = {
+      id: 'jv_' + Date.now(),
+      voucherNo: 'JV-' + String(ledger.journalEntries.length + 1).padStart(3, '0'),
+      date: date,
+      debitAccount: dr,
+      creditAccount: cr,
+      amount: amt,
+      narration: narration
+    };
+
+    applyJournalEffect(ledger, dr, amt, true);
+    applyJournalEffect(ledger, cr, amt, false);
+    ledger.journalEntries.push(entry);
+
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Post Voucher', 'Cancel');
+}
+
+function deleteJournalEntry(id) {
+  if (isFamilyPublicView) return;
+  const ledger = getFinLedger();
+  const item = (ledger.journalEntries || []).find(j => j.id === id);
+  if (!item) return;
+
+  showModal(`Reverse & Delete ${item.voucherNo || 'Journal Entry'}?`, `
+    <div class="hint">Deleting this ${inr(item.amount)} voucher will reverse both <b>Dr ${escapeForHtml(getJournalAccountLabel(item.debitAccount))}</b> and <b>Cr ${escapeForHtml(getJournalAccountLabel(item.creditAccount))}</b>.</div>
+  `, () => {
+    applyJournalEffect(ledger, item.debitAccount, item.amount, false);
+    applyJournalEffect(ledger, item.creditAccount, item.amount, true);
+
+    ledger.journalEntries = ledger.journalEntries.filter(j => j.id !== id);
+    if (!ledger.deletedIds) ledger.deletedIds = [];
+    ledger.deletedIds.push(id);
+
+    saveFinLedger(ledger);
+    renderFinancialsPage();
+    render();
+  }, 'Delete', 'Cancel');
 }
 
 // =========================================================================
@@ -1549,7 +1668,7 @@ function renderFinancialsPage() {
   const tripContributions = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.contributions) || [];
   const totalTripOutlay = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
   const totalTripContrib = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
-  const netTripOutflow = Math.max(0, totalTripOutlay - totalTripContrib);
+  const netTripOutflow = Math.max(0, totalTripOutlay - totalTripContrib + (Number(ledger.journalZiyaratAdj) || 0));
   const equalFamilyShare = totalTripOutlay / 3;
 
   const badgeEl = document.getElementById('finBadge');
@@ -1559,9 +1678,9 @@ function renderFinancialsPage() {
   const operatingExpensesList = (ledger.expenses || []).filter(e => !isDrawingCategory(e.category));
   const personalDrawingsList = (ledger.expenses || []).filter(e => isDrawingCategory(e.category));
 
-  const grossFeeIncome = 700.00;
-  const totalOperatingExpenses = operatingExpensesList.reduce((s, e) => s + (e.amount || 0), 0);
-  const totalPersonalDrawings = personalDrawingsList.reduce((s, e) => s + (e.amount || 0), 0);
+  const grossFeeIncome = 700.00 + (Number(ledger.journalIncomeAdj) || 0);
+  const totalOperatingExpenses = operatingExpensesList.reduce((s, e) => s + (e.amount || 0), 0) + (Number(ledger.journalExpenseAdj) || 0);
+  const totalPersonalDrawings = personalDrawingsList.reduce((s, e) => s + (e.amount || 0), 0) + (Number(ledger.journalDrawingsAdj) || 0);
   const netProfit = grossFeeIncome - totalOperatingExpenses;
 
   const totalAssets = totalLiquidCashBank + totalLoansGiven + netTripOutflow;
@@ -1575,6 +1694,7 @@ function renderFinancialsPage() {
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
         <div class="fin-mode-toggle" role="tablist">
           <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">All Ledgers</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'journal' ? 'active' : ''}" onclick="setFinViewMode('journal')">📒 Journal (${(ledger.journalEntries || []).length})</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')">🕌 Ziyarat Trip</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'loans' ? 'active' : ''}" onclick="setFinViewMode('loans')">🤝 Loans</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses</button>
@@ -1582,9 +1702,10 @@ function renderFinancialsPage() {
           <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openJournalEntryModal()">📒 + Journal Entry</button>
           <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
           <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Balances</button>
-          <button type="button" class="btn btn-primary" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddLoanModal()">+ Loan / Advance</button>
+          <button type="button" class="btn btn-quiet" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddLoanModal()">+ Loan / Advance</button>
         </div>
       </div>
 
@@ -1608,6 +1729,61 @@ function renderFinancialsPage() {
           <div class="f-lbl">Owner's Net Capital</div>
           <div class="f-val" style="color:var(--green);">${inr(effectiveCapital)}</div>
           <div class="f-sub">Net Profit: ${inr(netProfit)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // === JOURNAL VOUCHER REGISTER ===
+  if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'journal')) {
+    const jvList = ledger.journalEntries || [];
+    html += `
+      <div class="statement-sheet">
+        <div class="statement-header" style="background:linear-gradient(135deg, #1E3A8A 0%, #312E81 100%);">
+          <div>
+            <h3>📒 Double-Entry Journal Register</h3>
+            <div style="font-size:11px; color:#E2E8F0;">Total Vouchers Posted: ${jvList.length} &bull; Every entry posts Dr &amp; Cr automatically</div>
+          </div>
+          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openJournalEntryModal()">+ New Journal Voucher</button>
+        </div>
+        <div class="statement-body">
+          ${jvList.length === 0 ? `
+            <div style="text-align:center; padding:18px; color:var(--muted); font-size:12.5px;">
+              No manual journal entries recorded yet. Tap <strong>+ New Journal Voucher</strong> to pass an adjustment, contra, or settlement entry.
+            </div>
+          ` : `
+            <div class="table-responsive">
+              <table class="stmt-table">
+                <thead>
+                  <tr>
+                    <th>Voucher</th>
+                    <th>Date</th>
+                    <th>Debit (Dr) &amp; Credit (Cr) Accounts</th>
+                    <th>Narration</th>
+                    <th class="text-right">Amount (₹)</th>
+                    <th style="width:36px; text-align:center;">Del</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${jvList.slice().reverse().map(jv => `
+                    <tr>
+                      <td style="white-space:nowrap; font-weight:700; color:var(--accent);">${escapeForHtml(jv.voucherNo || 'JV')}</td>
+                      <td style="white-space:nowrap;">${escapeForHtml(jv.date)}</td>
+                      <td>
+                        <div style="color:var(--ink); font-weight:600;">Dr: ${escapeForHtml(getJournalAccountLabel(jv.debitAccount))}</div>
+                        <div style="color:var(--muted); padding-left:14px;">To Cr: ${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</div>
+                      </td>
+                      <td>${escapeForHtml(jv.narration)}</td>
+                      <td class="text-right stmt-mono">${inr(jv.amount)}</td>
+                      <td style="text-align:center;">
+                        <button type="button" class="act del" onclick="deleteJournalEntry('${jv.id}')">${ICON.x}</button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -1890,19 +2066,25 @@ function renderFinancialsPage() {
                   <td colspan="2">A. Revenue &amp; Professional Fees</td>
                 </tr>
                 <tr>
-                  <td>Gross Billed Professional Fees (Royal Consultancy Gumasta)</td>
+                  <td>Gross Billed Professional Fees (incl. Journal Income Adjustments)</td>
                   <td class="text-right stmt-mono">${inr(grossFeeIncome)}</td>
                 </tr>
                 <tr style="background:#F8FAFC; font-weight:700;">
                   <td colspan="2">B. Direct &amp; Operating Business Expenses</td>
                 </tr>
-                ${operatingExpensesList.length === 0 ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
+                ${operatingExpensesList.length === 0 && !(Number(ledger.journalExpenseAdj) > 0) ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
                 ${operatingExpensesList.map(exp => `
                   <tr>
                     <td>${escapeForHtml(exp.payee)} <small style="color:var(--muted);">(${escapeForHtml(exp.category)})</small></td>
                     <td class="text-right stmt-mono">${inr(exp.amount)}</td>
                   </tr>
                 `).join('')}
+                ${Number(ledger.journalExpenseAdj) !== 0 && ledger.journalExpenseAdj ? `
+                  <tr>
+                    <td>Journal Operating Expense Adjustments</td>
+                    <td class="text-right stmt-mono">${inr(ledger.journalExpenseAdj)}</td>
+                  </tr>
+                ` : ''}
                 <tr style="font-weight:700; background:#FAFCFE; border-top:1.5px solid var(--rule);">
                   <td>NET PRACTICE PROFIT (A &minus; B)</td>
                   <td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td>
@@ -2317,3 +2499,10 @@ if (document.readyState === 'loading') {
 </script>
 </body>
 </html>
+```
+
+### What Has Been Restored:
+1. **Google Calendar Task Sync (`pullFromCalendar`)**: Automatically pulls all your tagged tasks (`[MHJ]`, `[SHK]`, `[OWN]`, `[PERSONAL]`, `[FEES]`) from Google Calendar upon opening the dashboard.
+2. **Two-Way Calendar Actions**: Adding tasks (`addTask`), marking tasks complete (`toggleTask`), editing remarks (`setRemark`), recording fee payments (`recordPayment`), and deleting items (`deleteTask`) now sync directly back to Google Calendar.
+3. **Grouped Category Views**: Restored your collapsible category groups (**MHJ**, **SHK Husain Arif**, **OWN**, **Personal**, **Fees & Receivables**) and filter tabs (`All`, `Personal`, `Professional`, `Pending`, `Done`).
+4. **All Recent Features Preserved**: The new **Loans & Advances Manager** (`+ Loan / Advance`, repayment recording, deletion with balance reversal), **Kathiyawad Ziyarat 3-family equal split & read-only family link (`?view=ziyarat`)**, **mobile table scrolling**, and **double-entry cash/bank accounting** remain completely intact.
