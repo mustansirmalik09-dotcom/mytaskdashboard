@@ -371,6 +371,10 @@
     <span>Financials &amp; Ziyarat</span>
     <span class="nav-badge" id="finBadge">₹1.07L</span>
   </button>
+  <button type="button" id="tabInvoices" class="page-nav-btn" onclick="switchPage('invoices')">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span>Invoices</span>
+  </button>
 </nav>
 
 <div id="modalOverlay" style="display:none;">
@@ -422,6 +426,7 @@
 </div>
 
 <div id="financialsView"></div>
+<div id="invoicesView" style="display:none; width:100%; max-width:100%;"></div>
 
 <div id="authGate">
   <div class="auth-card">
@@ -500,19 +505,217 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// =========================================================================
-// CALENDAR BIDIRECTIONAL SYNC ENGINE (RESTORED)
-// =========================================================================
-async function pushToCalendar(name, tag, dueDate) {
+function switchPage(page) {
+  activePage = page;
+  const tasksView = document.getElementById('tasksView');
+  const finView = document.getElementById('financialsView');
+  const invView = document.getElementById('invoicesView');
+  const btnTasks = document.getElementById('tabTasks');
+  const btnFin = document.getElementById('tabFinancials');
+  const btnInv = document.getElementById('tabInvoices');
+
+  if (tasksView) tasksView.style.display = (page === 'tasks') ? 'block' : 'none';
+  if (finView) finView.style.display = (page === 'financials') ? 'block' : 'none';
+  if (invView) invView.style.display = (page === 'invoices') ? 'block' : 'none';
+
+  if (btnTasks) btnTasks.classList.toggle('active', page === 'tasks');
+  if (btnFin) btnFin.classList.toggle('active', page === 'financials');
+  if (btnInv) btnInv.classList.toggle('active', page === 'invoices');
+
+  if (page === 'financials') renderFinancialsPage();
+  if (page === 'invoices') renderInvoicesPage();
+  try { history.replaceState(null, '', '#' + page); } catch (e) {}
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function generateOrOpenInvoice(taskId) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const existingInv = String(t.invoice || '').split('|')[0].trim();
+  if (existingInv) {
+    window.open('invoice.html?inv=' + encodeURIComponent(existingInv), '_blank');
+    return;
+  }
+  const balance = Math.max(0, (t.payable || 0) - (t.received || 0) - (t.discount || 0));
+  const payUrl = balance > 0 ? `https://razorpay.me/@mustansirmalik/${Math.round(balance * 100) / 100}` : '';
   const url = getWebhook();
-  if (!url) return null;
-  try {
-    const paramsObj = { action: 'add', name, tag };
-    if (dueDate) paramsObj.dueDate = dueDate;
-    const res = await fetch(url + '?' + new URLSearchParams(paramsObj).toString());
-    const data = await res.json();
-    return data.id || null;
-  } catch (e) { return null; }
+
+  if (t.id && t.id.startsWith('cal_') && url) {
+    showModal('Generating Official Invoice...', `<div class="hint">Creating sequential invoice number for <strong>${escapeForHtml(t.linked || t.name)}</strong>...</div>`, () => {}, 'Close', 'Close');
+    fetch(url + '?' + new URLSearchParams({
+      action: 'getinvoice',
+      id: t.id,
+      client: t.linked || t.name,
+      payable: t.payable || 0,
+      received: t.received || 0,
+      discount: t.discount || 0,
+      balance: balance,
+      pay: payUrl
+    }).toString())
+      .then(r => r.json())
+      .then(data => {
+        closeModal();
+        if (data && data.status === 'ok' && data.invoiceNumber) {
+          t.invoice = data.invoiceNumber;
+          saveTasks();
+          render();
+          if (activePage === 'invoices') renderInvoicesPage();
+          window.open('invoice.html?inv=' + encodeURIComponent(data.invoiceNumber), '_blank');
+        } else {
+          openInstantInvoicePreview(t);
+        }
+      })
+      .catch(() => {
+        closeModal();
+        openInstantInvoicePreview(t);
+      });
+  } else {
+    const ym = new Date().toISOString().slice(0, 7);
+    const localNum = 'INV-' + ym + '-' + String(Math.floor(100 + Math.random() * 899));
+    t.invoice = localNum;
+    saveTasks();
+    render();
+    if (activePage === 'invoices') renderInvoicesPage();
+    openInstantInvoicePreview(t);
+  }
+}
+
+function openInstantInvoicePreview(t) {
+  const payable = Number(t.payable) || 0;
+  const received = Number(t.received) || 0;
+  const discount = Number(t.discount) || 0;
+  const balance = Math.max(0, payable - received - discount);
+  const invNo = String(t.invoice || 'INV-DRAFT').split('|')[0].trim();
+  const payUrl = balance > 0 ? `https://razorpay.me/@mustansirmalik/${Math.round(balance * 100) / 100}` : '';
+
+  showModal('📄 Invoice ' + invNo, `
+    <div style="background:#F8FAFC; border:1px solid var(--rule); border-radius:10px; padding:12px; font-size:12.5px; line-height:1.6;">
+      <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--rule); padding-bottom:6px; margin-bottom:6px;">
+        <strong>Mustannsirr Mallik</strong>
+        <span style="font-weight:700; color:var(--accent);">${escapeForHtml(invNo)}</span>
+      </div>
+      <div><strong>Billed To:</strong> ${escapeForHtml(t.linked || t.name)}</div>
+      <div><strong>Work:</strong> ${escapeForHtml(t.name)}</div>
+      <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--rule);">
+        <div style="display:flex; justify-content:space-between;"><span>Total Billable:</span><strong>${inr(payable)}</strong></div>
+        <div style="display:flex; justify-content:space-between; color:var(--green);"><span>Received:</span><strong>${inr(received)}</strong></div>
+        ${discount > 0 ? `<div style="display:flex; justify-content:space-between;"><span>Discount:</span><strong>${inr(discount)}</strong></div>` : ''}
+        <div style="display:flex; justify-content:space-between; font-size:14px; margin-top:4px; color:${balance > 0 ? 'var(--red)' : 'var(--green)'};">
+          <span>${balance > 0 ? 'Balance Due:' : 'Status:'}</span>
+          <strong>${balance > 0 ? inr(balance) : 'PAID / SETTLED'}</strong>
+        </div>
+      </div>
+    </div>
+    ${payUrl ? `<div style="margin-top:10px;"><a href="${payUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">💳 Pay ${inr(balance)} Online</a></div>` : ''}
+  `, () => {}, 'Done', 'Close');
+}
+
+function renderInvoicesPage() {
+  const invContainer = document.getElementById('invoicesView');
+  if (!invContainer) return;
+
+  const feeList = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance'));
+  const totalBilled = feeList.reduce((s, t) => s + (Number(t.payable) || 0), 0);
+  const totalCollected = feeList.reduce((s, t) => s + (Number(t.received) || 0), 0);
+  const totalDiscounts = feeList.reduce((s, t) => s + (Number(t.discount) || 0), 0);
+  const totalPending = Math.max(0, totalBilled - totalCollected - totalDiscounts);
+
+  let html = `
+    <div class="fin-hero-grid">
+      <div class="fin-card">
+        <div class="f-lbl">Total Invoices / Fees</div>
+        <div class="f-val">${feeList.length}</div>
+        <div class="f-sub">Billed: ${inr(totalBilled)}</div>
+      </div>
+      <div class="fin-card">
+        <div class="f-lbl">Amount Collected</div>
+        <div class="f-val" style="color:var(--green);">${inr(totalCollected)}</div>
+        <div class="f-sub">Discounts: ${inr(totalDiscounts)}</div>
+      </div>
+      <div class="fin-card">
+        <div class="f-lbl">Pending Balance</div>
+        <div class="f-val" style="color:${totalPending > 0 ? 'var(--red)' : 'var(--green)'};">${inr(totalPending)}</div>
+        <div class="f-sub">Autofilled payment links</div>
+      </div>
+      <div class="fin-card">
+        <div class="f-lbl">Official Settlement</div>
+        <div class="f-val" style="font-size:14px; color:#1E3A8A;">slice SFB</div>
+        <div class="f-sub">A/c: 033311501064738</div>
+      </div>
+    </div>
+
+    <div class="statement-sheet">
+      <div class="statement-header">
+        <div>
+          <h3>📄 Client Invoices &amp; Billing Register</h3>
+          <div style="font-size:11px; color:#E2E8F0;">Generate printable invoices, open invoice links, or send WhatsApp reminders</div>
+        </div>
+        <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="switchPage('tasks'); document.getElementById('newCat').value='FEES'; onCategoryChange(); document.getElementById('newTask').focus();">+ New Fee / Invoice</button>
+      </div>
+      <div class="statement-body">
+        ${feeList.length === 0 ? `
+          <div style="text-align:center; padding:24px; color:var(--muted);">No fee or invoice records found.</div>
+        ` : `
+          <div class="table-responsive">
+            <table class="stmt-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Client &amp; Work</th>
+                  <th class="text-right">Billed (₹)</th>
+                  <th class="text-right">Received (₹)</th>
+                  <th class="text-right">Balance Due (₹)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${feeList.map(t => {
+                  const payable = Number(t.payable) || 0;
+                  const received = Number(t.received) || 0;
+                  const discount = Number(t.discount) || 0;
+                  const bal = Math.max(0, payable - received - discount);
+                  const invNo = String(t.invoice || '').split('|')[0].trim();
+                  return `
+                    <tr>
+                      <td style="white-space:nowrap;">
+                        ${invNo ? `<strong style="color:var(--accent);">${escapeForHtml(invNo)}</strong>` : '<span style="color:var(--muted); font-size:11px;">Not Issued</span>'}
+                      </td>
+                      <td>
+                        <strong>${escapeForHtml(t.linked || t.name)}</strong>
+                        <div style="font-size:11px; color:var(--muted);">${escapeForHtml(t.name)}</div>
+                      </td>
+                      <td class="text-right stmt-mono">${inr(payable)}</td>
+                      <td class="text-right stmt-mono" style="color:var(--green);">${inr(received)}</td>
+                      <td class="text-right stmt-mono" style="color:${bal > 0 ? 'var(--red)' : 'var(--green)'}; font-weight:700;">
+                        ${bal > 0 ? inr(bal) : 'Settled ✓'}
+                      </td>
+                      <td style="white-space:nowrap;">
+                        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                          <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="generateOrOpenInvoice('${t.id}')">
+                            ${invNo ? '📄 Open Invoice' : '✨ Issue Invoice'}
+                          </button>
+                          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 8px;" onclick="recordPayment('${t.id}')">
+                            Payment
+                          </button>
+                          ${bal > 0 ? `
+                            <button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 8px;" onclick="sendWhatsAppReminder('${t.id}', ${bal})">
+                              📲 Remind
+                            </button>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  invContainer.innerHTML = html;
 }
 
 async function deleteFromCalendar(taskId) {
@@ -1088,13 +1291,18 @@ function sendWhatsAppReminder(taskId, balance) {
   if (!t) return;
   const clientName = t.linked || t.name;
   const currentPhone = (t.phone || '').replace(/[^0-9]/g, '');
+  const cleanAmt = Math.round((Number(balance) || 0) * 100) / 100;
+  const autoFillRazorpayMe = cleanAmt > 0
+    ? `https://razorpay.me/@mustansirmalik/${cleanAmt}`
+    : 'https://razorpay.me/@mustansirmalik';
 
   const buildReminderUrl = (rawPhone, payUrl, invNumber) => {
     let clean = (rawPhone || '').replace(/[^0-9]/g, '');
     if (clean.length === 10) clean = '91' + clean;
     const invLine = invNumber ? `\n\n📄 *Invoice ${invNumber}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNumber)}` : '';
-    const linkLine = payUrl ? `\n\n👉 *Pay securely here:*\n${payUrl}` : `\n\n👉 *Pay securely here (please enter ₹${balance}):*\nhttps://razorpay.me/@mustansirmalik`;
-    const msg = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${balance}${invLine}${linkLine}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+    const finalPayLink = payUrl || autoFillRazorpayMe;
+    const linkLine = `\n\n👉 *Pay ₹${cleanAmt} securely here:*\n${finalPayLink}`;
+    const msg = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${cleanAmt}${invLine}${linkLine}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
     return {
       msg,
       waUrl: 'https://api.whatsapp.com/send?' + (clean ? 'phone=' + clean + '&' : '') + 'text=' + encodeURIComponent(msg)
@@ -1102,13 +1310,13 @@ function sendWhatsAppReminder(taskId, balance) {
   };
 
   const initialInv = String(t.invoice || '').split('|')[0].trim();
-  const initialData = buildReminderUrl(currentPhone, '', initialInv);
+  const initialData = buildReminderUrl(currentPhone, autoFillRazorpayMe, initialInv);
 
   showModal('📲 Payment Reminder — ' + clientName, `
-    <div class="hint">Pending Balance: <strong style="color:var(--red);">${inr(balance)}</strong>. Verify or enter mobile number below:</div>
+    <div class="hint">Pending Balance: <strong style="color:var(--red);">${inr(cleanAmt)}</strong> (Autofilled in payment link). Verify or enter mobile number below:</div>
     <label>Client Mobile Number (Optional — leave blank to pick in WhatsApp)</label>
     <input type="tel" id="mRemPhone" value="${escapeForHtml(currentPhone)}" placeholder="e.g. 9876543210">
-    <div id="mRemLinkStatus" style="font-size:11.5px; color:var(--accent); margin-bottom:8px; font-weight:600;">⏳ Generating direct Razorpay payment link...</div>
+    <div id="mRemLinkStatus" style="font-size:11.5px; color:var(--green); margin-bottom:8px; font-weight:600;">✓ Amount ₹${cleanAmt} autofilled in payment link</div>
     <div class="receipt-preview" id="mRemPreview">${escapeForHtml(initialData.msg)}</div>
     <div style="margin-top:12px; display:flex; gap:8px;">
       <a id="mRemWaBtn" href="${initialData.waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
@@ -1127,7 +1335,7 @@ function sendWhatsAppReminder(taskId, balance) {
     }
   }, 'Save Number', 'Close');
 
-  let livePayUrl = '';
+  let livePayUrl = autoFillRazorpayMe;
   let liveInvNum = initialInv;
 
   const phoneInp = document.getElementById('mRemPhone');
@@ -1142,30 +1350,28 @@ function sendWhatsAppReminder(taskId, balance) {
 
   const url = getWebhook();
   if (url) {
-    fetch(url + '?' + new URLSearchParams({ action: 'razorpaylink', amount: balance, client: clientName, id: taskId }).toString())
+    fetch(url + '?' + new URLSearchParams({ action: 'razorpaylink', amount: cleanAmt, client: clientName, id: taskId }).toString())
       .then(r => r.json())
       .then(data => {
         const stEl = document.getElementById('mRemLinkStatus');
         if (data && data.status === 'ok' && data.shortUrl) {
           livePayUrl = data.shortUrl;
-          if (stEl) { stEl.textContent = '✓ Direct Razorpay payment link ready!'; stEl.style.color = 'var(--green)'; }
+          if (stEl) { stEl.textContent = '✓ Direct Razorpay Payment Link (₹' + cleanAmt + ' locked) ready!'; stEl.style.color = 'var(--green)'; }
           updatePreview();
-        } else if (stEl) {
-          stEl.textContent = 'Using standard Razorpay.me payment link.';
-          stEl.style.color = 'var(--muted)';
         }
       })
-      .catch(() => {
-        const stEl = document.getElementById('mRemLinkStatus');
-        if (stEl) { stEl.textContent = 'Using standard Razorpay.me payment link.'; stEl.style.color = 'var(--muted)'; }
-      });
+      .catch(() => {});
   }
 }
 
 function sendCustomLoanReminder(name, phone, amount) {
   let clean = (phone || '').replace(/[^0-9]/g, '');
   if (clean.length === 10) clean = '91' + clean;
-  const msg = `🧾 *Payment Reminder*\n\nDear ${name},\n\nA gentle reminder regarding the pending advance/loan balance of *${inr(amount)}*.\n\n👉 *Pay securely here:*\nhttps://razorpay.me/@mustansirmalik\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+  const cleanAmt = Math.round((Number(amount) || 0) * 100) / 100;
+  const payLink = cleanAmt > 0
+    ? `https://razorpay.me/@mustansirmalik/${cleanAmt}`
+    : 'https://razorpay.me/@mustansirmalik';
+  const msg = `🧾 *Payment Reminder*\n\nDear ${name},\n\nA gentle reminder regarding the pending advance/loan balance of *${inr(cleanAmt)}*.\n\n👉 *Pay ₹${cleanAmt} securely here:*\n${payLink}\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
   const waUrl = 'https://api.whatsapp.com/send?' + (clean ? 'phone=' + clean + '&' : '') + 'text=' + encodeURIComponent(msg);
 
   showModal('📲 Payment Reminder — ' + name, `
@@ -1836,6 +2042,7 @@ function render(listOnly) {
                 ${t.remark ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
                 <div class="task-meta">
                   ${isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : ''}
+                  ${isFee ? `<button type="button" class="act" onclick="generateOrOpenInvoice('${t.id}')">${ICON.doc} ${t.invoice ? 'View Invoice' : 'Generate Invoice'}</button>` : ''}
                   ${isFee && bal > 0 ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${bal})">${ICON.chat} Send WhatsApp reminder</button>` : ''}
                   ${isFee && t.received > 0 ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}', 0)">Send receipt</button>` : ''}
                   ${!t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">Remark</button>` : ''}
