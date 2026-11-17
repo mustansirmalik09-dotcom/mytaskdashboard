@@ -6,263 +6,303 @@
 <title>Live Task Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Public+Sans:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Karla:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#F3F5F8">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#EFF6FF">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   :root {
-    --bg: #F8FAFC;
+    --bg: #F4F7FE;
     --sheet: #FFFFFF;
-    --sheet-alt: #F1F5F9;
+    --sheet-alt: #F8FAFC;
     --ink: #0F172A;
     --ink-light: #1E293B;
     --muted: #64748B;
     --muted-light: #94A3B8;
-    --icon: #94A3B8;
+    --icon: #64748B;
     --field: #CBD5E1;
     --rule: #E2E8F0;
     --rule-soft: #F1F5F9;
 
-    --accent: #1E3A8A;
+    /* Vibrant Corporate Palette */
+    --accent: #2563EB;
     --accent-hover: #1D4ED8;
     --accent-soft: #EFF6FF;
     --accent-border: #BFDBFE;
 
-    --red: #BE123C;
+    --violet: #7C3AED;
+    --violet-soft: #F5F3FF;
+    --violet-border: #DDD6FE;
+
+    --coral: #E11D48;
+    --red: #E11D48;
     --red-soft: #FFF1F2;
     --red-border: #FECDD3;
 
-    --green: #047857;
+    --green: #059669;
     --green-soft: #ECFDF5;
     --green-border: #A7F3D0;
 
-    --amber: #B45309;
+    --amber: #D97706;
     --amber-soft: #FFFBEB;
     --amber-border: #FDE68A;
 
+    --cyan: #0891B2;
+    --cyan-soft: #ECFEFF;
+
     --c-mhj: #2563EB;
-    --c-shk: #6D28D9;
-    --c-own: #0F766E;
-    --c-personal: #BE185D;
-    --c-fees: #D97706;
+    --c-shk: #7C3AED;
+    --c-own: #0D9488;
+    --c-personal: #E11D48;
+    --c-fees: #F59E0B;
 
     --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
-    --sans: 'Plus Jakarta Sans', 'Public Sans', system-ui, -apple-system, sans-serif;
+    --sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
-    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
-    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
-    --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    --shadow-xs: 0 1px 2px rgba(37, 99, 235, 0.05);
+    --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(37, 99, 235, 0.04);
+    --shadow-md: 0 8px 18px -4px rgba(37, 99, 235, 0.10), 0 2px 6px -2px rgba(15, 23, 42, 0.05);
+    --shadow-modal: 0 25px 50px -12px rgba(15, 23, 42, 0.28);
   }
 
   * { box-sizing: border-box; }
   html { background: var(--bg); overflow-x: hidden; width: 100%; max-width: 100vw; -webkit-text-size-adjust: 100%; }
   
   body {
-    font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--ink);
-    background: var(--bg); margin: 0 auto; max-width: 1120px; padding: 14px 10px 72px;
+    font-family: var(--sans); font-size: 13.5px; line-height: 1.45; color: var(--ink);
+    background: radial-gradient(circle at 0% 0%, #EEF2FF 0%, #F4F7FE 45%, #F0FDF4 100%);
+    margin: 0 auto; max-width: 1120px; padding: 10px 10px 64px;
     overflow-x: hidden; width: 100%; -webkit-font-smoothing: antialiased;
   }
 
   button, input, select { font-family: var(--sans); }
   button, [role=button] { -webkit-tap-highlight-color: transparent; }
   :where(button, input, select, a, [role=button]):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .ic { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* Masthead */
+  /* Vibrant Corporate Masthead */
   .masthead {
     display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-    gap: 10px; margin-bottom: 14px; padding: 14px 16px;
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px;
-    box-shadow: var(--shadow-sm);
+    gap: 8px; margin-bottom: 10px; padding: 10px 14px;
+    background: linear-gradient(120deg, #1E3A8A 0%, #2563EB 55%, #7C3AED 100%);
+    color: #FFFFFF; border-radius: 14px; box-shadow: var(--shadow-md);
   }
-  .masthead-brand { display: flex; align-items: center; gap: 12px; }
+  .masthead-brand { display: flex; align-items: center; gap: 10px; }
   .masthead-crest {
-    width: 40px; height: 40px; border-radius: 10px;
-    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-    color: #F8FAFC; display: grid; place-content: center;
-    font-family: var(--serif); font-weight: 600; font-size: 17px;
-    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.15);
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(6px);
+    color: #FFFFFF; display: grid; place-content: center;
+    font-family: var(--serif); font-weight: 600; font-size: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
   }
-  h1 { font-family: var(--serif); font-weight: 600; font-size: 22px; line-height: 1.15; margin: 0; color: var(--ink); }
-  .sub { color: var(--muted); font-size: 12px; font-weight: 500; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
-  .sub-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted-light); }
+  h1 { font-family: var(--serif); font-weight: 600; font-size: 20px; line-height: 1.15; margin: 0; color: #FFFFFF; }
+  .sub { color: #DBEAFE; font-size: 11.5px; font-weight: 500; margin-top: 1px; display: flex; align-items: center; gap: 5px; }
+  .sub-dot { width: 4px; height: 4px; border-radius: 50%; background: #93C5FD; }
   
-  .masthead .status { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); }
+  .masthead .status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #E0E7FF; }
   .sync-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #F8FAFC; border: 1px solid var(--rule); border-radius: 999px;
-    padding: 3px 10px; font-size: 11px; font-weight: 500; color: #475569;
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px;
+    padding: 3px 9px; font-size: 10.5px; font-weight: 600; color: #FFFFFF;
   }
-  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; }
+  .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #34D399; box-shadow: 0 0 6px #34D399; }
   #resetBtn {
-    background: transparent; border: 1px solid var(--rule); border-radius: 6px;
-    padding: 4px 8px; font: 600 11px var(--sans); color: var(--muted); cursor: pointer;
+    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 7px;
+    padding: 3px 8px; font: 600 10.5px var(--sans); color: #FFFFFF; cursor: pointer;
   }
+  #resetBtn:hover { background: rgba(255, 255, 255, 0.28); }
 
-  /* Summary Sheet */
+  /* Compact Summary Sheet */
   .summary-sheet {
     background: var(--sheet); border: 1px solid var(--rule); border-radius: 14px;
-    margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow-sm);
+    margin-bottom: 10px; overflow: hidden; box-shadow: var(--shadow-sm);
   }
   .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 10px 8px; }
+  .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 8px 8px; position: relative; }
   .hero-card + .hero-card { border-left: 1px solid var(--rule-soft); }
-  .hero-card .l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 2px; }
-  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
-  .hero-card.alert .n { color: var(--red); }
+  .hero-card .l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 1px; }
+  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .hero-card:nth-child(1) { background: linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 100%); }
+  .hero-card:nth-child(1) .n { color: var(--green); }
+  .hero-card:nth-child(2) { background: linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 100%); }
+  .hero-card:nth-child(2) .n { color: var(--amber); }
+  .hero-card:nth-child(3) { background: linear-gradient(180deg, #ECFEFF 0%, #FFFFFF 100%); }
+  .hero-card:nth-child(3) .n { color: var(--cyan); }
+  .hero-card:nth-child(4) { background: linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 100%); }
+  .hero-card:nth-child(4) .n { color: var(--accent); }
 
-  .totals { border-top: 1px solid var(--rule-soft); padding: 6px 0 4px; background: #FAFCFE; }
-  .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 4px 14px; }
-  .totals .l { font-size: 12.5px; font-weight: 500; color: var(--muted); }
-  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; color: var(--ink); }
-  .totals .fig.recd { color: var(--green); }
-  .totals > .tot.sum { margin: 4px 14px 0; padding: 6px 0 4px; border-top: 1px dashed var(--rule); }
-  .totals .fig.out { color: var(--red); font-size: 18px; border-bottom: 2px solid var(--red); }
-  .totals .fig.out.clear { color: var(--green); border-bottom-color: var(--green); }
+  .totals { border-top: 1px solid var(--rule-soft); padding: 4px 0 3px; background: #FAFCFF; }
+  .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 3px 12px; }
+  .totals .l { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 15.5px; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .totals > .tot.sum { margin: 3px 12px 0; padding: 5px 0 3px; border-top: 1px dashed var(--rule); }
+  .totals .fig.out { color: var(--red); font-size: 16.5px; border-bottom: 2px solid var(--red); }
 
-  /* Search & Inputs */
-  #searchRow { margin: 0 0 10px; }
+  /* Compact Toolbar: Search + Add Task */
+  #searchRow { margin: 0 0 8px; }
   #searchWrap { position: relative; }
-  #searchWrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; width: 16px; height: 16px; }
+  #searchWrap .ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--accent); pointer-events: none; width: 15px; height: 15px; }
   #searchBox {
-    width: 100%; height: 42px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
-    padding: 0 36px 0 36px; border-radius: 10px; font: 400 13.5px var(--sans); box-shadow: var(--shadow-xs);
+    width: 100%; height: 36px; background: #FFFFFF; border: 1.5px solid var(--accent-border); color: var(--ink);
+    padding: 0 32px 0 32px; border-radius: 10px; font: 500 13px var(--sans); box-shadow: var(--shadow-xs);
   }
-  #searchClear { display: none; position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+  #searchBox:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14); }
+  #searchClear { display: none; position: absolute; right: 4px; top: 4px; width: 28px; height: 28px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
 
-  .add-box { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .add-box { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
   .add-box input, .add-box select {
-    height: 40px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
-    padding: 0 10px; border-radius: 8px; font: 400 13px var(--sans); max-width: 100%; min-width: 0;
+    height: 36px; background: #FFFFFF; border: 1.5px solid var(--rule); color: var(--ink);
+    padding: 0 9px; border-radius: 9px; font: 500 12.5px var(--sans); max-width: 100%; min-width: 0;
   }
-  #newCat { flex: 1 1 140px; font-weight: 500; }
-  .add-box input[type=text] { flex: 2 1 180px; }
+  .add-box input:focus, .add-box select:focus { outline: none; border-color: var(--accent); }
+  #newCat { flex: 1 1 130px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-color: var(--accent-border); }
+  .add-box input[type=text] { flex: 2 1 170px; }
   .add-box button {
-    height: 40px; padding: 0 18px; background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
-    color: #FFFFFF; border: 0; border-radius: 8px; font: 600 13px var(--sans); cursor: pointer;
+    height: 36px; padding: 0 16px; background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+    color: #FFFFFF; border: 0; border-radius: 9px; font: 700 12.5px var(--sans); cursor: pointer;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
   }
+  .add-box button:hover { filter: brightness(1.07); }
 
-  /* Category Filters & Sections */
-  .filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  /* Playful Category Filters & Sections */
+  .filters { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
   .filters.seg {
-    gap: 3px; flex-wrap: nowrap; padding: 3px; background: #EEF2F6;
-    border: 1px solid #E2E8F0; border-radius: 10px; overflow-x: auto; scrollbar-width: none;
+    gap: 3px; flex-wrap: nowrap; padding: 3px; background: #E0E7FF;
+    border: 1px solid #C7D2FE; border-radius: 10px; overflow-x: auto; scrollbar-width: none;
   }
   .filters.seg::-webkit-scrollbar { display: none; }
-  .filter-btn { cursor: pointer; font: 500 12.5px var(--sans); transition: all 0.15s ease; }
+  .filter-btn { cursor: pointer; font: 600 12px var(--sans); transition: all 0.15s ease; }
   .filters.seg .filter-btn {
-    flex: 1 1 auto; border: 0; background: transparent; color: var(--muted);
-    padding: 6px 10px; border-radius: 7px; white-space: nowrap;
+    flex: 1 1 auto; border: 0; background: transparent; color: #3730A3;
+    padding: 5px 9px; border-radius: 7px; white-space: nowrap;
   }
-  .filters.seg .filter-btn.active { background: #FFFFFF; color: var(--accent); font-weight: 600; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
-  .filters.chips { margin-bottom: 12px; gap: 6px; }
+  .filters.seg .filter-btn.active {
+    background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
+    color: #FFFFFF; font-weight: 700; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25);
+  }
+  .filters.chips { margin-bottom: 10px; gap: 5px; }
   .filters.chips .filter-btn {
-    display: inline-flex; align-items: center; background: #FFFFFF; border: 1px solid var(--rule);
-    color: var(--ink); padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    display: inline-flex; align-items: center; background: #FFFFFF; border: 1.5px solid var(--rule);
+    color: var(--ink); padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
   }
-  .filters.chips .filter-btn.active { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); font-weight: 600; }
-  .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; flex: none; }
+  .filters.chips .filter-btn.active {
+    background: linear-gradient(135deg, #EFF6FF 0%, #F5F3FF 100%);
+    border-color: var(--accent); color: var(--accent); font-weight: 700;
+  }
+  .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; flex: none; }
 
-  .cat-section { margin-bottom: 18px; }
-  .cat-heading { display: flex; align-items: center; gap: 8px; margin: 0 2px 8px; min-height: 28px; cursor: pointer; }
-  .cat-heading .dot { width: 8px; height: 8px; border-radius: 3px; flex: none; }
-  .cat-heading .title { font-family: var(--serif); font-weight: 600; font-size: 16.5px; color: var(--ink); }
+  .cat-section { margin-bottom: 12px; }
+  .cat-heading {
+    display: flex; align-items: center; gap: 7px; margin: 0 0 6px; padding: 5px 10px;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 9px; cursor: pointer;
+    box-shadow: var(--shadow-xs);
+  }
+  .cat-heading .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .cat-heading .title { font-family: var(--serif); font-weight: 600; font-size: 15.5px; color: var(--ink); }
   .cat-heading .count {
-    margin-left: auto; padding: 2px 8px; background: #F1F5F9; border: 1px solid var(--rule);
-    border-radius: 999px; font: 500 11px var(--sans); color: var(--muted);
+    margin-left: auto; padding: 2px 8px; background: var(--accent-soft); border: 1px solid var(--accent-border);
+    border-radius: 999px; font: 600 10.5px var(--sans); color: var(--accent);
   }
   .cat-section.collapsed .cat-heading .chev { transform: rotate(-90deg); }
 
-  /* Tasks List */
+  /* Compact Tasks List */
   .task-grid { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
   .task {
-    display: flex; align-items: flex-start; gap: 8px; padding: 11px 12px 10px;
-    border-top: 1px solid var(--rule-soft); position: relative;
+    display: flex; align-items: flex-start; gap: 7px; padding: 8px 10px;
+    border-top: 1px solid var(--rule-soft); position: relative; transition: background 0.12s ease;
   }
+  .task:hover { background: #FAFBFD; }
   .task:first-child { border-top: 0; }
-  .task .num { flex: none; width: 18px; text-align: right; font-size: 11px; line-height: 20px; color: var(--muted-light); }
+  .task .num { flex: none; width: 16px; text-align: right; font-size: 11px; line-height: 19px; color: var(--muted-light); font-weight: 600; }
   .task input[type=checkbox] {
     -webkit-appearance: none; appearance: none; flex: none; display: grid; place-content: center;
-    width: 18px; height: 18px; margin: 1px 0 0; border: 1.5px solid var(--field); border-radius: 5px; background: var(--sheet); cursor: pointer;
+    width: 17px; height: 17px; margin: 1px 0 0; border: 1.8px solid #94A3B8; border-radius: 5px; background: var(--sheet); cursor: pointer;
   }
-  .task input[type=checkbox]:checked { background: #2563EB; border-color: #2563EB; }
+  .task input[type=checkbox]:checked { background: linear-gradient(135deg, #10B981, #059669); border-color: #059669; }
   .task input[type=checkbox]:checked::before { content: ''; width: 8px; height: 4px; margin-top: -2px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg); }
   .task-body { flex: 1; min-width: 0; }
-  .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .task-name { flex: 1; min-width: 0; font-size: 14px; line-height: 1.35; font-weight: 600; color: var(--ink); overflow-wrap: break-word; word-break: break-word; }
-  .amt { flex: none; text-align: right; font-family: var(--serif); font-weight: 600; font-size: 15px; }
+  .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+  .task-name { flex: 1; min-width: 0; font-size: 13.5px; line-height: 1.32; font-weight: 600; color: var(--ink); overflow-wrap: break-word; word-break: break-word; }
+  .amt { flex: none; text-align: right; font-family: var(--serif); font-weight: 700; font-size: 14.5px; }
   .amt.owed { color: var(--red); }
-  .amt.clear { font: 600 11px var(--sans); color: var(--green); background: var(--green-soft); border: 1px solid var(--green-border); padding: 1px 6px; border-radius: 4px; }
-  .task-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .amt.clear { font: 700 10.5px var(--sans); color: var(--green); background: var(--green-soft); border: 1px solid var(--green-border); padding: 1px 6px; border-radius: 5px; }
+  .task-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
   .note {
-    display: flex; align-items: flex-start; gap: 5px; margin-top: 6px; padding: 3px 8px; border-radius: 6px;
-    background: var(--amber-soft); border: 1px solid var(--amber-border); color: #92400E; font-size: 11px;
+    display: flex; align-items: flex-start; gap: 5px; margin-top: 4px; padding: 3px 8px; border-radius: 6px;
+    background: linear-gradient(90deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid var(--amber-border); color: #92400E; font-size: 11px; font-weight: 500;
   }
-  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; font-size: 12px; }
-  .act { display: inline-flex; align-items: center; gap: 4px; padding: 4px 0; background: none; border: 0; font: 600 11.5px var(--sans); color: var(--accent); cursor: pointer; }
-  .act.pay { padding: 3px 8px; border: 1px solid var(--rule); border-radius: 6px; background: #F8FAFC; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; margin-top: 3px; font-size: 11.5px; }
+  .act { display: inline-flex; align-items: center; gap: 4px; padding: 2px 0; background: none; border: 0; font: 700 11px var(--sans); color: var(--accent); cursor: pointer; }
+  .act.pay { padding: 2px 8px; border: 1px solid var(--accent-border); border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
   .act.wa { color: var(--green); }
-  .act.del { flex: none; justify-content: center; width: 26px; height: 26px; color: var(--icon); border: 0; background: none; cursor: pointer; }
+  .act.del { flex: none; justify-content: center; width: 24px; height: 24px; color: var(--icon); border: 0; background: none; cursor: pointer; }
   .act.del:hover { color: var(--red); }
   .done-toggle {
-    display: block; width: 100%; text-align: left; padding: 10px 14px; background: #FAFCFE; border: 0; border-top: 1px solid var(--rule-soft);
-    color: var(--muted); font: 500 12px var(--sans); cursor: pointer;
+    display: block; width: 100%; text-align: left; padding: 7px 12px; background: #F8FAFC; border: 0; border-top: 1px solid var(--rule-soft);
+    color: var(--accent); font: 600 11.5px var(--sans); cursor: pointer;
   }
 
-  /* Page Nav */
+  /* Vibrant Page Nav */
   .page-nav {
-    display: flex; gap: 6px; margin: 0 0 14px; padding: 3px;
-    background: #EEF2F6; border: 1px solid var(--rule); border-radius: 12px; width: 100%;
+    display: flex; gap: 5px; margin: 0 0 10px; padding: 3px;
+    background: #E0E7FF; border: 1px solid #C7D2FE; border-radius: 12px; width: 100%;
   }
   .page-nav-btn {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 8px 10px; border-radius: 8px; border: 0; background: transparent;
-    color: var(--muted); font: 600 12.5px var(--sans); cursor: pointer;
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 7px 8px; border-radius: 9px; border: 0; background: transparent;
+    color: #3730A3; font: 700 12px var(--sans); cursor: pointer; transition: all 0.15s ease;
   }
-  .page-nav-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
-  .page-nav-btn .nav-badge { background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
-  .page-nav-btn.active .nav-badge { background: var(--accent); color: #FFFFFF; }
+  .page-nav-btn.active {
+    background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+    color: #FFFFFF; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  }
+  .page-nav-btn .nav-badge { background: rgba(37, 99, 235, 0.12); color: #1E3A8A; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 800; }
+  .page-nav-btn.active .nav-badge { background: rgba(255, 255, 255, 0.24); color: #FFFFFF; }
 
-  /* Financials Page & Mobile Responsive Tables */
+  /* Financials Page & Colorful Cards */
   #financialsView { display: none; width: 100%; max-width: 100%; }
   .fin-mode-toggle {
-    display: flex; gap: 3px; padding: 3px; background: #EEF2F6; border: 1px solid var(--rule);
-    border-radius: 8px; margin-bottom: 12px; overflow-x: auto; width: 100%; scrollbar-width: none;
+    display: flex; gap: 3px; padding: 3px; background: #E0E7FF; border: 1px solid #C7D2FE;
+    border-radius: 9px; margin-bottom: 10px; overflow-x: auto; width: 100%; scrollbar-width: none;
   }
   .fin-mode-toggle::-webkit-scrollbar { display: none; }
   .fin-mode-btn {
-    flex: 0 0 auto; border: 0; background: transparent; padding: 6px 10px; border-radius: 6px;
-    font: 600 11.5px var(--sans); color: var(--muted); cursor: pointer; white-space: nowrap;
+    flex: 0 0 auto; border: 0; background: transparent; padding: 5px 10px; border-radius: 7px;
+    font: 700 11px var(--sans); color: #3730A3; cursor: pointer; white-space: nowrap;
   }
-  .fin-mode-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
+  .fin-mode-btn.active { background: #FFFFFF; color: var(--accent); box-shadow: 0 1px 3px rgba(37, 99, 235, 0.18); }
 
-  .fin-hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; width: 100%; }
-  .fin-card { background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow-xs); }
-  .fin-card .f-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-  .fin-card .f-val { font-family: var(--serif); font-size: 18px; font-weight: 700; color: var(--ink); margin: 2px 0 1px; }
-  .fin-card .f-sub { font-size: 10.5px; color: var(--muted); }
+  .fin-hero-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; width: 100%; }
+  .fin-card {
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 11px; padding: 9px 11px;
+    box-shadow: var(--shadow-xs); border-top: 3px solid var(--accent);
+  }
+  .fin-card:nth-child(1) { border-top-color: var(--green); background: linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 55%); }
+  .fin-card:nth-child(2) { border-top-color: #2563EB; background: linear-gradient(180deg, #EFF6FF 0%, #FFFFFF 55%); }
+  .fin-card:nth-child(3) { border-top-color: var(--coral); background: linear-gradient(180deg, #FFF1F2 0%, #FFFFFF 55%); }
+  .fin-card:nth-child(4) { border-top-color: var(--violet); background: linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 55%); }
+  .fin-card .f-lbl { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .fin-card .f-val { font-family: var(--serif); font-size: 17.5px; font-weight: 700; color: var(--ink); margin: 2px 0 1px; }
+  .fin-card .f-sub { font-size: 10px; color: var(--muted); font-weight: 500; }
 
   .statement-sheet {
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 12px;
-    box-shadow: var(--shadow-sm); margin-bottom: 16px; overflow: hidden; width: 100%;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 13px;
+    box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden; width: 100%;
   }
   .statement-header {
-    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%); color: #FFFFFF;
-    padding: 14px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+    background: linear-gradient(120deg, #1E3A8A 0%, #2563EB 60%, #0D9488 100%); color: #FFFFFF;
+    padding: 11px 13px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
   }
-  .statement-header h3 { font-family: var(--serif); font-size: 16px; font-weight: 600; margin: 0; }
-  .statement-body { padding: 12px 10px; width: 100%; }
+  .statement-header h3 { font-family: var(--serif); font-size: 15.5px; font-weight: 600; margin: 0; }
+  .statement-body { padding: 10px 10px; width: 100%; }
 
   /* Loans & Advances Cards */
-  .loan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .loan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; margin-bottom: 8px; }
   .loan-card {
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px;
     box-shadow: var(--shadow-xs); display: flex; flex-direction: column; justify-content: space-between;
   }
-  .loan-pill { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
+  .loan-pill { font-size: 9.5px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; }
   .loan-pill.asset { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-border); }
   .loan-pill.liab { background: var(--amber-soft); color: var(--amber); border: 1px solid var(--amber-border); }
   .loan-pill.settled { background: var(--green-soft); color: var(--green); border: 1px solid var(--green-border); }
@@ -272,73 +312,73 @@
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     border: 1px solid var(--rule);
-    border-radius: 8px;
+    border-radius: 9px;
     background: #FFFFFF;
   }
   .stmt-table {
     width: 100%;
-    min-width: 540px;
+    min-width: 520px;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 11.5px;
   }
   .stmt-table th {
-    background: #F8FAFC; border-bottom: 1.5px solid var(--rule); padding: 8px 10px;
-    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    background: linear-gradient(90deg, #EFF6FF 0%, #F5F3FF 100%); border-bottom: 1.5px solid #C7D2FE; padding: 7px 9px;
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: #1E3A8A;
     white-space: nowrap;
   }
   .stmt-table td {
-    padding: 8px 10px; border-bottom: 1px solid var(--rule-soft); vertical-align: top;
+    padding: 7px 9px; border-bottom: 1px solid var(--rule-soft); vertical-align: top;
     overflow-wrap: break-word; word-break: break-word;
   }
   .stmt-table tr:last-child td { border-bottom: 0; }
-  .stmt-mono { font-family: var(--serif); font-weight: 600; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stmt-mono { font-family: var(--serif); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   /* Modal */
   #modalOverlay {
-    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px);
     z-index: 1000; align-items: center; justify-content: center; padding: 12px;
   }
   .modal {
-    background: #FFFFFF; border-radius: 14px; padding: 18px 16px; width: 100%; max-width: 400px;
+    background: #FFFFFF; border-radius: 16px; padding: 16px 16px; width: 100%; max-width: 400px;
     max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto;
-    box-shadow: var(--shadow-modal); border: 1px solid var(--rule);
+    box-shadow: var(--shadow-modal); border: 1.5px solid var(--accent-border);
   }
-  #modalTitle { font-family: var(--serif); font-weight: 600; font-size: 18px; margin-bottom: 10px; }
-  .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
-  #modalFields label { display: block; margin: 0 0 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
+  #modalTitle { font-family: var(--serif); font-weight: 700; font-size: 17.5px; margin-bottom: 10px; color: #1E3A8A; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+  #modalFields label { display: block; margin: 0 0 3px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: var(--muted); }
   #modalFields input:not([type=checkbox]), #modalFields select {
-    display: block; width: 100%; height: 38px; margin-bottom: 10px; padding: 0 10px; background: #FFFFFF; color: var(--ink);
-    border: 1px solid var(--field); border-radius: 8px; font: 400 13.5px var(--sans);
+    display: block; width: 100%; height: 36px; margin-bottom: 9px; padding: 0 10px; background: #FFFFFF; color: var(--ink);
+    border: 1.5px solid var(--field); border-radius: 8px; font: 500 13px var(--sans);
   }
-  .btn { height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid transparent; font: 600 13px var(--sans); cursor: pointer; }
-  .btn-primary { background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); color: #fff; }
-  .btn-wa { background: linear-gradient(135deg, #059669 0%, #047857 100%); color: #fff; }
-  .btn-quiet { background: #FFFFFF; color: #334155; border-color: var(--field); }
-  .btn-danger { background: #BE123C; color: #fff; }
+  .btn { height: 34px; padding: 0 13px; border-radius: 8px; border: 1px solid transparent; font: 700 12.5px var(--sans); cursor: pointer; transition: all 0.12s ease; }
+  .btn-primary { background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%); color: #fff; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25); }
+  .btn-wa { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #fff; box-shadow: 0 2px 5px rgba(5, 150, 105, 0.25); }
+  .btn-quiet { background: #FFFFFF; color: #1E3A8A; border-color: #C7D2FE; }
+  .btn-danger { background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color: #fff; }
   .receipt-preview { white-space: pre-wrap; word-break: break-word; background: var(--green-soft); border: 1px solid var(--green-border); border-radius: 8px; padding: 10px; font-size: 12px; max-height: 220px; overflow-y: auto; }
 
   /* Auth Gate */
   #authGate {
     position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px;
-    background: radial-gradient(circle at 50% 35%, #1E293B 0%, #0F172A 100%);
+    background: radial-gradient(circle at 20% 20%, #1E3A8A 0%, #0F172A 60%, #312E81 100%);
   }
   .auth-card {
     width: 100%; max-width: 340px; text-align: center;
-    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 16px; padding: 28px 20px; backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 18px; padding: 26px 20px; backdrop-filter: blur(14px);
   }
-  .auth-crest { width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 10px; background: linear-gradient(135deg, #1E3A8A, #2563EB); color: #fff; display: grid; place-content: center; font-family: var(--serif); font-size: 19px; }
+  .auth-crest { width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 12px; background: linear-gradient(135deg, #2563EB, #7C3AED); color: #fff; display: grid; place-content: center; font-family: var(--serif); font-size: 19px; }
   .auth-title { font-family: var(--serif); font-weight: 600; font-size: 22px; color: #FFFFFF; }
-  #authInput { width: 100%; height: 44px; margin: 16px 0 10px; padding: 0 14px; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; text-align: center; font-size: 15px; }
+  #authInput { width: 100%; height: 42px; margin: 14px 0 10px; padding: 0 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; text-align: center; font-size: 15px; }
 
   @media (min-width: 720px) {
-    body { padding: 24px 24px 80px; }
-    h1 { font-size: 28px; }
+    body { padding: 16px 20px 64px; }
+    h1 { font-size: 24px; }
     .hero-stats { grid-template-columns: repeat(4, 1fr); }
     .fin-hero-grid { grid-template-columns: repeat(4, 1fr); }
-    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; background: none; border: 0; box-shadow: none; }
+    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; background: none; border: 0; box-shadow: none; }
     .task { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow-sm); }
     .done-toggle { grid-column: 1 / -1; border: 1px solid var(--rule); border-radius: 10px; background: #FFFFFF; }
     .stmt-table { min-width: 100%; }
@@ -411,7 +451,7 @@
     </select>
     <input type="text" id="newTask" placeholder="New task or client…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
     <input type="date" id="newDueDate" style="flex:1; min-width:110px;">
-    <button onclick="addTask()">Add</button>
+    <button onclick="addTask()">+ Add</button>
   </div>
   <div class="add-box" id="feeFields" style="display:none;">
     <input type="number" id="feePayable" placeholder="₹ Billable" style="flex:1; min-width:90px;">
@@ -432,14 +472,14 @@
   <div class="auth-card">
     <div class="auth-crest">MM</div>
     <div class="auth-title">Mustannsirr Mallik</div>
-    <div style="font-size:12px; color:#94A3B8; margin-top:3px;">Tax &amp; Accounts Consultant &bull; Indore</div>
+    <div style="font-size:12px; color:#CBD5E1; margin-top:3px;">Tax &amp; Accounts Consultant &bull; Indore</div>
     <input type="password" id="authInput" placeholder="Enter password" onkeydown="if(event.key==='Enter'){ checkAuth(); }">
     <button type="button" class="btn btn-primary" style="width:100%; height:42px;" onclick="checkAuth()">Unlock Dashboard</button>
-    <div id="authError" style="display:none; color:#FB7185; margin-top:10px; font-size:12.5px; font-weight:600;">Incorrect password</div>
+    <div id="authError" style="display:none; color:#FDA4AF; margin-top:10px; font-size:12.5px; font-weight:600;">Incorrect password</div>
   </div>
 </div>
 
-<button type="button" id="toTop" style="display:none; position:fixed; bottom:20px; right:20px; width:40px; height:40px; border-radius:50%; background:#0F172A; color:#fff; border:0; cursor:pointer;" onclick="scrollToTop()">↑</button>
+<button type="button" id="toTop" style="display:none; position:fixed; bottom:20px; right:20px; width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, #2563EB, #7C3AED); color:#fff; border:0; cursor:pointer; box-shadow:0 4px 12px rgba(37,99,235,0.35);" onclick="scrollToTop()">↑</button>
 
 <script>
 var tasks = [];
@@ -470,7 +510,7 @@ const ICON = {
   chev: '<svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>'
 };
 
-const EXTRA_COLORS = ['#5B6B84', '#9A5B2E', '#2F8F6B', '#A04E9B', '#4D7FB8'];
+const EXTRA_COLORS = ['#2563EB', '#7C3AED', '#0D9488', '#E11D48', '#F59E0B'];
 
 function inr(n) {
   const v = Math.round((Number(n) || 0) * 100) / 100;
@@ -487,6 +527,16 @@ function saveUi() {
 
 function toggleGroup(key) {
   if (uiState.collapsed[key]) delete uiState.collapsed[key]; else uiState.collapsed[key] = true;
+  saveUi();
+  render();
+}
+
+function toggleAllGroups(collapse) {
+  const keys = ['MHJ', 'SHK', 'OWN', 'personal', 'FEES'];
+  keys.forEach(k => {
+    if (collapse) uiState.collapsed[k] = true;
+    else delete uiState.collapsed[k];
+  });
   saveUi();
   render();
 }
@@ -1419,7 +1469,6 @@ function renderFinancialsPage() {
   // 2) Any unpaid balance on those fees automatically creates Sundry Debtors (Receivable) on the Balance Sheet.
   const practiceFeeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !/juzer presswala/i.test(t.name));
   const grossBilledFees = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.discount) || 0)), 0);
-  const totalFeesReceivedCash = practiceFeeTasks.reduce((s, t) => s + (Number(t.received) || 0), 0);
   const sundryDebtorsReceivable = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
 
   const isDrawingCategory = (cat) => /drawing|personal/i.test(String(cat || ''));
@@ -1439,7 +1488,7 @@ function renderFinancialsPage() {
 
   if (!isFamilyPublicView) {
     html += `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
         <div class="fin-mode-toggle" role="tablist">
           <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">All Ledgers</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'journal' ? 'active' : ''}" onclick="setFinViewMode('journal')">📒 Journal (${(ledger.journalEntries || []).length})</button>
@@ -1449,11 +1498,11 @@ function renderFinancialsPage() {
           <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">P&amp;L</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
         </div>
-        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-primary" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openJournalEntryModal()">📒 + Journal Entry</button>
-          <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
-          <button type="button" class="btn btn-quiet" style="height:32px; padding:0 10px; font-size:11.5px;" onclick="openEditBalancesModal()">✏️ Balances</button>
-          <button type="button" class="btn btn-quiet" style="height:32px; padding:0 12px; font-size:11.5px;" onclick="openAddLoanModal()">+ Loan / Advance</button>
+        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" style="height:30px; padding:0 11px; font-size:11px;" onclick="openJournalEntryModal()">📒 + Journal</button>
+          <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
+          <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+          <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px;" onclick="openAddLoanModal()">+ Loan</button>
         </div>
       </div>
 
@@ -1475,7 +1524,7 @@ function renderFinancialsPage() {
         </div>
         <div class="fin-card">
           <div class="f-lbl">Owner's Net Capital</div>
-          <div class="f-val" style="color:var(--green);">${inr(effectiveCapital)}</div>
+          <div class="f-val" style="color:var(--violet);">${inr(effectiveCapital)}</div>
           <div class="f-sub">Net Profit: ${inr(netProfit)}</div>
         </div>
       </div>
@@ -1487,16 +1536,16 @@ function renderFinancialsPage() {
     const jvList = ledger.journalEntries || [];
     html += `
       <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(135deg, #1E3A8A 0%, #312E81 100%);">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #6D28D9 100%);">
           <div>
             <h3>📒 Double-Entry Journal Register</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Total Vouchers Posted: ${jvList.length} &bull; Every entry posts Dr &amp; Cr automatically</div>
+            <div style="font-size:10.5px; color:#E0E7FF;">Total Vouchers Posted: ${jvList.length} &bull; Automatic Dr &amp; Cr ledger posting</div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openJournalEntryModal()">+ New Journal Voucher</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openJournalEntryModal()">+ New Journal Voucher</button>
         </div>
         <div class="statement-body">
           ${jvList.length === 0 ? `
-            <div style="text-align:center; padding:18px; color:var(--muted); font-size:12.5px;">
+            <div style="text-align:center; padding:12px; color:var(--muted); font-size:12px;">
               No manual journal entries recorded yet. Tap <strong>+ New Journal Voucher</strong> to pass an adjustment, contra, or settlement entry.
             </div>
           ` : `
@@ -1509,7 +1558,7 @@ function renderFinancialsPage() {
                     <th>Debit (Dr) &amp; Credit (Cr) Accounts</th>
                     <th>Narration</th>
                     <th class="text-right">Amount (₹)</th>
-                    <th style="width:36px; text-align:center;">Del</th>
+                    <th style="width:32px; text-align:center;">Del</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1519,7 +1568,7 @@ function renderFinancialsPage() {
                       <td style="white-space:nowrap;">${escapeForHtml(jv.date)}</td>
                       <td>
                         <div style="color:var(--ink); font-weight:600;">Dr: ${escapeForHtml(getJournalAccountLabel(jv.debitAccount))}</div>
-                        <div style="color:var(--muted); padding-left:14px;">To Cr: ${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</div>
+                        <div style="color:var(--muted); padding-left:12px;">To Cr: ${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</div>
                       </td>
                       <td>${escapeForHtml(jv.narration)}</td>
                       <td class="text-right stmt-mono">${inr(jv.amount)}</td>
@@ -1550,16 +1599,16 @@ function renderFinancialsPage() {
 
     html += `
       <div class="statement-sheet">
-        <div class="statement-header">
+        <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #0284C7 100%);">
           <div>
             <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Split</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Total Outlay: ${inr(totalTripOutlay)} &bull; Equal 1/3 Share: ${inr(equalFamilyShare)} / family</div>
+            <div style="font-size:10.5px; color:#E0F2FE;">Total Outlay: ${inr(totalTripOutlay)} &bull; Equal 1/3 Share: ${inr(equalFamilyShare)} / family</div>
           </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 10px;" onclick="shareZiyaratWithFamilies()">📲 Share with Families</button>
+          <div style="display:flex; gap:5px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-wa" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="shareZiyaratWithFamilies()">📲 Share</button>
             ${!isFamilyPublicView ? `
-              <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddTripPaymentModal()">+ Record Payment</button>
-              <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddTripContributionModal()">+ Add Contribution</button>
+              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddTripPaymentModal()">+ Payment</button>
+              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddTripContributionModal()">+ Contrib</button>
             ` : ''}
           </div>
         </div>
@@ -1593,7 +1642,7 @@ function renderFinancialsPage() {
             </table>
           </div>
 
-          <div style="font-weight:700; font-size:12px; margin:10px 0 6px; color:var(--ink);">Itemized Trip Disbursements &amp; Payments</div>
+          <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Itemized Trip Disbursements &amp; Payments</div>
           <div class="table-responsive">
             <table class="stmt-table">
               <thead>
@@ -1603,7 +1652,7 @@ function renderFinancialsPage() {
                   <th>Particulars</th>
                   <th>Mode</th>
                   <th class="text-right">Amount (₹)</th>
-                  ${!isFamilyPublicView ? '<th style="width:36px; text-align:center;">Del</th>' : ''}
+                  ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
                 </tr>
               </thead>
               <tbody>
@@ -1622,7 +1671,7 @@ function renderFinancialsPage() {
           </div>
 
           ${tripContributions.length > 0 ? `
-            <div style="font-weight:700; font-size:12px; margin:10px 0 6px; color:var(--ink);">Family Contributions Received</div>
+            <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Family Contributions Received</div>
             <div class="table-responsive">
               <table class="stmt-table">
                 <thead>
@@ -1632,7 +1681,7 @@ function renderFinancialsPage() {
                     <th>Contributor</th>
                     <th>Mode</th>
                     <th class="text-right">Amount (₹)</th>
-                    ${!isFamilyPublicView ? '<th style="width:36px; text-align:center;">Del</th>' : ''}
+                    ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
                   </tr>
                 </thead>
                 <tbody>
@@ -1659,57 +1708,57 @@ function renderFinancialsPage() {
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'loans')) {
     html += `
       <div class="statement-sheet">
-        <div class="statement-header">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #2563EB 100%);">
           <div>
             <h3>🤝 Loans &amp; Advances Manager</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Receivables: ${inr(totalLoansGiven)} &bull; Payables: ${inr(totalLoansTaken)}</div>
+            <div style="font-size:10.5px; color:#DBEAFE;">Receivables: ${inr(totalLoansGiven)} &bull; Payables: ${inr(totalLoansTaken)}</div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddLoanModal()">+ New Loan / Advance</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddLoanModal()">+ New Loan / Advance</button>
         </div>
         <div class="statement-body">
           <div class="loan-grid">
-            <div class="loan-card" style="border-left:4px solid var(--red);">
+            <div class="loan-card" style="border-left:4px solid var(--red); background:linear-gradient(90deg, #FFF1F2 0%, #FFFFFF 35%);">
               <div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <strong>${escapeForHtml(ledger.loansGiven.juzer.name)}</strong>
                   <span class="loan-pill asset">Given (Asset)</span>
                 </div>
-                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--red); margin:4px 0;">${inr(juzerNet)}</div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
+                <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--red); margin:3px 0;">${inr(juzerNet)}</div>
+                <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
               </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>
-                <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+              <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>
+                <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
               </div>
             </div>
 
-            <div class="loan-card" style="border-left:4px solid var(--amber);">
+            <div class="loan-card" style="border-left:4px solid var(--amber); background:linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 35%);">
               <div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <strong>${escapeForHtml(ledger.loansTaken.mhj.name)}</strong>
                   <span class="loan-pill liab">Taken (Liability)</span>
                 </div>
-                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--amber); margin:4px 0;">${inr(mhjNet)}</div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
+                <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(mhjNet)}</div>
+                <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
               </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>
-                <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+              <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>
+                <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
               </div>
             </div>
 
-            <div class="loan-card" style="border-left:4px solid var(--amber);">
+            <div class="loan-card" style="border-left:4px solid var(--amber); background:linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 35%);">
               <div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <strong>${escapeForHtml(ledger.loansTaken.hatim.name)}</strong>
                   <span class="loan-pill liab">Taken (Liability)</span>
                 </div>
-                <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--amber); margin:4px 0;">${inr(hatimNet)}</div>
-                <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
+                <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(hatimNet)}</div>
+                <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
               </div>
-              <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>
-                <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+              <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>
+                <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
               </div>
             </div>
 
@@ -1723,13 +1772,13 @@ function renderFinancialsPage() {
                       <strong>${escapeForHtml(cl.name)}</strong>
                       <span class="loan-pill ${rem <= 0 ? 'settled' : (isGiven ? 'asset' : 'liab')}">${rem <= 0 ? 'Settled' : (isGiven ? 'Given (Asset)' : 'Taken (Liability)')}</span>
                     </div>
-                    <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:4px 0;">${inr(rem)}</div>
-                    <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
+                    <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:3px 0;">${inr(rem)}</div>
+                    <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
                   </div>
-                  <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                    ${rem > 0 ? `<button type="button" class="btn btn-primary" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="recordLoanRepayment('${cl.id}', false)">Record Repayment</button>` : ''}
-                    ${rem > 0 && isGiven ? `<button type="button" class="btn btn-wa" style="height:30px; font-size:11.5px; padding:0 10px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}', '${escapeForHtml(cl.phone || '')}', ${rem})">📲 Reminder</button>` : ''}
-                    <button type="button" class="btn btn-quiet" style="height:30px; font-size:11.5px; padding:0 10px; color:var(--red);" onclick="deleteCustomLoan('${cl.id}')">Delete</button>
+                  <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                    ${rem > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${cl.id}', false)">Record Repayment</button>` : ''}
+                    ${rem > 0 && isGiven ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}', '${escapeForHtml(cl.phone || '')}', ${rem})">📲 Reminder</button>` : ''}
+                    <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; color:var(--red);" onclick="deleteCustomLoan('${cl.id}')">Delete</button>
                   </div>
                 </div>
               `;
@@ -1744,12 +1793,12 @@ function renderFinancialsPage() {
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'expenses')) {
     html += `
       <div class="statement-sheet">
-        <div class="statement-header">
+        <div class="statement-header" style="background:linear-gradient(120deg, #BE123C 0%, #D97706 100%);">
           <div>
             <h3>💸 Expenses &amp; Personal Drawings</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Business Expenses (P&amp;L): ${inr(totalOperatingExpenses)} &bull; Personal Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
+            <div style="font-size:10.5px; color:#FFE4E6;">Business Expenses (P&amp;L): ${inr(totalOperatingExpenses)} &bull; Personal Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openAddExpenseModal()">+ Record Expense / Drawing</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddExpenseModal()">+ Record Expense / Drawing</button>
         </div>
         <div class="statement-body">
           <div class="table-responsive">
@@ -1761,7 +1810,7 @@ function renderFinancialsPage() {
                   <th>Category &amp; Treatment</th>
                   <th>Paid From</th>
                   <th class="text-right">Amount (₹)</th>
-                  <th style="width:36px; text-align:center;">Del</th>
+                  <th style="width:32px; text-align:center;">Del</th>
                 </tr>
               </thead>
               <tbody>
@@ -1772,10 +1821,10 @@ function renderFinancialsPage() {
                     <td style="white-space:nowrap;">${exp.date}</td>
                     <td><strong>${escapeForHtml(exp.payee)}</strong>${exp.note ? `<br><small style="color:var(--muted);">${escapeForHtml(exp.note)}</small>` : ''}</td>
                     <td>
-                      <span style="font-size:10.5px; font-weight:700; padding:2px 6px; border-radius:4px; ${isDrawing ? 'background:#FDF2F8; color:#9D174D;' : 'background:#F1F5F9; color:#334155;'}">
+                      <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; ${isDrawing ? 'background:#FDF2F8; color:#9D174D;' : 'background:#F1F5F9; color:#334155;'}">
                         ${escapeForHtml(exp.category)}
                       </span>
-                      <div style="font-size:10px; color:var(--muted); margin-top:2px;">${isDrawing ? '→ Capital A/c (Drawings)' : '→ Profit & Loss A/c'}</div>
+                      <div style="font-size:9.5px; color:var(--muted); margin-top:2px;">${isDrawing ? '→ Capital A/c (Drawings)' : '→ Profit & Loss A/c'}</div>
                     </td>
                     <td style="white-space:nowrap;">${escapeForHtml(exp.source)}</td>
                     <td class="text-right stmt-mono" style="color:var(--red);">${inr(exp.amount)}</td>
@@ -1797,12 +1846,12 @@ function renderFinancialsPage() {
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'pl')) {
     html += `
       <div class="statement-sheet">
-        <div class="statement-header">
+        <div class="statement-header" style="background:linear-gradient(120deg, #047857 0%, #0D9488 100%);">
           <div>
             <h3>Profit &amp; Loss Statement (Accrual Basis)</h3>
-            <div style="font-size:11px; color:#E2E8F0;">Includes all Billed &amp; Receivable Fees (${inr(grossBilledFees)}) &bull; Net Profit: ${inr(netProfit)}</div>
+            <div style="font-size:10.5px; color:#D1FAE5;">Includes all Billed &amp; Receivable Fees (${inr(grossBilledFees)}) &bull; Net Profit: ${inr(netProfit)}</div>
           </div>
-          <span style="font-size:11px; color:#E2E8F0;">Net Practice Profit: ${inr(netProfit)}</span>
+          <span style="font-size:10.5px; color:#D1FAE5; font-weight:700;">Net Practice Profit: ${inr(netProfit)}</span>
         </div>
         <div class="statement-body">
           <div class="table-responsive">
@@ -1814,8 +1863,8 @@ function renderFinancialsPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr style="background:#F8FAFC; font-weight:700;">
-                  <td colspan="2">A. Revenue &amp; Professional Fees (Realized + Fees Receivable)</td>
+                <tr style="background:#ECFDF5; font-weight:700;">
+                  <td colspan="2" style="color:#065F46;">A. Revenue &amp; Professional Fees (Realized + Fees Receivable)</td>
                 </tr>
                 ${practiceFeeTasks.map(ft => {
                   const netFee = Math.max(0, (Number(ft.payable) || 0) - (Number(ft.discount) || 0));
@@ -1825,7 +1874,7 @@ function renderFinancialsPage() {
                     <tr>
                       <td>
                         <strong>${escapeForHtml(ft.linked || ft.name)}</strong>
-                        <div style="font-size:11px; color:var(--muted);">
+                        <div style="font-size:10.5px; color:var(--muted);">
                           ${escapeForHtml(ft.name)} &bull; ${due > 0 ? `<span style="color:var(--amber); font-weight:600;">Received: ${inr(recd)} | Receivable (Debtor): ${inr(due)}</span>` : '<span style="color:var(--green);">Fully Realized</span>'}
                         </div>
                       </td>
@@ -1843,8 +1892,8 @@ function renderFinancialsPage() {
                   <td>Total Accrued Professional Income [A]</td>
                   <td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td>
                 </tr>
-                <tr style="background:#F8FAFC; font-weight:700;">
-                  <td colspan="2">B. Direct &amp; Operating Business Expenses</td>
+                <tr style="background:#FFF1F2; font-weight:700;">
+                  <td colspan="2" style="color:#9F1239;">B. Direct &amp; Operating Business Expenses</td>
                 </tr>
                 ${operatingExpensesList.length === 0 && !(Number(ledger.journalExpenseAdj) > 0) ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
                 ${operatingExpensesList.map(exp => `
@@ -1875,9 +1924,9 @@ function renderFinancialsPage() {
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'bs')) {
     html += `
       <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%);">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E293B 0%, #312E81 100%);">
           <h3>Balance Sheet Statement</h3>
-          <span style="font-size:11px; color:#E2E8F0;">Assets = Liab. + Equity (${inr(totalAssets)})</span>
+          <span style="font-size:10.5px; color:#E0E7FF; font-weight:700;">Assets = Liab. + Equity (${inr(totalAssets)})</span>
         </div>
         <div class="statement-body">
           <div class="table-responsive">
@@ -1894,7 +1943,7 @@ function renderFinancialsPage() {
                 <tr>
                   <td>
                     <strong>Owner's Capital Account</strong>
-                    <div style="font-size:11px; color:var(--muted); margin-top:2px;">
+                    <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">
                       Capital &amp; Reserves (incl. Net Profit ${inr(netProfit)}): ${inr(grossCapitalBeforeDrawings)}
                       ${totalPersonalDrawings > 0 ? `<br><span style="color:#BE185D; font-weight:600;">Less: Personal Drawings: &minus; ${inr(totalPersonalDrawings)}</span>` : ''}
                     </div>
@@ -1908,7 +1957,7 @@ function renderFinancialsPage() {
                   <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td>
                   <td>
                     <strong>Sundry Debtors (Fees Receivable)</strong>
-                    <div style="font-size:11px; color:var(--muted);">2nd effect of P&amp;L accrued fees (${practiceFeeTasks.filter(ft => Math.max(0, (Number(ft.payable)||0) - (Number(ft.received)||0) - (Number(ft.discount)||0)) > 0).length} pending)</div>
+                    <div style="font-size:10.5px; color:var(--muted);">2nd effect of P&amp;L accrued fees (${practiceFeeTasks.filter(ft => Math.max(0, (Number(ft.payable)||0) - (Number(ft.received)||0) - (Number(ft.discount)||0)) > 0).length} pending)</div>
                   </td>
                   <td class="text-right stmt-mono" style="color:var(--red); font-weight:700;">${inr(sundryDebtorsReceivable)}</td>
                 </tr>
@@ -1930,7 +1979,7 @@ function renderFinancialsPage() {
                   <td><strong>Kathiyawad Ziyarat Advance Asset</strong></td>
                   <td class="text-right stmt-mono" style="color:#0284C7;">${inr(netTripOutflow)}</td>
                 </tr>
-                <tr style="font-weight:700; background:#FAFCFE; border-top:2px solid var(--ink);">
+                <tr style="font-weight:700; background:#EFF6FF; border-top:2px solid #1E3A8A;">
                   <td>TOTAL LIABILITIES &amp; EQUITY</td>
                   <td class="text-right stmt-mono">${inr(totalAssets)}</td>
                   <td>TOTAL ASSETS</td>
@@ -1946,9 +1995,9 @@ function renderFinancialsPage() {
 
   if (!isFamilyPublicView) {
     html += `
-      <div style="background:#FFFFFF; border:1px solid var(--rule); border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:12px;">
-        <div style="font-weight:700; color:var(--ink); margin-bottom:6px;">Official Settlement Bank Account</div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px;">
+      <div style="background:linear-gradient(90deg, #EFF6FF 0%, #F5F3FF 100%); border:1px solid #C7D2FE; border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:11.5px;">
+        <div style="font-weight:700; color:#1E3A8A; margin-bottom:4px;">Official Settlement Bank Account</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:5px;">
           <div><span style="color:var(--muted);">Holder:</span> <b>Mustannsirr Mallik</b></div>
           <div><span style="color:var(--muted);">Bank:</span> <b>slice Small Finance Bank</b></div>
           <div><span style="color:var(--muted);">Account:</span> <b style="font-family:var(--serif); color:var(--accent);">033311501064738</b></div>
@@ -1987,12 +2036,14 @@ function render(listOnly) {
   const filterBtn = (key, label, dotColor) =>
     `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
 
+  const allCollapsed = ['MHJ', 'SHK', 'OWN', 'personal', 'FEES'].every(k => !!uiState.collapsed[k]);
+
   let summaryHtml = `
     <div class="summary-sheet">
       <div class="hero-stats">
         <div class="hero-card"><div class="n">${doneCount}</div><div class="l">Done</div></div>
         <div class="hero-card"><div class="n">${pendingCount}</div><div class="l">Pending</div></div>
-        <div class="hero-card"><div class="n" style="color:#0284C7;">₹13k</div><div class="l">Ziyarat</div></div>
+        <div class="hero-card"><div class="n">₹13k</div><div class="l">Ziyarat</div></div>
         <div class="hero-card"><div class="n">${inr(totalLiquid)}</div><div class="l">Liquid</div></div>
       </div>
       <div class="totals">
@@ -2007,6 +2058,9 @@ function render(listOnly) {
     <div class="filters chips" role="group">
       ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK Husain Arif', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
       ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
+      <button type="button" class="filter-btn" style="margin-left:auto; background:#F1F5F9; color:#475569;" onclick="toggleAllGroups(${!allCollapsed})">
+        ${allCollapsed ? '⊞ Expand All' : '⊟ Fold All'}
+      </button>
     </div>
   `;
 
@@ -2028,7 +2082,7 @@ function render(listOnly) {
 
   let html = '';
   if (filtered.length === 0) {
-    html = '<div style="text-align:center; padding:30px; color:var(--muted);">No matching tasks found.</div>';
+    html = '<div style="text-align:center; padding:24px; color:var(--muted);">No matching tasks found.</div>';
   } else {
     const groupDefs = [
       { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' }
@@ -2056,7 +2110,7 @@ function render(listOnly) {
 
       html += `
         <div class="cat-section${collapsed ? ' collapsed' : ''}">
-          <div class="cat-heading" onclick="toggleGroup('${g.key}')">
+          <div class="cat-heading" style="border-left:4px solid ${g.color};" onclick="toggleGroup('${g.key}')">
             ${ICON.chev}
             <span class="dot" style="background:${g.color}"></span>
             <span class="title">${g.label}</span>
@@ -2071,7 +2125,7 @@ function render(listOnly) {
           const isFee = t.type === 'fee';
           const bal = isFee ? Math.max(0, (t.payable || 0) - (t.received || 0) - (t.discount || 0)) : 0;
           return `
-            <div class="task" style="border-left:3.5px solid ${g.color};">
+            <div class="task" style="border-left:4px solid ${g.color};">
               <span class="num">${idx + 1}.</span>
               <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
               <div class="task-body">
