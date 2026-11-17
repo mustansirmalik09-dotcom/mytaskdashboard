@@ -465,7 +465,7 @@ const ICON = {
   chat: '<svg class="ic" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
   doc: '<svg class="ic" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
   note: '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  wallet: '<svg class="ic" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 2 0 0 0 1-1v-4"/></svg>',
+  wallet: '<svg class="ic" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a2 2 0 0 0 1-1v-4"/></svg>',
   x: '<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   chev: '<svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>'
 };
@@ -1414,16 +1414,24 @@ function renderFinancialsPage() {
   const badgeEl = document.getElementById('finBadge');
   if (badgeEl) badgeEl.textContent = inr(totalLoansGiven);
 
+  // Accrual Treatment of All Fee Receivables:
+  // 1) All active fee tasks (excluding Juzer Presswala loan ledger) are accrued as Income in P&L.
+  // 2) Any unpaid balance on those fees automatically creates Sundry Debtors (Receivable) on the Balance Sheet.
+  const practiceFeeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !/juzer presswala/i.test(t.name));
+  const grossBilledFees = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.discount) || 0)), 0);
+  const totalFeesReceivedCash = practiceFeeTasks.reduce((s, t) => s + (Number(t.received) || 0), 0);
+  const sundryDebtorsReceivable = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
+
   const isDrawingCategory = (cat) => /drawing|personal/i.test(String(cat || ''));
   const operatingExpensesList = (ledger.expenses || []).filter(e => !isDrawingCategory(e.category));
   const personalDrawingsList = (ledger.expenses || []).filter(e => isDrawingCategory(e.category));
 
-  const grossFeeIncome = 700.00 + (Number(ledger.journalIncomeAdj) || 0);
+  const grossFeeIncome = grossBilledFees + (Number(ledger.journalIncomeAdj) || 0);
   const totalOperatingExpenses = operatingExpensesList.reduce((s, e) => s + (e.amount || 0), 0) + (Number(ledger.journalExpenseAdj) || 0);
   const totalPersonalDrawings = personalDrawingsList.reduce((s, e) => s + (e.amount || 0), 0) + (Number(ledger.journalDrawingsAdj) || 0);
   const netProfit = grossFeeIncome - totalOperatingExpenses;
 
-  const totalAssets = totalLiquidCashBank + totalLoansGiven + netTripOutflow;
+  const totalAssets = totalLiquidCashBank + totalLoansGiven + netTripOutflow + sundryDebtorsReceivable;
   const effectiveCapital = totalAssets - totalLoansTaken;
   const grossCapitalBeforeDrawings = effectiveCapital + totalPersonalDrawings;
 
@@ -1461,9 +1469,9 @@ function renderFinancialsPage() {
           <div class="f-sub">Liquid Total: ${inr(totalLiquidCashBank)}</div>
         </div>
         <div class="fin-card">
-          <div class="f-lbl">Loans Given (Asset)</div>
-          <div class="f-val" style="color:var(--red);">${inr(totalLoansGiven)}</div>
-          <div class="f-sub">Loans Taken: ${inr(totalLoansTaken)}</div>
+          <div class="f-lbl">Debtors &amp; Loans Given</div>
+          <div class="f-val" style="color:var(--red);">${inr(totalLoansGiven + sundryDebtorsReceivable)}</div>
+          <div class="f-sub">Debtors: ${inr(sundryDebtorsReceivable)} &bull; Loans: ${inr(totalLoansGiven)}</div>
         </div>
         <div class="fin-card">
           <div class="f-lbl">Owner's Net Capital</div>
@@ -1790,7 +1798,10 @@ function renderFinancialsPage() {
     html += `
       <div class="statement-sheet">
         <div class="statement-header">
-          <h3>Profit &amp; Loss Statement</h3>
+          <div>
+            <h3>Profit &amp; Loss Statement (Accrual Basis)</h3>
+            <div style="font-size:11px; color:#E2E8F0;">Includes all Billed &amp; Receivable Fees (${inr(grossBilledFees)}) &bull; Net Profit: ${inr(netProfit)}</div>
+          </div>
           <span style="font-size:11px; color:#E2E8F0;">Net Practice Profit: ${inr(netProfit)}</span>
         </div>
         <div class="statement-body">
@@ -1804,11 +1815,33 @@ function renderFinancialsPage() {
               </thead>
               <tbody>
                 <tr style="background:#F8FAFC; font-weight:700;">
-                  <td colspan="2">A. Revenue &amp; Professional Fees</td>
+                  <td colspan="2">A. Revenue &amp; Professional Fees (Realized + Fees Receivable)</td>
                 </tr>
-                <tr>
-                  <td>Gross Billed Professional Fees (incl. Journal Income Adjustments)</td>
-                  <td class="text-right stmt-mono">${inr(grossFeeIncome)}</td>
+                ${practiceFeeTasks.map(ft => {
+                  const netFee = Math.max(0, (Number(ft.payable) || 0) - (Number(ft.discount) || 0));
+                  const recd = Number(ft.received) || 0;
+                  const due = Math.max(0, netFee - recd);
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${escapeForHtml(ft.linked || ft.name)}</strong>
+                        <div style="font-size:11px; color:var(--muted);">
+                          ${escapeForHtml(ft.name)} &bull; ${due > 0 ? `<span style="color:var(--amber); font-weight:600;">Received: ${inr(recd)} | Receivable (Debtor): ${inr(due)}</span>` : '<span style="color:var(--green);">Fully Realized</span>'}
+                        </div>
+                      </td>
+                      <td class="text-right stmt-mono">${inr(netFee)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+                ${Number(ledger.journalIncomeAdj) !== 0 && ledger.journalIncomeAdj ? `
+                  <tr>
+                    <td>Journal Professional Income Adjustments</td>
+                    <td class="text-right stmt-mono">${inr(ledger.journalIncomeAdj)}</td>
+                  </tr>
+                ` : ''}
+                <tr style="font-weight:700; background:#F8FAFC;">
+                  <td>Total Accrued Professional Income [A]</td>
+                  <td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td>
                 </tr>
                 <tr style="background:#F8FAFC; font-weight:700;">
                   <td colspan="2">B. Direct &amp; Operating Business Expenses</td>
@@ -1873,18 +1906,27 @@ function renderFinancialsPage() {
                 <tr>
                   <td><strong>Loan Taken &mdash; MHJ</strong></td>
                   <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td>
-                  <td><strong>Loans Given &mdash; Juzer Presswala</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td>
+                  <td>
+                    <strong>Sundry Debtors (Fees Receivable)</strong>
+                    <div style="font-size:11px; color:var(--muted);">2nd effect of P&amp;L accrued fees (${practiceFeeTasks.filter(ft => Math.max(0, (Number(ft.payable)||0) - (Number(ft.received)||0) - (Number(ft.discount)||0)) > 0).length} pending)</div>
+                  </td>
+                  <td class="text-right stmt-mono" style="color:var(--red); font-weight:700;">${inr(sundryDebtorsReceivable)}</td>
                 </tr>
                 <tr>
                   <td><strong>Loan Taken &mdash; Hatim Bhai</strong></td>
                   <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet)}</td>
-                  <td><strong>Other Loans Given (${customGivenList.length})</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--red);">${inr(customGivenNet)}</td>
+                  <td><strong>Loans Given &mdash; Juzer Presswala</strong></td>
+                  <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td>
                 </tr>
                 <tr>
                   <td><strong>Other Loans Taken (${customTakenList.length})</strong></td>
                   <td class="text-right stmt-mono" style="color:var(--amber);">${inr(customTakenNet)}</td>
+                  <td><strong>Other Loans Given (${customGivenList.length})</strong></td>
+                  <td class="text-right stmt-mono" style="color:var(--red);">${inr(customGivenNet)}</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
                   <td><strong>Kathiyawad Ziyarat Advance Asset</strong></td>
                   <td class="text-right stmt-mono" style="color:#0284C7;">${inr(netTripOutflow)}</td>
                 </tr>
