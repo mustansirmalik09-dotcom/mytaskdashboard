@@ -259,7 +259,7 @@
   .page-nav-btn .nav-badge { background: rgba(37, 99, 235, 0.12); color: #1E3A8A; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 800; }
   .page-nav-btn.active .nav-badge { background: rgba(255, 255, 255, 0.24); color: #FFFFFF; }
 
-  /* Financials Page & Colorful Cards */
+  /* Financials Page & Collapsible Accordion Sheets */
   #financialsView { display: none; width: 100%; max-width: 100%; }
   .fin-mode-toggle {
     display: flex; gap: 3px; padding: 3px; background: #E0E7FF; border: 1px solid #C7D2FE;
@@ -287,13 +287,22 @@
 
   .statement-sheet {
     background: #FFFFFF; border: 1px solid var(--rule); border-radius: 13px;
-    box-shadow: var(--shadow-sm); margin-bottom: 12px; overflow: hidden; width: 100%;
+    box-shadow: var(--shadow-sm); margin-bottom: 9px; overflow: hidden; width: 100%;
+    transition: box-shadow 0.15s ease;
   }
+  .statement-sheet:hover { box-shadow: var(--shadow-md); }
   .statement-header {
     background: linear-gradient(120deg, #1E3A8A 0%, #2563EB 60%, #0D9488 100%); color: #FFFFFF;
     padding: 11px 13px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+    cursor: pointer; user-select: none;
   }
-  .statement-header h3 { font-family: var(--serif); font-size: 15.5px; font-weight: 600; margin: 0; }
+  .statement-header-left { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1; }
+  .stmt-chev {
+    width: 22px; height: 22px; border-radius: 6px; background: rgba(255, 255, 255, 0.16);
+    display: grid; place-content: center; flex: none; transition: transform 0.2s ease;
+  }
+  .statement-sheet.collapsed .stmt-chev { transform: rotate(-90deg); }
+  .statement-header h3 { font-family: var(--serif); font-size: 15px; font-weight: 600; margin: 0; line-height: 1.2; }
   .statement-body { padding: 10px 10px; width: 100%; }
 
   /* Loans & Advances Cards */
@@ -487,7 +496,7 @@ var filter = 'all';
 var activePage = 'tasks';
 var finViewMode = 'all';
 var isFamilyPublicView = false;
-var uiState = { collapsed: {} };
+var uiState = { collapsed: {}, finOpen: {} };
 var doneOpen = {};
 
 const STORAGE_KEY = 'tasks-v2';
@@ -499,6 +508,7 @@ const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLyd
 try {
   const savedUi = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
   if (savedUi && savedUi.collapsed) uiState.collapsed = savedUi.collapsed;
+  if (savedUi && savedUi.finOpen) uiState.finOpen = savedUi.finOpen;
 } catch (e) {}
 
 const ICON = {
@@ -529,6 +539,21 @@ function toggleGroup(key) {
   if (uiState.collapsed[key]) delete uiState.collapsed[key]; else uiState.collapsed[key] = true;
   saveUi();
   render();
+}
+
+function toggleFinSection(key) {
+  if (!uiState.finOpen) uiState.finOpen = {};
+  uiState.finOpen[key] = !uiState.finOpen[key];
+  saveUi();
+  renderFinancialsPage();
+}
+
+function toggleAllFinSections(expand) {
+  const keys = ['journal', 'trip', 'loans', 'expenses', 'pl', 'bs', 'bank'];
+  if (!uiState.finOpen) uiState.finOpen = {};
+  keys.forEach(k => { uiState.finOpen[k] = !!expand; });
+  saveUi();
+  renderFinancialsPage();
 }
 
 function toggleAllGroups(collapse) {
@@ -1487,6 +1512,17 @@ function renderFinancialsPage() {
   const effectiveCapital = totalAssets - totalLoansTaken;
   const grossCapitalBeforeDrawings = effectiveCapital + totalPersonalDrawings;
 
+  // Determine whether a section is expanded:
+  // If user selected a single-section tab (e.g., finViewMode === 'trip'), or is on public family view, expand automatically.
+  // In 'all' mode, sections start collapsed by default and open when tapped.
+  const isSecOpen = (key) => {
+    if (isFamilyPublicView && key === 'trip') return true;
+    if (finViewMode !== 'all') return true;
+    return !!(uiState.finOpen && uiState.finOpen[key]);
+  };
+
+  const allFinExpanded = ['journal', 'trip', 'loans', 'expenses', 'pl', 'bs', 'bank'].every(k => !!(uiState.finOpen && uiState.finOpen[k]));
+
   let html = '';
 
   if (!isFamilyPublicView) {
@@ -1502,6 +1538,11 @@ function renderFinancialsPage() {
           <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
         </div>
         <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          ${finViewMode === 'all' ? `
+            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="toggleAllFinSections(${!allFinExpanded})">
+              ${allFinExpanded ? '⊟ Fold All' : '⊞ Expand All'}
+            </button>
+          ` : ''}
           <button type="button" class="btn btn-primary" style="height:30px; padding:0 11px; font-size:11px;" onclick="openJournalEntryModal()">📒 + Journal</button>
           <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
           <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openEditBalancesModal()">✏️ Balances</button>
@@ -1536,61 +1577,68 @@ function renderFinancialsPage() {
 
   // === JOURNAL VOUCHER REGISTER ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'journal')) {
+    const open = isSecOpen('journal');
     const jvList = ledger.journalEntries || [];
     html += `
-      <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #6D28D9 100%);">
-          <div>
-            <h3>📒 Double-Entry Journal Register</h3>
-            <div style="font-size:10.5px; color:#E0E7FF;">Total Vouchers Posted: ${jvList.length} &bull; Automatic Dr &amp; Cr ledger posting</div>
+      <div class="statement-sheet${open ? '' : ' collapsed'}">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #6D28D9 100%);" onclick="toggleFinSection('journal')">
+          <div class="statement-header-left">
+            <span class="stmt-chev">${ICON.chev}</span>
+            <div>
+              <h3>📒 Double-Entry Journal Register</h3>
+              <div style="font-size:10.5px; color:#E0E7FF;">${jvList.length} Vouchers Posted &bull; Tap to ${open ? 'hide' : 'view'} details</div>
+            </div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openJournalEntryModal()">+ New Journal Voucher</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openJournalEntryModal();">+ New Journal</button>
         </div>
-        <div class="statement-body">
-          ${jvList.length === 0 ? `
-            <div style="text-align:center; padding:12px; color:var(--muted); font-size:12px;">
-              No manual journal entries recorded yet. Tap <strong>+ New Journal Voucher</strong> to pass an adjustment, contra, or settlement entry.
-            </div>
-          ` : `
-            <div class="table-responsive">
-              <table class="stmt-table">
-                <thead>
-                  <tr>
-                    <th>Voucher</th>
-                    <th>Date</th>
-                    <th>Debit (Dr) &amp; Credit (Cr) Accounts</th>
-                    <th>Narration</th>
-                    <th class="text-right">Amount (₹)</th>
-                    <th style="width:32px; text-align:center;">Del</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${jvList.slice().reverse().map(jv => `
+        ${open ? `
+          <div class="statement-body">
+            ${jvList.length === 0 ? `
+              <div style="text-align:center; padding:12px; color:var(--muted); font-size:12px;">
+                No manual journal entries recorded yet. Tap <strong>+ New Journal</strong> to pass an adjustment, contra, or settlement entry.
+              </div>
+            ` : `
+              <div class="table-responsive">
+                <table class="stmt-table">
+                  <thead>
                     <tr>
-                      <td style="white-space:nowrap; font-weight:700; color:var(--accent);">${escapeForHtml(jv.voucherNo || 'JV')}</td>
-                      <td style="white-space:nowrap;">${escapeForHtml(jv.date)}</td>
-                      <td>
-                        <div style="color:var(--ink); font-weight:600;">Dr: ${escapeForHtml(getJournalAccountLabel(jv.debitAccount))}</div>
-                        <div style="color:var(--muted); padding-left:12px;">To Cr: ${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</div>
-                      </td>
-                      <td>${escapeForHtml(jv.narration)}</td>
-                      <td class="text-right stmt-mono">${inr(jv.amount)}</td>
-                      <td style="text-align:center;">
-                        <button type="button" class="act del" onclick="deleteJournalEntry('${jv.id}')">${ICON.x}</button>
-                      </td>
+                      <th>Voucher</th>
+                      <th>Date</th>
+                      <th>Debit (Dr) &amp; Credit (Cr) Accounts</th>
+                      <th>Narration</th>
+                      <th class="text-right">Amount (₹)</th>
+                      <th style="width:32px; text-align:center;">Del</th>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          `}
-        </div>
+                  </thead>
+                  <tbody>
+                    ${jvList.slice().reverse().map(jv => `
+                      <tr>
+                        <td style="white-space:nowrap; font-weight:700; color:var(--accent);">${escapeForHtml(jv.voucherNo || 'JV')}</td>
+                        <td style="white-space:nowrap;">${escapeForHtml(jv.date)}</td>
+                        <td>
+                          <div style="color:var(--ink); font-weight:600;">Dr: ${escapeForHtml(getJournalAccountLabel(jv.debitAccount))}</div>
+                          <div style="color:var(--muted); padding-left:12px;">To Cr: ${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</div>
+                        </td>
+                        <td>${escapeForHtml(jv.narration)}</td>
+                        <td class="text-right stmt-mono">${inr(jv.amount)}</td>
+                        <td style="text-align:center;">
+                          <button type="button" class="act del" onclick="deleteJournalEntry('${jv.id}')">${ICON.x}</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        ` : ''}
       </div>
     `;
   }
 
   // === KATHIYAWAD ZIYARAT TRIP (3 FAMILIES EQUAL DIVISION) ===
   if (isFamilyPublicView || finViewMode === 'all' || finViewMode === 'trip') {
+    const open = isSecOpen('trip');
     const families = ledger.kathiyawadTrip.families || [];
     const familyRows = families.map(f => {
       const pPaid = tripPayments.filter(p => p.family === f.name).reduce((s, p) => s + (p.amount || 0), 0);
@@ -1601,13 +1649,16 @@ function renderFinancialsPage() {
     });
 
     html += `
-      <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #0284C7 100%);">
-          <div>
-            <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Split</h3>
-            <div style="font-size:10.5px; color:#E0F2FE;">Total Outlay: ${inr(totalTripOutlay)} &bull; Equal 1/3 Share: ${inr(equalFamilyShare)} / family</div>
+      <div class="statement-sheet${open ? '' : ' collapsed'}">
+        <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #0284C7 100%);" ${!isFamilyPublicView ? `onclick="toggleFinSection('trip')"` : ''}>
+          <div class="statement-header-left">
+            ${!isFamilyPublicView ? `<span class="stmt-chev">${ICON.chev}</span>` : ''}
+            <div>
+              <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Split</h3>
+              <div style="font-size:10.5px; color:#E0F2FE;">Total Outlay: ${inr(totalTripOutlay)} &bull; 1/3 Share: ${inr(equalFamilyShare)} / family</div>
+            </div>
           </div>
-          <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          <div style="display:flex; gap:5px; flex-wrap:wrap;" onclick="event.stopPropagation();">
             <button type="button" class="btn btn-wa" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="shareZiyaratWithFamilies()">📲 Share</button>
             ${!isFamilyPublicView ? `
               <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddTripPaymentModal()">+ Payment</button>
@@ -1615,397 +1666,441 @@ function renderFinancialsPage() {
             ` : ''}
           </div>
         </div>
-        <div class="statement-body">
-          <div class="table-responsive">
-            <table class="stmt-table">
-              <thead>
-                <tr>
-                  <th>Family Unit</th>
-                  <th class="text-right">Paid / Advanced</th>
-                  <th class="text-right">Equal Share (1/3)</th>
-                  <th class="text-right">Settlement Balance</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${familyRows.map(r => {
-                  const isDue = r.diff < -0.5;
-                  const isRefund = r.diff > 0.5;
-                  return `
-                    <tr>
-                      <td><strong>${escapeForHtml(r.name)}</strong><br><small style="color:var(--muted);">${escapeForHtml(r.members)}</small></td>
-                      <td class="text-right stmt-mono">${inr(r.totalPaid)}</td>
-                      <td class="text-right stmt-mono">${inr(r.equalShare)}</td>
-                      <td class="text-right stmt-mono" style="color:${isDue ? 'var(--red)' : (isRefund ? 'var(--green)' : 'var(--ink)')}; font-weight:700;">
-                        ${isDue ? 'Needs to Pay: ' + inr(Math.abs(r.diff)) : (isRefund ? 'Receivable / Refund: ' + inr(r.diff) : 'Settled ✓')}
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-
-          <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Itemized Trip Disbursements &amp; Payments</div>
-          <div class="table-responsive">
-            <table class="stmt-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Family</th>
-                  <th>Particulars</th>
-                  <th>Mode</th>
-                  <th class="text-right">Amount (₹)</th>
-                  ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
-                </tr>
-              </thead>
-              <tbody>
-                ${tripPayments.map(p => `
+        ${open ? `
+          <div class="statement-body">
+            <div class="table-responsive">
+              <table class="stmt-table">
+                <thead>
                   <tr>
-                    <td style="white-space:nowrap;">${p.date}</td>
-                    <td><strong>${escapeForHtml(p.family)}</strong></td>
-                    <td>${escapeForHtml(p.desc)}</td>
-                    <td style="white-space:nowrap;">${escapeForHtml(p.mode)}</td>
-                    <td class="text-right stmt-mono">${inr(p.amount)}</td>
-                    ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button></td>` : ''}
+                    <th>Family Unit</th>
+                    <th class="text-right">Paid / Advanced</th>
+                    <th class="text-right">Equal Share (1/3)</th>
+                    <th class="text-right">Settlement Balance</th>
                   </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  ${familyRows.map(r => {
+                    const isDue = r.diff < -0.5;
+                    const isRefund = r.diff > 0.5;
+                    return `
+                      <tr>
+                        <td><strong>${escapeForHtml(r.name)}</strong><br><small style="color:var(--muted);">${escapeForHtml(r.members)}</small></td>
+                        <td class="text-right stmt-mono">${inr(r.totalPaid)}</td>
+                        <td class="text-right stmt-mono">${inr(r.equalShare)}</td>
+                        <td class="text-right stmt-mono" style="color:${isDue ? 'var(--red)' : (isRefund ? 'var(--green)' : 'var(--ink)')}; font-weight:700;">
+                          ${isDue ? 'Needs to Pay: ' + inr(Math.abs(r.diff)) : (isRefund ? 'Receivable / Refund: ' + inr(r.diff) : 'Settled ✓')}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
 
-          ${tripContributions.length > 0 ? `
-            <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Family Contributions Received</div>
+            <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Itemized Trip Disbursements &amp; Payments</div>
             <div class="table-responsive">
               <table class="stmt-table">
                 <thead>
                   <tr>
                     <th>Date</th>
                     <th>Family</th>
-                    <th>Contributor</th>
+                    <th>Particulars</th>
                     <th>Mode</th>
                     <th class="text-right">Amount (₹)</th>
                     ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
                   </tr>
                 </thead>
                 <tbody>
-                  ${tripContributions.map(c => `
+                  ${tripPayments.map(p => `
                     <tr>
-                      <td style="white-space:nowrap;">${c.date}</td>
-                      <td><strong>${escapeForHtml(c.family)}</strong></td>
-                      <td>${escapeForHtml(c.member)}</td>
-                      <td style="white-space:nowrap;">${escapeForHtml(c.mode)}</td>
-                      <td class="text-right stmt-mono" style="color:var(--green);">${inr(c.amount)}</td>
-                      ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('contrib', '${c.id}')">${ICON.x}</button></td>` : ''}
+                      <td style="white-space:nowrap;">${p.date}</td>
+                      <td><strong>${escapeForHtml(p.family)}</strong></td>
+                      <td>${escapeForHtml(p.desc)}</td>
+                      <td style="white-space:nowrap;">${escapeForHtml(p.mode)}</td>
+                      <td class="text-right stmt-mono">${inr(p.amount)}</td>
+                      ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button></td>` : ''}
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
             </div>
-          ` : ''}
-        </div>
+
+            ${tripContributions.length > 0 ? `
+              <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Family Contributions Received</div>
+              <div class="table-responsive">
+                <table class="stmt-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Family</th>
+                      <th>Contributor</th>
+                      <th>Mode</th>
+                      <th class="text-right">Amount (₹)</th>
+                      ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tripContributions.map(c => `
+                      <tr>
+                        <td style="white-space:nowrap;">${c.date}</td>
+                        <td><strong>${escapeForHtml(c.family)}</strong></td>
+                        <td>${escapeForHtml(c.member)}</td>
+                        <td style="white-space:nowrap;">${escapeForHtml(c.mode)}</td>
+                        <td class="text-right stmt-mono" style="color:var(--green);">${inr(c.amount)}</td>
+                        ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('contrib', '${c.id}')">${ICON.x}</button></td>` : ''}
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
       </div>
     `;
   }
 
   // === LOANS & ADVANCES PORTFOLIO ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'loans')) {
+    const open = isSecOpen('loans');
     html += `
-      <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #2563EB 100%);">
-          <div>
-            <h3>🤝 Loans &amp; Advances Manager</h3>
-            <div style="font-size:10.5px; color:#DBEAFE;">Receivables: ${inr(totalLoansGiven)} &bull; Payables: ${inr(totalLoansTaken)}</div>
+      <div class="statement-sheet${open ? '' : ' collapsed'}">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #2563EB 100%);" onclick="toggleFinSection('loans')">
+          <div class="statement-header-left">
+            <span class="stmt-chev">${ICON.chev}</span>
+            <div>
+              <h3>🤝 Loans &amp; Advances Manager</h3>
+              <div style="font-size:10.5px; color:#DBEAFE;">Given: ${inr(totalLoansGiven)} &bull; Taken: ${inr(totalLoansTaken)}</div>
+            </div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddLoanModal()">+ New Loan / Advance</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openAddLoanModal();">+ New Loan</button>
         </div>
-        <div class="statement-body">
-          <div class="loan-grid">
-            <div class="loan-card" style="border-left:4px solid var(--red); background:linear-gradient(90deg, #FFF1F2 0%, #FFFFFF 35%);">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <strong>${escapeForHtml(ledger.loansGiven.juzer.name)}</strong>
-                  <span class="loan-pill asset">Given (Asset)</span>
+        ${open ? `
+          <div class="statement-body">
+            <div class="loan-grid">
+              <div class="loan-card" style="border-left:4px solid var(--red); background:linear-gradient(90deg, #FFF1F2 0%, #FFFFFF 35%);">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${escapeForHtml(ledger.loansGiven.juzer.name)}</strong>
+                    <span class="loan-pill asset">Given (Asset)</span>
+                  </div>
+                  <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--red); margin:3px 0;">${inr(juzerNet)}</div>
+                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
                 </div>
-                <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--red); margin:3px 0;">${inr(juzerNet)}</div>
-                <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
-              </div>
-              <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>
-                <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
-              </div>
-            </div>
-
-            <div class="loan-card" style="border-left:4px solid var(--amber); background:linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 35%);">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <strong>${escapeForHtml(ledger.loansTaken.mhj.name)}</strong>
-                  <span class="loan-pill liab">Taken (Liability)</span>
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>
+                  <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
                 </div>
-                <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(mhjNet)}</div>
-                <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
               </div>
-              <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>
-                <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
-              </div>
-            </div>
 
-            <div class="loan-card" style="border-left:4px solid var(--amber); background:linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 35%);">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <strong>${escapeForHtml(ledger.loansTaken.hatim.name)}</strong>
-                  <span class="loan-pill liab">Taken (Liability)</span>
+              <div class="loan-card" style="border-left:4px solid var(--amber); background:linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 35%);">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${escapeForHtml(ledger.loansTaken.mhj.name)}</strong>
+                    <span class="loan-pill liab">Taken (Liability)</span>
+                  </div>
+                  <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(mhjNet)}</div>
+                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
                 </div>
-                <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(hatimNet)}</div>
-                <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>
+                  <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+                </div>
               </div>
-              <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>
-                <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
-              </div>
-            </div>
 
-            ${(ledger.customLoans || []).map(cl => {
-              const rem = Math.max(0, (cl.principal || 0) - (cl.repaid || 0));
-              const isGiven = cl.type === 'given';
-              return `
-                <div class="loan-card" style="border-left:4px solid ${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')};">
-                  <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <strong>${escapeForHtml(cl.name)}</strong>
-                      <span class="loan-pill ${rem <= 0 ? 'settled' : (isGiven ? 'asset' : 'liab')}">${rem <= 0 ? 'Settled' : (isGiven ? 'Given (Asset)' : 'Taken (Liability)')}</span>
+              <div class="loan-card" style="border-left:4px solid var(--amber); background:linear-gradient(90deg, #FFFBEB 0%, #FFFFFF 35%);">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${escapeForHtml(ledger.loansTaken.hatim.name)}</strong>
+                    <span class="loan-pill liab">Taken (Liability)</span>
+                  </div>
+                  <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(hatimNet)}</div>
+                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
+                </div>
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>
+                  <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
+                </div>
+              </div>
+
+              ${(ledger.customLoans || []).map(cl => {
+                const rem = Math.max(0, (cl.principal || 0) - (cl.repaid || 0));
+                const isGiven = cl.type === 'given';
+                return `
+                  <div class="loan-card" style="border-left:4px solid ${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')};">
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${escapeForHtml(cl.name)}</strong>
+                        <span class="loan-pill ${rem <= 0 ? 'settled' : (isGiven ? 'asset' : 'liab')}">${rem <= 0 ? 'Settled' : (isGiven ? 'Given (Asset)' : 'Taken (Liability)')}</span>
+                      </div>
+                      <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:3px 0;">${inr(rem)}</div>
+                      <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
                     </div>
-                    <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:3px 0;">${inr(rem)}</div>
-                    <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
+                    <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                      ${rem > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${cl.id}', false)">Record Repayment</button>` : ''}
+                      ${rem > 0 && isGiven ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}', '${escapeForHtml(cl.phone || '')}', ${rem})">📲 Reminder</button>` : ''}
+                      <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; color:var(--red);" onclick="deleteCustomLoan('${cl.id}')">Delete</button>
+                    </div>
                   </div>
-                  <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
-                    ${rem > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${cl.id}', false)">Record Repayment</button>` : ''}
-                    ${rem > 0 && isGiven ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}', '${escapeForHtml(cl.phone || '')}', ${rem})">📲 Reminder</button>` : ''}
-                    <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; color:var(--red);" onclick="deleteCustomLoan('${cl.id}')">Delete</button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
+                `;
+              }).join('')}
+            </div>
           </div>
-        </div>
+        ` : ''}
       </div>
     `;
   }
 
   // === EXPENSES LEDGER ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'expenses')) {
+    const open = isSecOpen('expenses');
     html += `
-      <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(120deg, #BE123C 0%, #D97706 100%);">
-          <div>
-            <h3>💸 Expenses &amp; Personal Drawings</h3>
-            <div style="font-size:10.5px; color:#FFE4E6;">Business Expenses (P&amp;L): ${inr(totalOperatingExpenses)} &bull; Personal Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
+      <div class="statement-sheet${open ? '' : ' collapsed'}">
+        <div class="statement-header" style="background:linear-gradient(120deg, #BE123C 0%, #D97706 100%);" onclick="toggleFinSection('expenses')">
+          <div class="statement-header-left">
+            <span class="stmt-chev">${ICON.chev}</span>
+            <div>
+              <h3>💸 Expenses &amp; Personal Drawings</h3>
+              <div style="font-size:10.5px; color:#FFE4E6;">P&amp;L Expenses: ${inr(totalOperatingExpenses)} &bull; Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
+            </div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddExpenseModal()">+ Record Expense / Drawing</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openAddExpenseModal();">+ Record</button>
         </div>
-        <div class="statement-body">
-          <div class="table-responsive">
-            <table class="stmt-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Payee / Particular</th>
-                  <th>Category &amp; Treatment</th>
-                  <th>Paid From</th>
-                  <th class="text-right">Amount (₹)</th>
-                  <th style="width:32px; text-align:center;">Del</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${(ledger.expenses || []).map(exp => {
-                  const isDrawing = isDrawingCategory(exp.category);
-                  return `
+        ${open ? `
+          <div class="statement-body">
+            <div class="table-responsive">
+              <table class="stmt-table">
+                <thead>
                   <tr>
-                    <td style="white-space:nowrap;">${exp.date}</td>
-                    <td><strong>${escapeForHtml(exp.payee)}</strong>${exp.note ? `<br><small style="color:var(--muted);">${escapeForHtml(exp.note)}</small>` : ''}</td>
-                    <td>
-                      <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; ${isDrawing ? 'background:#FDF2F8; color:#9D174D;' : 'background:#F1F5F9; color:#334155;'}">
-                        ${escapeForHtml(exp.category)}
-                      </span>
-                      <div style="font-size:9.5px; color:var(--muted); margin-top:2px;">${isDrawing ? '→ Capital A/c (Drawings)' : '→ Profit & Loss A/c'}</div>
-                    </td>
-                    <td style="white-space:nowrap;">${escapeForHtml(exp.source)}</td>
-                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(exp.amount)}</td>
-                    <td style="text-align:center;">
-                      <button type="button" class="act del" onclick="deleteExpenseEntry('${exp.id}')">${ICON.x}</button>
-                    </td>
+                    <th>Date</th>
+                    <th>Payee / Particular</th>
+                    <th>Category &amp; Treatment</th>
+                    <th>Paid From</th>
+                    <th class="text-right">Amount (₹)</th>
+                    <th style="width:32px; text-align:center;">Del</th>
                   </tr>
-                `;
-                }).join('')}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${(ledger.expenses || []).map(exp => {
+                    const isDrawing = isDrawingCategory(exp.category);
+                    return `
+                    <tr>
+                      <td style="white-space:nowrap;">${exp.date}</td>
+                      <td><strong>${escapeForHtml(exp.payee)}</strong>${exp.note ? `<br><small style="color:var(--muted);">${escapeForHtml(exp.note)}</small>` : ''}</td>
+                      <td>
+                        <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; ${isDrawing ? 'background:#FDF2F8; color:#9D174D;' : 'background:#F1F5F9; color:#334155;'}">
+                          ${escapeForHtml(exp.category)}
+                        </span>
+                        <div style="font-size:9.5px; color:var(--muted); margin-top:2px;">${isDrawing ? '→ Capital A/c (Drawings)' : '→ Profit & Loss A/c'}</div>
+                      </td>
+                      <td style="white-space:nowrap;">${escapeForHtml(exp.source)}</td>
+                      <td class="text-right stmt-mono" style="color:var(--red);">${inr(exp.amount)}</td>
+                      <td style="text-align:center;">
+                        <button type="button" class="act del" onclick="deleteExpenseEntry('${exp.id}')">${ICON.x}</button>
+                      </td>
+                    </tr>
+                  `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        ` : ''}
       </div>
     `;
   }
 
   // === PROFIT & LOSS STATEMENT ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'pl')) {
+    const open = isSecOpen('pl');
     html += `
-      <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(120deg, #047857 0%, #0D9488 100%);">
-          <div>
-            <h3>Profit &amp; Loss Statement (Accrual Basis)</h3>
-            <div style="font-size:10.5px; color:#D1FAE5;">Includes all Billed &amp; Receivable Fees (${inr(grossBilledFees)}) &bull; Net Profit: ${inr(netProfit)}</div>
+      <div class="statement-sheet${open ? '' : ' collapsed'}">
+        <div class="statement-header" style="background:linear-gradient(120deg, #047857 0%, #0D9488 100%);" onclick="toggleFinSection('pl')">
+          <div class="statement-header-left">
+            <span class="stmt-chev">${ICON.chev}</span>
+            <div>
+              <h3>Profit &amp; Loss Statement (Accrual Basis)</h3>
+              <div style="font-size:10.5px; color:#D1FAE5;">Income: ${inr(grossFeeIncome)} &bull; Expenses: ${inr(totalOperatingExpenses)} &bull; Net Profit: ${inr(netProfit)}</div>
+            </div>
           </div>
-          <span style="font-size:10.5px; color:#D1FAE5; font-weight:700;">Net Practice Profit: ${inr(netProfit)}</span>
+          <span style="font-size:11px; color:#FFFFFF; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:999px; font-weight:700;">Net: ${inr(netProfit)}</span>
         </div>
-        <div class="statement-body">
-          <div class="table-responsive">
-            <table class="stmt-table">
-              <thead>
-                <tr>
-                  <th>Particulars</th>
-                  <th class="text-right">Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style="background:#ECFDF5; font-weight:700;">
-                  <td colspan="2" style="color:#065F46;">A. Revenue &amp; Professional Fees (Realized + Fees Receivable)</td>
-                </tr>
-                ${practiceFeeTasks.map(ft => {
-                  const netFee = Math.max(0, (Number(ft.payable) || 0) - (Number(ft.discount) || 0));
-                  const recd = Number(ft.received) || 0;
-                  const due = Math.max(0, netFee - recd);
-                  return `
+        ${open ? `
+          <div class="statement-body">
+            <div class="table-responsive">
+              <table class="stmt-table">
+                <thead>
+                  <tr>
+                    <th>Particulars</th>
+                    <th class="text-right">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background:#ECFDF5; font-weight:700;">
+                    <td colspan="2" style="color:#065F46;">A. Revenue &amp; Professional Fees (Realized + Fees Receivable)</td>
+                  </tr>
+                  ${practiceFeeTasks.map(ft => {
+                    const netFee = Math.max(0, (Number(ft.payable) || 0) - (Number(ft.discount) || 0));
+                    const recd = Number(ft.received) || 0;
+                    const due = Math.max(0, netFee - recd);
+                    return `
+                      <tr>
+                        <td>
+                          <strong>${escapeForHtml(ft.linked || ft.name)}</strong>
+                          <div style="font-size:10.5px; color:var(--muted);">
+                            ${escapeForHtml(ft.name)} &bull; ${due > 0 ? `<span style="color:var(--amber); font-weight:600;">Received: ${inr(recd)} | Receivable (Debtor): ${inr(due)}</span>` : '<span style="color:var(--green);">Fully Realized</span>'}
+                          </div>
+                        </td>
+                        <td class="text-right stmt-mono">${inr(netFee)}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                  ${Number(ledger.journalIncomeAdj) !== 0 && ledger.journalIncomeAdj ? `
                     <tr>
-                      <td>
-                        <strong>${escapeForHtml(ft.linked || ft.name)}</strong>
-                        <div style="font-size:10.5px; color:var(--muted);">
-                          ${escapeForHtml(ft.name)} &bull; ${due > 0 ? `<span style="color:var(--amber); font-weight:600;">Received: ${inr(recd)} | Receivable (Debtor): ${inr(due)}</span>` : '<span style="color:var(--green);">Fully Realized</span>'}
-                        </div>
-                      </td>
-                      <td class="text-right stmt-mono">${inr(netFee)}</td>
+                      <td>Journal Professional Income Adjustments</td>
+                      <td class="text-right stmt-mono">${inr(ledger.journalIncomeAdj)}</td>
                     </tr>
-                  `;
-                }).join('')}
-                ${Number(ledger.journalIncomeAdj) !== 0 && ledger.journalIncomeAdj ? `
-                  <tr>
-                    <td>Journal Professional Income Adjustments</td>
-                    <td class="text-right stmt-mono">${inr(ledger.journalIncomeAdj)}</td>
+                  ` : ''}
+                  <tr style="font-weight:700; background:#F8FAFC;">
+                    <td>Total Accrued Professional Income [A]</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td>
                   </tr>
-                ` : ''}
-                <tr style="font-weight:700; background:#F8FAFC;">
-                  <td>Total Accrued Professional Income [A]</td>
-                  <td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td>
-                </tr>
-                <tr style="background:#FFF1F2; font-weight:700;">
-                  <td colspan="2" style="color:#9F1239;">B. Direct &amp; Operating Business Expenses</td>
-                </tr>
-                ${operatingExpensesList.length === 0 && !(Number(ledger.journalExpenseAdj) > 0) ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
-                ${operatingExpensesList.map(exp => `
-                  <tr>
-                    <td>${escapeForHtml(exp.payee)} <small style="color:var(--muted);">(${escapeForHtml(exp.category)})</small></td>
-                    <td class="text-right stmt-mono">${inr(exp.amount)}</td>
+                  <tr style="background:#FFF1F2; font-weight:700;">
+                    <td colspan="2" style="color:#9F1239;">B. Direct &amp; Operating Business Expenses</td>
                   </tr>
-                `).join('')}
-                ${Number(ledger.journalExpenseAdj) !== 0 && ledger.journalExpenseAdj ? `
-                  <tr>
-                    <td>Journal Operating Expense Adjustments</td>
-                    <td class="text-right stmt-mono">${inr(ledger.journalExpenseAdj)}</td>
+                  ${operatingExpensesList.length === 0 && !(Number(ledger.journalExpenseAdj) > 0) ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
+                  ${operatingExpensesList.map(exp => `
+                    <tr>
+                      <td>${escapeForHtml(exp.payee)} <small style="color:var(--muted);">(${escapeForHtml(exp.category)})</small></td>
+                      <td class="text-right stmt-mono">${inr(exp.amount)}</td>
+                    </tr>
+                  `).join('')}
+                  ${Number(ledger.journalExpenseAdj) !== 0 && ledger.journalExpenseAdj ? `
+                    <tr>
+                      <td>Journal Operating Expense Adjustments</td>
+                      <td class="text-right stmt-mono">${inr(ledger.journalExpenseAdj)}</td>
+                    </tr>
+                  ` : ''}
+                  <tr style="font-weight:700; background:#FAFCFE; border-top:1.5px solid var(--rule);">
+                    <td>NET PRACTICE PROFIT (A &minus; B)</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td>
                   </tr>
-                ` : ''}
-                <tr style="font-weight:700; background:#FAFCFE; border-top:1.5px solid var(--rule);">
-                  <td>NET PRACTICE PROFIT (A &minus; B)</td>
-                  <td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td>
-                </tr>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        ` : ''}
       </div>
     `;
   }
 
   // === BALANCE SHEET STATEMENT ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'bs')) {
+    const open = isSecOpen('bs');
     html += `
-      <div class="statement-sheet">
-        <div class="statement-header" style="background:linear-gradient(120deg, #1E293B 0%, #312E81 100%);">
-          <h3>Balance Sheet Statement</h3>
-          <span style="font-size:10.5px; color:#E0E7FF; font-weight:700;">Assets = Liab. + Equity (${inr(totalAssets)})</span>
-        </div>
-        <div class="statement-body">
-          <div class="table-responsive">
-            <table class="stmt-table">
-              <thead>
-                <tr>
-                  <th>Capital &amp; Liabilities</th>
-                  <th class="text-right">Amount (₹)</th>
-                  <th>Assets &amp; Receivables</th>
-                  <th class="text-right">Amount (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <strong>Owner's Capital Account</strong>
-                    <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">
-                      Capital &amp; Reserves (incl. Net Profit ${inr(netProfit)}): ${inr(grossCapitalBeforeDrawings)}
-                      ${totalPersonalDrawings > 0 ? `<br><span style="color:#BE185D; font-weight:600;">Less: Personal Drawings: &minus; ${inr(totalPersonalDrawings)}</span>` : ''}
-                    </div>
-                  </td>
-                  <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">${inr(effectiveCapital)}</td>
-                  <td><strong>Cash &amp; Bank Balances</strong><br><small style="color:var(--muted);">Cash (${inr(cashInHand)}) + slice SFB (${inr(bankSlice)})</small></td>
-                  <td class="text-right stmt-mono">${inr(totalLiquidCashBank)}</td>
-                </tr>
-                <tr>
-                  <td><strong>Loan Taken &mdash; MHJ</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td>
-                  <td>
-                    <strong>Sundry Debtors (Fees Receivable)</strong>
-                    <div style="font-size:10.5px; color:var(--muted);">2nd effect of P&amp;L accrued fees (${practiceFeeTasks.filter(ft => Math.max(0, (Number(ft.payable)||0) - (Number(ft.received)||0) - (Number(ft.discount)||0)) > 0).length} pending)</div>
-                  </td>
-                  <td class="text-right stmt-mono" style="color:var(--red); font-weight:700;">${inr(sundryDebtorsReceivable)}</td>
-                </tr>
-                <tr>
-                  <td><strong>Loan Taken &mdash; Hatim Bhai</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet)}</td>
-                  <td><strong>Loans Given &mdash; Juzer Presswala</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td>
-                </tr>
-                <tr>
-                  <td><strong>Other Loans Taken (${customTakenList.length})</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--amber);">${inr(customTakenNet)}</td>
-                  <td><strong>Other Loans Given (${customGivenList.length})</strong></td>
-                  <td class="text-right stmt-mono" style="color:var(--red);">${inr(customGivenNet)}</td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td></td>
-                  <td><strong>Kathiyawad Ziyarat Advance Asset</strong></td>
-                  <td class="text-right stmt-mono" style="color:#0284C7;">${inr(netTripOutflow)}</td>
-                </tr>
-                <tr style="font-weight:700; background:#EFF6FF; border-top:2px solid #1E3A8A;">
-                  <td>TOTAL LIABILITIES &amp; EQUITY</td>
-                  <td class="text-right stmt-mono">${inr(totalAssets)}</td>
-                  <td>TOTAL ASSETS</td>
-                  <td class="text-right stmt-mono">${inr(totalAssets)}</td>
-                </tr>
-              </tbody>
-            </table>
+      <div class="statement-sheet${open ? '' : ' collapsed'}">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E293B 0%, #312E81 100%);" onclick="toggleFinSection('bs')">
+          <div class="statement-header-left">
+            <span class="stmt-chev">${ICON.chev}</span>
+            <div>
+              <h3>Balance Sheet Statement</h3>
+              <div style="font-size:10.5px; color:#E0E7FF;">Capital: ${inr(effectiveCapital)} &bull; Liab: ${inr(totalLoansTaken)} &bull; Assets: ${inr(totalAssets)}</div>
+            </div>
           </div>
+          <span style="font-size:11px; color:#FFFFFF; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:999px; font-weight:700;">Total: ${inr(totalAssets)}</span>
         </div>
+        ${open ? `
+          <div class="statement-body">
+            <div class="table-responsive">
+              <table class="stmt-table">
+                <thead>
+                  <tr>
+                    <th>Capital &amp; Liabilities</th>
+                    <th class="text-right">Amount (₹)</th>
+                    <th>Assets &amp; Receivables</th>
+                    <th class="text-right">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong>Owner's Capital Account</strong>
+                      <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">
+                        Capital &amp; Reserves (incl. Net Profit ${inr(netProfit)}): ${inr(grossCapitalBeforeDrawings)}
+                        ${totalPersonalDrawings > 0 ? `<br><span style="color:#BE185D; font-weight:600;">Less: Personal Drawings: &minus; ${inr(totalPersonalDrawings)}</span>` : ''}
+                      </div>
+                    </td>
+                    <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">${inr(effectiveCapital)}</td>
+                    <td><strong>Cash &amp; Bank Balances</strong><br><small style="color:var(--muted);">Cash (${inr(cashInHand)}) + slice SFB (${inr(bankSlice)})</small></td>
+                    <td class="text-right stmt-mono">${inr(totalLiquidCashBank)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Loan Taken &mdash; MHJ</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td>
+                    <td>
+                      <strong>Sundry Debtors (Fees Receivable)</strong>
+                      <div style="font-size:10.5px; color:var(--muted);">2nd effect of P&amp;L accrued fees (${practiceFeeTasks.filter(ft => Math.max(0, (Number(ft.payable)||0) - (Number(ft.received)||0) - (Number(ft.discount)||0)) > 0).length} pending)</div>
+                    </td>
+                    <td class="text-right stmt-mono" style="color:var(--red); font-weight:700;">${inr(sundryDebtorsReceivable)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Loan Taken &mdash; Hatim Bhai</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet)}</td>
+                    <td><strong>Loans Given &mdash; Juzer Presswala</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Other Loans Taken (${customTakenList.length})</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(customTakenNet)}</td>
+                    <td><strong>Other Loans Given (${customGivenList.length})</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(customGivenNet)}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td><strong>Kathiyawad Ziyarat Advance Asset</strong></td>
+                    <td class="text-right stmt-mono" style="color:#0284C7;">${inr(netTripOutflow)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#EFF6FF; border-top:2px solid #1E3A8A;">
+                    <td>TOTAL LIABILITIES &amp; EQUITY</td>
+                    <td class="text-right stmt-mono">${inr(totalAssets)}</td>
+                    <td>TOTAL ASSETS</td>
+                    <td class="text-right stmt-mono">${inr(totalAssets)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }
 
+  // === OFFICIAL SETTLEMENT BANK ACCOUNT ===
   if (!isFamilyPublicView) {
+    const open = isSecOpen('bank');
     html += `
-      <div style="background:linear-gradient(90deg, #EFF6FF 0%, #F5F3FF 100%); border:1px solid #C7D2FE; border-radius:10px; padding:10px 12px; margin-bottom:10px; font-size:11.5px;">
-        <div style="font-weight:700; color:#1E3A8A; margin-bottom:4px;">Official Settlement Bank Account</div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:5px;">
-          <div><span style="color:var(--muted);">Holder:</span> <b>Mustannsirr Mallik</b></div>
-          <div><span style="color:var(--muted);">Bank:</span> <b>slice Small Finance Bank</b></div>
-          <div><span style="color:var(--muted);">Account:</span> <b style="font-family:var(--serif); color:var(--accent);">033311501064738</b></div>
-          <div><span style="color:var(--muted);">IFSC:</span> <b style="font-family:var(--serif); color:var(--accent);">NESF0000333</b></div>
+      <div class="statement-sheet${open ? '' : ' collapsed'}" style="border:1px solid #C7D2FE;">
+        <div class="statement-header" style="background:linear-gradient(90deg, #EFF6FF 0%, #F5F3FF 100%); color:#1E3A8A;" onclick="toggleFinSection('bank')">
+          <div class="statement-header-left">
+            <span class="stmt-chev" style="background:rgba(30,58,138,0.1);">${ICON.chev}</span>
+            <div>
+              <h3 style="color:#1E3A8A;">🏦 Official Settlement Bank Account</h3>
+              <div style="font-size:10.5px; color:var(--muted);">slice Small Finance Bank &bull; A/c: 033311501064738</div>
+            </div>
+          </div>
+          <span style="font-size:10.5px; color:var(--accent); font-weight:700;">${open ? 'Hide' : 'Details'}</span>
         </div>
+        ${open ? `
+          <div class="statement-body" style="background:#FAFCFF; font-size:11.5px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:6px;">
+              <div><span style="color:var(--muted);">Holder:</span> <b>Mustannsirr Mallik</b></div>
+              <div><span style="color:var(--muted);">Bank:</span> <b>slice Small Finance Bank</b></div>
+              <div><span style="color:var(--muted);">Account:</span> <b style="font-family:var(--serif); color:var(--accent);">033311501064738</b></div>
+              <div><span style="color:var(--muted);">IFSC:</span> <b style="font-family:var(--serif); color:var(--accent);">NESF0000333</b></div>
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -2274,6 +2369,9 @@ function openJournalEntryModal() {
       narration
     });
     applyJournalEffect(ledger, debitAccount, creditAccount, amount, 1);
+    if (!uiState.finOpen) uiState.finOpen = {};
+    uiState.finOpen.journal = true;
+    saveUi();
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
@@ -2393,6 +2491,9 @@ function openAddLoanModal() {
     if (mode === 'Cash') ledger.cashInHand += delta;
     else ledger.bankSlice += delta;
 
+    if (!uiState.finOpen) uiState.finOpen = {};
+    uiState.finOpen.loans = true;
+    saveUi();
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
@@ -2563,6 +2664,9 @@ function openAddTripPaymentModal() {
     if (mode === 'Cash') ledger.cashInHand -= amount;
     else if (mode === 'slice SFB') ledger.bankSlice -= amount;
 
+    if (!uiState.finOpen) uiState.finOpen = {};
+    uiState.finOpen.trip = true;
+    saveUi();
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
@@ -2609,6 +2713,9 @@ function openAddTripContributionModal() {
     if (mode === 'Cash') ledger.cashInHand += amount;
     else ledger.bankSlice += amount;
 
+    if (!uiState.finOpen) uiState.finOpen = {};
+    uiState.finOpen.trip = true;
+    saveUi();
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
@@ -2730,6 +2837,9 @@ function openAddExpenseModal() {
     if (source === 'Cash') curLedger.cashInHand -= amount;
     else curLedger.bankSlice -= amount;
 
+    if (!uiState.finOpen) uiState.finOpen = {};
+    uiState.finOpen.expenses = true;
+    saveUi();
     saveFinLedger(curLedger);
     render();
     renderFinancialsPage();
