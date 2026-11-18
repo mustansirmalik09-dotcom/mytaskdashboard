@@ -505,7 +505,7 @@ const ICON = {
   chat: '<svg class="ic" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>',
   doc: '<svg class="ic" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>',
   note: '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  wallet: '<svg class="ic" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a2 2 0 0 0 1-1v-4"/></svg>',
+  wallet: '<svg class="ic" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>',
   x: '<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   chev: '<svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>'
 };
@@ -967,6 +967,7 @@ function getDefaultFinLedger() {
         note: 'Gateway charge on ₹700 fee from Royal consultancy services gumasta application'
       }
     ],
+    customExpenseCategories: [],
     adjustmentsLog: [],
     deletedIds: []
   };
@@ -984,6 +985,7 @@ function getFinLedger() {
     const def = getDefaultFinLedger();
     if (!parsed.kathiyawadTrip) parsed.kathiyawadTrip = def.kathiyawadTrip;
     if (!parsed.expenses) parsed.expenses = def.expenses;
+    if (!parsed.customExpenseCategories) parsed.customExpenseCategories = [];
     if (!parsed.adjustmentsLog) parsed.adjustmentsLog = [];
     if (!parsed.customLoans) parsed.customLoans = [];
     if (!parsed.journalEntries) parsed.journalEntries = [];
@@ -1050,6 +1052,10 @@ function mergeFinLedgers(local, cloud) {
   merged.expenses = mergeById(local.expenses, cloud.expenses);
   merged.customLoans = mergeById(local.customLoans, cloud.customLoans);
   merged.journalEntries = mergeById(local.journalEntries, cloud.journalEntries);
+  merged.customExpenseCategories = Array.from(new Set([
+    ...(local.customExpenseCategories || []),
+    ...(cloud.customExpenseCategories || [])
+  ]));
 
   return merged;
 }
@@ -1464,9 +1470,6 @@ function renderFinancialsPage() {
   const badgeEl = document.getElementById('finBadge');
   if (badgeEl) badgeEl.textContent = inr(totalLoansGiven);
 
-  // Accrual Treatment of All Fee Receivables:
-  // 1) All active fee tasks (excluding Juzer Presswala loan ledger) are accrued as Income in P&L.
-  // 2) Any unpaid balance on those fees automatically creates Sundry Debtors (Receivable) on the Balance Sheet.
   const practiceFeeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !/juzer presswala/i.test(t.name));
   const grossBilledFees = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.discount) || 0)), 0);
   const sundryDebtorsReceivable = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
@@ -2642,18 +2645,48 @@ function deleteTripEntry(kind, id) {
   }, 'Delete', 'Cancel');
 }
 
+function onExpenseCatSelectChange() {
+  const sel = document.getElementById('expCat');
+  const wrap = document.getElementById('expNewCatWrap');
+  const inp = document.getElementById('expNewCatName');
+  if (!sel || !wrap) return;
+  if (sel.value === '__NEW_EXP_CAT__') {
+    wrap.style.display = 'block';
+    if (inp) inp.focus();
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
 function openAddExpenseModal() {
+  const ledger = getFinLedger();
+  const baseCategories = [
+    { val: 'Personal Drawings', label: 'Personal Drawings (Deducted from Capital A/c)' },
+    { val: 'Portal Filing & Challan', label: 'Portal Filing & Challan (P&L Expense)' },
+    { val: 'Office & Documentation', label: 'Office & Documentation (P&L Expense)' },
+    { val: 'Travel & Conveyance', label: 'Travel & Conveyance (P&L Expense)' },
+    { val: 'Gateway / Merchant Fee', label: 'Gateway / Merchant Fee (P&L Expense)' }
+  ];
+  const savedCustom = (ledger.customExpenseCategories || []).filter(c => !baseCategories.some(b => b.val.toLowerCase() === c.toLowerCase()));
+  const optionsHtml = baseCategories.map(b => `<option value="${escapeForHtml(b.val)}">${escapeForHtml(b.label)}</option>`).join('') +
+    savedCustom.map(c => {
+      const isDraw = /drawing|personal/i.test(c);
+      return `<option value="${escapeForHtml(c)}">${escapeForHtml(c)} (${isDraw ? 'Capital A/c' : 'P&L Expense'})</option>`;
+    }).join('') +
+    `<option value="__NEW_EXP_CAT__">+ Add new category…</option>`;
+
   showModal('💸 Record Expense or Personal Drawing', `
     <label>Date</label>
     <input type="date" id="expDate" value="${new Date().toISOString().slice(0, 10)}">
     <label>Category &amp; Accounting Treatment</label>
-    <select id="expCat">
-      <option value="Personal Drawings">Personal Drawings (Deducted from Capital A/c)</option>
-      <option value="Portal Filing & Challan">Portal Filing &amp; Challan (P&amp;L Expense)</option>
-      <option value="Office & Documentation">Office &amp; Documentation (P&amp;L Expense)</option>
-      <option value="Travel & Conveyance">Travel &amp; Conveyance (P&amp;L Expense)</option>
-      <option value="Gateway / Merchant Fee">Gateway / Merchant Fee (P&amp;L Expense)</option>
+    <select id="expCat" onchange="onExpenseCatSelectChange()">
+      ${optionsHtml}
     </select>
+    <div id="expNewCatWrap" style="display:none; background:#F8FAFC; border:1px dashed var(--accent-border); padding:8px 10px; border-radius:8px; margin-bottom:9px;">
+      <label style="color:var(--accent);">New Category Name</label>
+      <input type="text" id="expNewCatName" placeholder="e.g. Software Subscription, Staff Welfare, Personal Drawings - Home" style="margin-bottom:4px;">
+      <div style="font-size:10px; color:var(--muted);">Tip: Include "Personal" or "Drawings" in the name to deduct from Capital A/c; otherwise it posts to P&amp;L.</div>
+    </div>
     <label>Payee / Description</label>
     <input type="text" id="expPayee" placeholder="e.g. Household / Office supplies">
     <label>Amount (₹)</label>
@@ -2667,16 +2700,25 @@ function openAddExpenseModal() {
     <input type="text" id="expNote" placeholder="Optional details">
   `, () => {
     const date = document.getElementById('expDate').value || new Date().toISOString().slice(0, 10);
-    const category = document.getElementById('expCat').value;
+    let category = document.getElementById('expCat').value;
+    if (category === '__NEW_EXP_CAT__') {
+      const customName = (document.getElementById('expNewCatName').value || '').trim();
+      if (!customName) return;
+      category = customName;
+    }
     const payee = document.getElementById('expPayee').value.trim();
     const amount = parseFloat(document.getElementById('expAmount').value) || 0;
     const source = document.getElementById('expSource').value;
     const note = document.getElementById('expNote').value.trim();
     if (!payee || amount <= 0) return;
 
-    const ledger = getFinLedger();
-    if (!ledger.expenses) ledger.expenses = [];
-    ledger.expenses.push({
+    const curLedger = getFinLedger();
+    if (!curLedger.customExpenseCategories) curLedger.customExpenseCategories = [];
+    if (!curLedger.customExpenseCategories.some(c => c.toLowerCase() === category.toLowerCase())) {
+      curLedger.customExpenseCategories.push(category);
+    }
+    if (!curLedger.expenses) curLedger.expenses = [];
+    curLedger.expenses.push({
       id: 'exp_' + Date.now(),
       date,
       payee,
@@ -2685,10 +2727,10 @@ function openAddExpenseModal() {
       source,
       note
     });
-    if (source === 'Cash') ledger.cashInHand -= amount;
-    else ledger.bankSlice -= amount;
+    if (source === 'Cash') curLedger.cashInHand -= amount;
+    else curLedger.bankSlice -= amount;
 
-    saveFinLedger(ledger);
+    saveFinLedger(curLedger);
     render();
     renderFinancialsPage();
   }, 'Save Entry', 'Cancel');
