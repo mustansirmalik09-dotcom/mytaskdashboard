@@ -54,7 +54,6 @@
     --c-shk: #7C3AED;
     --c-own: #0D9488;
     --c-personal: #E11D48;
-    --c-invitation: #DB2777;
     --c-fees: #F59E0B;
 
     --serif: 'Newsreader', Georgia, 'Times New Roman', serif;
@@ -459,14 +458,13 @@
   <div class="add-box">
     <select id="newCat" onchange="onCategoryChange()">
       <option value="PERSONAL">Personal</option>
-      <option value="INVITATION">💌 Invitations</option>
       <option value="OWN">Professional — OWN</option>
       <option value="MHJ">Professional — MHJ</option>
       <option value="SHK">Professional — SHK Husain Arif</option>
       <option value="FEES">Fees</option>
       <option value="__NEW__">+ New category…</option>
     </select>
-    <input type="text" id="newTask" placeholder="New task, invitation, or client…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+    <input type="text" id="newTask" placeholder="New task or client…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
     <input type="date" id="newDueDate" style="flex:1; min-width:110px;">
     <button onclick="addTask()">+ Add</button>
   </div>
@@ -578,7 +576,7 @@ function toggleAllFinSections(expand) {
 }
 
 function toggleAllGroups(collapse) {
-  const keys = ['MHJ', 'SHK', 'OWN', 'INVITATION', 'personal', 'FEES'];
+  const keys = ['MHJ', 'SHK', 'OWN', 'personal', 'FEES'];
   keys.forEach(k => {
     if (collapse) uiState.collapsed[k] = true;
     else delete uiState.collapsed[k];
@@ -1054,7 +1052,7 @@ async function pullFromCalendar() {
       }
 
       const tag = ev.tag;
-      const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : (tag === 'INVITATION' ? 'invitation' : 'professional'));
+      const type = tag === 'PERSONAL' ? 'personal' : (tag === 'FEES' ? 'fee' : 'professional');
       const cat = (tag === 'PERSONAL') ? null : tag;
       const task = {
         id: ev.id,
@@ -2859,10 +2857,9 @@ function addTask() {
     });
   } else {
     const dueVal = document.getElementById('newDueDate').value;
-    const isInv = catVal === 'INVITATION';
     const newTask = {
-      id: 'task_' + Date.now(), name: name, type: isInv ? 'invitation' : (catVal === 'PERSONAL' ? 'personal' : 'professional'),
-      cat: catVal, done: false,
+      id: 'task_' + Date.now(), name: name, type: catVal === 'PERSONAL' ? 'personal' : 'professional',
+      cat: catVal === 'PERSONAL' ? 'PERSONAL' : catVal, done: false,
       dueDate: dueVal ? new Date(dueVal + 'T09:00:00').toISOString() : null, remark: ''
     };
     tasks.push(newTask);
@@ -2919,12 +2916,12 @@ function render(listOnly) {
 
   const badgeEl = document.getElementById('finBadge');
   if (badgeEl) badgeEl.textContent = inr(totalLiquid);
-  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES', 'PERSONAL', 'INVITATION']);
+
+  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES', 'PERSONAL']);
   const extraCats = [...new Set(tasks.filter(t => t.type === 'professional' && t.cat && !knownCats.has(t.cat)).map(t => t.cat))];
 
   let filtered = tasks;
   if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal');
-  else if (filter === 'invitation') filtered = tasks.filter(t => t.type === 'invitation' || t.cat === 'INVITATION');
   else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional');
   else if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN');
   else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ');
@@ -2970,10 +2967,10 @@ function render(listOnly) {
       </div>
 
       <div class="filters seg">
-        ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('invitation', '💌 Invitations')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
+        ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
       </div>
       <div class="filters chips">
-        ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK', 'var(--c-shk)')}${filterBtn('invitation', 'Invitations', 'var(--c-invitation)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
+        ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
         ${extraCats.map((c, i) => filterBtn(c, c.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
         <button type="button" class="filter-btn" onclick="toggleAllGroups(true)">⊟ Fold All</button>
         <button type="button" class="filter-btn" onclick="toggleAllGroups(false)">⊞ Expand All</button>
@@ -2997,8 +2994,7 @@ function render(listOnly) {
     groupDefs.push(
       { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
       { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' },
-      { key: 'INVITATION', label: '💌 Invitations & Events', color: 'var(--c-invitation)', match: t => t.type === 'invitation' || t.cat === 'INVITATION' },
-      { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' && t.cat !== 'INVITATION' },
+      { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' },
       { key: 'FEES', label: 'Fees & Receivables', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
     );
 
