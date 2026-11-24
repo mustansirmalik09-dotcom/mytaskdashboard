@@ -121,7 +121,7 @@
   .hero-card { display: flex; flex-direction: column-reverse; justify-content: flex-end; min-width: 0; padding: 8px 8px; position: relative; }
   .hero-card + .hero-card { border-left: 1px solid var(--rule-soft); }
   .hero-card .l { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-top: 1px; }
-  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .hero-card .n { font-family: var(--serif); font-weight: 600; font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
   .hero-card:nth-child(1) { background: linear-gradient(180deg, #ECFDF5 0%, #FFFFFF 100%); }
   .hero-card:nth-child(1) .n { color: var(--green); }
   .hero-card:nth-child(2) { background: linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 100%); }
@@ -133,10 +133,10 @@
 
   .totals { border-top: 1px solid var(--rule-soft); padding: 4px 0 3px; background: #FAFCFF; }
   .totals > .tot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 3px 12px; }
-  .totals .l { font-size: 11.5px; font-weight: 600; color: var(--muted); }
-  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .totals .l { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .totals .fig { font-family: var(--serif); font-weight: 600; font-size: 15.5px; font-variant-numeric: tabular-nums; color: var(--ink); }
   .totals > .tot.sum { margin: 3px 12px 0; padding: 5px 0 3px; border-top: 1px dashed var(--rule); }
-  .totals .fig.out { color: var(--red); font-size: 16px; border-bottom: 2px solid var(--red); }
+  .totals .fig.out { color: var(--red); font-size: 16.5px; border-bottom: 2px solid var(--red); }
 
   /* Compact Toolbar: Search + Add Task */
   #searchRow { margin: 0 0 8px; }
@@ -148,8 +148,6 @@
   }
   #searchBox:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14); }
   #searchClear { display: none; position: absolute; right: 4px; top: 4px; width: 28px; height: 28px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
-  #searchInfo { font-size: 11.5px; color: var(--muted); margin: 4px 2px 0; }
-  #searchInfo:empty { display: none; }
 
   .add-box { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
   .add-box input, .add-box select {
@@ -215,8 +213,6 @@
   }
   .task:hover { background: #FAFBFD; }
   .task:first-child { border-top: 0; }
-  .task.done { opacity: 0.72; }
-  .task.done .task-name { text-decoration: line-through; color: var(--muted); font-weight: 500; }
   .task .num { flex: none; width: 16px; text-align: right; font-size: 11px; line-height: 19px; color: var(--muted-light); font-weight: 600; }
   .task input[type=checkbox] {
     -webkit-appearance: none; appearance: none; flex: none; display: grid; place-content: center;
@@ -347,7 +343,6 @@
   }
   .stmt-table tr:last-child td { border-bottom: 0; }
   .stmt-mono { font-family: var(--serif); font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .text-right { text-align: right; }
 
   /* Modal */
   #modalOverlay {
@@ -366,7 +361,6 @@
     display: block; width: 100%; height: 36px; margin-bottom: 9px; padding: 0 10px; background: #FFFFFF; color: var(--ink);
     border: 1.5px solid var(--field); border-radius: 8px; font: 500 13px var(--sans);
   }
-  .hint { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.45; }
   .btn { height: 34px; padding: 0 13px; border-radius: 8px; border: 1px solid transparent; font: 700 12.5px var(--sans); cursor: pointer; transition: all 0.12s ease; }
   .btn-primary { background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%); color: #fff; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25); }
   .btn-wa { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #fff; box-shadow: 0 2px 5px rgba(5, 150, 105, 0.25); }
@@ -502,10 +496,8 @@ var filter = 'all';
 var activePage = 'tasks';
 var finViewMode = 'all';
 var isFamilyPublicView = false;
-var uiState = { collapsed: {}, finOpen: {}, showSummaryDetails: false };
+var uiState = { collapsed: {}, finOpen: {} };
 var doneOpen = {};
-var searchQuery = '';
-var searchTimer = null;
 
 const STORAGE_KEY = 'tasks-v2';
 const FIN_LEDGER_KEY = 'mm_fin_ledger_v3';
@@ -517,7 +509,6 @@ try {
   const savedUi = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
   if (savedUi && savedUi.collapsed) uiState.collapsed = savedUi.collapsed;
   if (savedUi && savedUi.finOpen) uiState.finOpen = savedUi.finOpen;
-  if (savedUi && typeof savedUi.showSummaryDetails === 'boolean') uiState.showSummaryDetails = savedUi.showSummaryDetails;
 } catch (e) {}
 
 const ICON = {
@@ -536,22 +527,12 @@ function inr(n) {
   return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
 }
 
-function escapeForHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 function getWebhook() {
   return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
 }
 
 function saveUi() {
   try { localStorage.setItem(UI_KEY, JSON.stringify(uiState)); } catch (e) {}
-}
-
-function toggleSummaryDetails() {
-  uiState.showSummaryDetails = !uiState.showSummaryDetails;
-  saveUi();
-  render();
 }
 
 function toggleGroup(key) {
@@ -595,49 +576,8 @@ function setFilter(f) {
   render();
 }
 
-function setFinViewMode(mode) {
-  finViewMode = mode;
-  renderFinancialsPage();
-}
-
-function onSearch(val) {
-  searchQuery = val || '';
-  const clr = document.getElementById('searchClear');
-  if (clr) clr.style.display = searchQuery ? 'block' : 'none';
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => render(true), 120);
-}
-
-function clearSearch() {
-  const box = document.getElementById('searchBox');
-  if (box) box.value = '';
-  onSearch('');
-}
-
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-window.addEventListener('scroll', () => {
-  const b = document.getElementById('toTop');
-  if (b) b.style.display = window.scrollY > 500 ? 'block' : 'none';
-}, { passive: true });
-
-function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalFields').innerHTML = fieldsHtml;
-  document.getElementById('modalOverlay').style.display = 'flex';
-  const btn = document.getElementById('modalConfirmBtn');
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-  newBtn.textContent = confirmLabel || 'Save';
-  newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
-  newBtn.onclick = () => { onConfirm(); closeModal(); };
-  document.querySelector('#modalOverlay button[onclick="closeModal()"]').textContent = skipLabel || 'Skip';
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').style.display = 'none';
 }
 
 function switchPage(page) {
@@ -663,9 +603,6 @@ function switchPage(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// =========================================================================
-// INVOICES & RAZORPAY REMINDERS (AUTOFILLED AMOUNT)
-// =========================================================================
 function generateOrOpenInvoice(taskId) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
@@ -748,89 +685,11 @@ function openInstantInvoicePreview(t) {
   `, () => {}, 'Done', 'Close');
 }
 
-function sendWhatsAppReminder(taskId, balance) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const clientName = t.linked || t.name;
-  const cleanAmt = Math.round((Number(balance) || 0) * 100) / 100;
-  const autofillPayUrl = `https://razorpay.me/@mustansirmalik/${cleanAmt}`;
-  const invNo = String(t.invoice || '').split('|')[0].trim();
-
-  const buildMsg = (link) => {
-    let m = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${cleanAmt}`;
-    if (invNo) m += `\n\n📄 *Invoice ${invNo}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNo)}`;
-    m += `\n\n👉 *Pay ₹${cleanAmt} securely here (Amount pre-filled):*\n${link}\n\nThank you for your continued trust.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
-    return m.replace(/&/g, 'and');
-  };
-
-  showModal(`📲 Payment Reminder — ${clientName}`, `
-    <label>Client Mobile Number (Save for 1-tap WhatsApp)</label>
-    <input type="tel" id="remPhoneInput" value="${escapeForHtml(t.phone || '')}" placeholder="e.g. 9876543210">
-    <div id="remLinkStatus" style="font-size:11px; color:var(--green); font-weight:600; margin-bottom:6px;">✓ Amount ₹${cleanAmt} pre-filled in payment link</div>
-    <div id="remMsgPreview" class="receipt-preview" style="margin-bottom:10px;">${escapeForHtml(buildMsg(autofillPayUrl))}</div>
-    <div style="display:flex; gap:8px;">
-      <button type="button" id="remSendWaBtn" class="btn btn-wa" style="flex:1;">📲 Send on WhatsApp</button>
-      <button type="button" class="btn btn-quiet" onclick="navigator.clipboard.writeText(document.getElementById('remMsgPreview').textContent); this.textContent='Copied ✓';">📋 Copy</button>
-    </div>
-  `, () => {
-    const newPh = (document.getElementById('remPhoneInput').value || '').trim();
-    if (newPh !== (t.phone || '')) {
-      t.phone = newPh;
-      saveTasks();
-      render();
-    }
-  }, 'Save Phone', 'Close');
-
-  let activePayUrl = autofillPayUrl;
-  const sendBtn = document.getElementById('remSendWaBtn');
-  if (sendBtn) {
-    sendBtn.onclick = () => {
-      const phRaw = (document.getElementById('remPhoneInput').value || '').trim();
-      if (phRaw && phRaw !== t.phone) {
-        t.phone = phRaw;
-        saveTasks();
-        render();
-      }
-      let cleanPh = phRaw.replace(/[^0-9]/g, '');
-      if (cleanPh.length === 10) cleanPh = '91' + cleanPh;
-      const phonePart = cleanPh ? 'phone=' + cleanPh + '&' : '';
-      const waUrl = 'https://api.whatsapp.com/send?' + phonePart + 'text=' + encodeURIComponent(buildMsg(activePayUrl));
-      window.open(waUrl, '_blank');
-    };
-  }
-
-  const url = getWebhook();
-  if (url) {
-    fetch(url + '?' + new URLSearchParams({ action: 'razorpaylink', amount: cleanAmt, client: clientName, id: taskId }).toString())
-      .then(r => r.json())
-      .then(data => {
-        if (data && data.status === 'ok' && data.shortUrl) {
-          activePayUrl = data.shortUrl;
-          const prevEl = document.getElementById('remMsgPreview');
-          const stEl = document.getElementById('remLinkStatus');
-          if (prevEl) prevEl.textContent = buildMsg(activePayUrl);
-          if (stEl) stEl.textContent = '✓ Dedicated Razorpay link generated (₹' + cleanAmt + ' locked)';
-        }
-      })
-      .catch(() => {});
-  }
-}
-
-function sendCustomLoanReminder(partyName, phone, balance) {
-  const cleanAmt = Math.round((Number(balance) || 0) * 100) / 100;
-  const payUrl = `https://razorpay.me/@mustansirmalik/${cleanAmt}`;
-  let cleanPh = (phone || '').replace(/[^0-9]/g, '');
-  if (cleanPh.length === 10) cleanPh = '91' + cleanPh;
-  const msg = `🧾 *Payment Reminder*\n\nDear ${partyName},\n\nA gentle reminder regarding the pending advance/loan balance of *₹${cleanAmt}*.\n\n👉 *Pay ₹${cleanAmt} securely here (Amount pre-filled):*\n${payUrl}\n\nWarm regards,\n*Mustannsirr Mallik*`.replace(/&/g, 'and');
-  const waUrl = 'https://api.whatsapp.com/send?' + (cleanPh ? 'phone=' + cleanPh + '&' : '') + 'text=' + encodeURIComponent(msg);
-  window.open(waUrl, '_blank');
-}
-
 function renderInvoicesPage() {
   const invContainer = document.getElementById('invoicesView');
   if (!invContainer) return;
 
-  const feeList = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !/juzer presswala/i.test(t.name));
+  const feeList = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance'));
   const totalBilled = feeList.reduce((s, t) => s + (Number(t.payable) || 0), 0);
   const totalCollected = feeList.reduce((s, t) => s + (Number(t.received) || 0), 0);
   const totalDiscounts = feeList.reduce((s, t) => s + (Number(t.discount) || 0), 0);
@@ -932,52 +791,6 @@ function renderInvoicesPage() {
   `;
 
   invContainer.innerHTML = html;
-}
-
-// =========================================================================
-// CALENDAR & TASKS SYNC ENGINE
-// =========================================================================
-const seedTasks = [
-  {
-    id: 'cal_lghida9k5kgvrvqamrebcdv18c',
-    name: 'Loan & Advances - Juzer Presswala',
-    type: 'fee',
-    cat: 'FEES',
-    feeCat: 'PERSONAL',
-    due: '',
-    dueDate: '2026-11-05T08:40:00.000Z',
-    done: false,
-    urgent: false,
-    payable: 107690,
-    received: 0,
-    discount: 0,
-    linked: 'Juzer Presswala (Loan & Advances)',
-    phone: '7869282535',
-    invoice: '',
-    remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues 1,07,690'
-  }
-];
-
-function loadTasks() {
-  let saved = [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) saved = JSON.parse(raw);
-  } catch (e) { saved = []; }
-  const savedIds = new Set(saved.map(t => t.id));
-  const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
-  tasks = saved.concat(newFromSeed).filter(t => !/Monthly Salary Receivable/i.test(t.name) && !/Hakimi Vihar Society/i.test(t.name));
-  saveTasks();
-  render();
-  if (activePage === 'financials') renderFinancialsPage();
-}
-
-function saveTasks() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    const badge = document.getElementById('lastSync');
-    if (badge) badge.textContent = 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {}
 }
 
 async function deleteFromCalendar(taskId) {
@@ -1082,7 +895,6 @@ async function pullFromCalendar() {
       saveTasks();
       render();
       if (activePage === 'financials') renderFinancialsPage();
-      if (activePage === 'invoices') renderInvoicesPage();
     }
     const badge = document.getElementById('lastSync');
     if (badge) badge.textContent = 'Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1093,7 +905,7 @@ async function pullFromCalendar() {
 }
 
 // =========================================================================
-// MASTER DOUBLE-ENTRY LEDGER BASELINE & CLOUD MERGE
+// MASTER DOUBLE-ENTRY LEDGER BASELINE
 // =========================================================================
 function getDefaultFinLedger() {
   return {
@@ -1130,7 +942,6 @@ function getDefaultFinLedger() {
       }
     },
     customLoans: [],
-    loanTransactions: [],
     kathiyawadTrip: {
       title: 'Kathiyawad Ziyarat Trip',
       families: [
@@ -1182,10 +993,8 @@ function getDefaultFinLedger() {
       }
     ],
     customExpenseCategories: [],
-    journalEntries: [],
     adjustmentsLog: [],
-    deletedIds: [],
-    updatedAt: 0
+    deletedIds: []
   };
 }
 
@@ -1204,7 +1013,6 @@ function getFinLedger() {
     if (!parsed.customExpenseCategories) parsed.customExpenseCategories = [];
     if (!parsed.adjustmentsLog) parsed.adjustmentsLog = [];
     if (!parsed.customLoans) parsed.customLoans = [];
-    if (!parsed.loanTransactions) parsed.loanTransactions = [];
     if (!parsed.journalEntries) parsed.journalEntries = [];
     if (!parsed.deletedIds) parsed.deletedIds = [];
     if (!parsed.loansGiven) parsed.loansGiven = def.loansGiven;
@@ -1219,35 +1027,45 @@ function saveFinLedger(ledger) {
   try {
     ledger.updatedAt = Date.now();
     localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(ledger));
-    const url = getWebhook();
-    if (url) {
+  } catch (e) {}
+
+  const url = getWebhook();
+  if (url) {
+    try {
+      const payloadStr = JSON.stringify({ action: 'savefinledger', ledger: ledger });
       fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'savefinledger', ledger })
-      }).catch(() => {});
-    }
-  } catch (e) {}
+        body: payloadStr,
+        redirect: 'follow'
+      }).catch(() => {
+        const getUrl = url + '?action=savefinledger&data=' + encodeURIComponent(JSON.stringify(ledger));
+        new Image().src = getUrl;
+      });
+    } catch (err) {}
+  }
 }
 
 function mergeFinLedgers(local, cloud) {
   if (!cloud || typeof cloud !== 'object') return local;
-  const localTs = Number(local.updatedAt) || 0;
-  const cloudTs = Number(cloud.updatedAt) || 0;
-  const base = (cloudTs > localTs) ? Object.assign({}, local, cloud) : Object.assign({}, cloud, local);
-  const deletedSet = new Set([...(local.deletedIds || []), ...(cloud.deletedIds || [])]);
+  const merged = Object.assign({}, local, cloud);
+  const delSet = new Set([...(local.deletedIds || []), ...(cloud.deletedIds || [])]);
+  merged.deletedIds = Array.from(delSet);
 
-  const mergeById = (arrA, arrB) => {
+  if ((local.updatedAt || 0) >= (cloud.updatedAt || 0)) {
+    merged.cashInHand = local.cashInHand;
+    merged.bankSlice = local.bankSlice;
+    merged.loansGiven = local.loansGiven;
+    merged.loansTaken = local.loansTaken;
+  }
+
+  const mergeById = (arr1, arr2) => {
     const map = new Map();
-    [...(arrA || []), ...(arrB || [])].forEach(item => {
-      if (item && item.id && !deletedSet.has(item.id)) map.set(item.id, item);
-    });
+    (arr2 || []).forEach(item => { if (item && item.id && !delSet.has(item.id)) map.set(item.id, item); });
+    (arr1 || []).forEach(item => { if (item && item.id && !delSet.has(item.id)) map.set(item.id, item); });
     return Array.from(map.values());
   };
 
-  const merged = Object.assign({}, base);
-  merged.deletedIds = Array.from(deletedSet);
-  merged.kathiyawadTrip = Object.assign({}, base.kathiyawadTrip);
   merged.kathiyawadTrip.payments = mergeById(
     local.kathiyawadTrip && local.kathiyawadTrip.payments,
     cloud.kathiyawadTrip && cloud.kathiyawadTrip.payments
@@ -1258,13 +1076,12 @@ function mergeFinLedgers(local, cloud) {
   );
   merged.expenses = mergeById(local.expenses, cloud.expenses);
   merged.customLoans = mergeById(local.customLoans, cloud.customLoans);
-  merged.loanTransactions = mergeById(local.loanTransactions, cloud.loanTransactions);
   merged.journalEntries = mergeById(local.journalEntries, cloud.journalEntries);
   merged.customExpenseCategories = Array.from(new Set([
     ...(local.customExpenseCategories || []),
     ...(cloud.customExpenseCategories || [])
   ]));
-  merged.updatedAt = Math.max(localTs, cloudTs);
+
   return merged;
 }
 
@@ -1284,244 +1101,502 @@ async function syncCloudFinLedger() {
   } catch (e) {}
 }
 
-// =========================================================================
-// DOUBLE-ENTRY JOURNAL VOUCHERS
-// =========================================================================
-const JOURNAL_ACCOUNTS = {
-  CASH: 'Cash in Hand (Asset)',
-  BANK_SLICE: 'slice SFB Bank (Asset)',
-  LOAN_JUZER: 'Juzer Presswala — Loan Given (Asset)',
-  LOAN_MHJ: 'MHJ — Loan Taken (Liability)',
-  LOAN_HATIM: 'Hatim Bhai — Loan Taken (Liability)',
-  INCOME_FEES: 'Professional Fees Income (P&L)',
-  EXP_BUSINESS: 'Business Operating Expense (P&L)',
-  DRAWINGS: 'Personal Drawings (Capital Deduction)',
-  CAPITAL: "Owner's Capital Account (Equity)",
-  TRIP_ZIYARAT: 'Kathiyawad Ziyarat Trip Advance (Asset)'
-};
+const seedTasks = [
+  {
+    id: 'cal_lghida9k5kgvrvqamrebcdv18c',
+    name: 'Loan & Advances - Juzer Presswala',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'PERSONAL',
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    payable: 107690,
+    received: 0,
+    discount: 0,
+    linked: 'Juzer Presswala (Loan & Advances)',
+    phone: '7869282535',
+    invoice: '',
+    remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues ₹1,07,690'
+  },
+  {
+    id: 'cal_ed85ko32qqb708i2pvumghm51c',
+    name: 'Loan & Advance Taken - MHJ (₹86,000)',
+    type: 'personal',
+    cat: 'MHJ',
+    due: '',
+    dueDate: '2026-11-05T10:00:00.000Z',
+    done: false,
+    urgent: true,
+    remark: 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000.'
+  },
+  {
+    id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc',
+    name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)',
+    type: 'personal',
+    cat: 'PERSONAL',
+    due: '',
+    dueDate: '2026-11-05T09:15:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Payable to Hatim Bhai (Mob: 9826768052). Pending ₹5,000.'
+  },
+  {
+    id: 'cal_trip_kz_2026',
+    name: 'Kathiyawad Ziyarat Trip (₹13,000 Total Advance Paid across 3 Families)',
+    type: 'personal',
+    cat: 'PERSONAL',
+    due: '',
+    dueDate: '2026-11-15T09:00:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Mustannsirr Family ₹3,000 + Father-in-law Family ₹10,000 cash + Sister-in-law Family.'
+  },
+  {
+    id: 'cal_fee_gumasta_royal',
+    name: 'Royal consultancy services gumasta application',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'OWN',
+    due: '',
+    dueDate: '2026-11-04T12:00:00.000Z',
+    done: true,
+    urgent: false,
+    payable: 700,
+    received: 700,
+    discount: 0,
+    linked: 'Royal Consultancy Services',
+    phone: '',
+    invoice: 'INV-2026-11-001',
+    remark: 'Gross ₹700 received via Razorpay. Net credited ₹681.82. Gateway fee ₹18.18. Portal challan ₹224. Net profit ₹457.82'
+  }
+];
 
-function applyJournalSide(ledger, account, amt, sign) {
-  // sign = +1 for Debit, -1 for Credit
-  const delta = amt * sign;
-  if (account === 'CASH') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + delta;
-  else if (account === 'BANK_SLICE') ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta;
-  else if (account === 'LOAN_JUZER') ledger.loansGiven.juzer.adjustments = (ledger.loansGiven.juzer.adjustments || 0) + delta;
-  else if (account === 'LOAN_MHJ') ledger.loansTaken.mhj.adjustments = (ledger.loansTaken.mhj.adjustments || 0) - delta;
-  else if (account === 'LOAN_HATIM') ledger.loansTaken.hatim.adjustments = (ledger.loansTaken.hatim.adjustments || 0) - delta;
-  else if (account === 'CAPITAL') ledger.openingCapital = (Number(ledger.openingCapital) || 0) - delta;
+function loadTasks() {
+  let saved = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw);
+  } catch (e) { saved = []; }
+
+  const savedIds = new Set(saved.map(t => t.id));
+  const missingSeed = seedTasks.filter(t => !savedIds.has(t.id));
+  tasks = saved.concat(missingSeed);
+
+  tasks = tasks.filter(t => !/Monthly Salary Receivable/i.test(t.name) && !/Hakimi Vihar Society/i.test(t.name));
+
+  saveTasks();
+  render();
 }
 
-function openJournalEntryModal() {
-  const opts = Object.entries(JOURNAL_ACCOUNTS).map(([k, v]) => `<option value="${k}">${escapeForHtml(v)}</option>`).join('');
-  showModal('📒 Record Double-Entry Journal Voucher', `
-    <label>Voucher Date</label>
-    <input type="date" id="jvDate" value="${new Date().toISOString().slice(0, 10)}">
-    <label>Debit Account (Dr)</label>
-    <select id="jvDr">${opts}</select>
-    <label>Credit Account (Cr)</label>
-    <select id="jvCr">
-      ${Object.entries(JOURNAL_ACCOUNTS).map(([k, v]) => `<option value="${k}" ${k === 'BANK_SLICE' ? 'selected' : ''}>${escapeForHtml(v)}</option>`).join('')}
+function saveTasks() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); } catch (e) {}
+}
+
+function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalFields').innerHTML = fieldsHtml;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  const btn = document.getElementById('modalConfirmBtn');
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.textContent = confirmLabel || 'Save';
+  newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
+  newBtn.onclick = () => { onConfirm(); closeModal(); };
+  document.querySelector('#modalOverlay button[onclick="closeModal()"]').textContent = skipLabel || 'Skip';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function escapeForHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks();
+  render();
+
+  if (t.id && t.id.startsWith('cal_')) {
+    toggleOnCalendar(t.id, t.done);
+  }
+
+  if (t.done && t.type !== 'fee') {
+    const existingFee = tasks.find(x => x.type === 'fee' && (x.name === t.name || x.linked === t.name));
+    if (!existingFee) {
+      const GROUP_DEFAULT_PHONES = { SHK: '9425320184', MHJ: '9425054543', HATIM_BHAI_ADV: '9826768052' };
+      const defaultPhone = (t.cat && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
+      setTimeout(() => {
+        showModal('Record Fee & Payment — ' + t.name, `
+          <div class="hint">Task complete! Log the fee and payment mode directly into your books.</div>
+          <label>Total Billable Fee (₹)</label>
+          <input type="number" id="mPromptPayable" placeholder="₹ Total billable">
+          <label>Amount Received Now (₹)</label>
+          <input type="number" id="mPromptReceived" placeholder="₹ Received" value="0">
+          <label>Client / Group Mobile Number</label>
+          <input type="tel" id="mPromptPhone" placeholder="e.g. 9876543210" value="${defaultPhone}">
+          <label>Deposit To / Payment Mode</label>
+          <select id="mPromptMode">
+            <option value="Cash">Cash in Hand</option>
+            <option value="slice SFB">slice Small Finance Bank</option>
+          </select>
+          <label class="check-row" style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:12.5px; font-weight:600; color:var(--green); cursor:pointer;">
+            <input type="checkbox" id="mPromptReceipt" checked> Offer WhatsApp payment receipt after saving
+          </label>
+        `, () => {
+          const payable = parseFloat(document.getElementById('mPromptPayable').value) || 0;
+          const received = parseFloat(document.getElementById('mPromptReceived').value) || 0;
+          const phone = document.getElementById('mPromptPhone').value.trim();
+          const mode = document.getElementById('mPromptMode').value;
+          const wantReceipt = document.getElementById('mPromptReceipt').checked;
+
+          if (payable > 0) {
+            const localId = 'fee_' + Date.now();
+            const feeTask = {
+              id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || 'OWN',
+              due: '', done: received >= payable, urgent: false,
+              payable: payable, received: received, discount: 0,
+              linked: t.name, phone: phone
+            };
+            tasks.push(feeTask);
+            saveTasks();
+
+            if (received > 0) {
+              const ledger = getFinLedger();
+              if (mode === 'Cash') ledger.cashInHand += received;
+              else ledger.bankSlice += received;
+              saveFinLedger(ledger);
+            }
+            render();
+            if (activePage === 'financials') renderFinancialsPage();
+
+            pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || 'OWN').then(calId => {
+              if (calId) { feeTask.id = calId; saveTasks(); }
+            });
+
+            if (wantReceipt && received > 0) {
+              setTimeout(() => offerReceipt(feeTask.id, received, true), 100);
+            }
+          }
+        }, 'Save & Record', 'Skip Fee');
+      }, 100);
+    }
+  }
+}
+
+function recordPayment(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  showModal('Record payment — ' + t.name, `
+    <div class="hint">Currently ${inr(t.received)} of ${inr(t.payable)} received</div>
+    <label>Total amount received so far (₹)</label>
+    <input type="number" id="modalReceivedAmt" value="${t.received}">
+    <label>Discount to write off (optional)</label>
+    <input type="number" id="modalDiscountAmt" placeholder="₹ Discount" value="${t.discount || 0}">
+    <label>Deposit New Payment To</label>
+    <select id="modalPayMode">
+      <option value="Cash">Cash in Hand</option>
+      <option value="slice SFB">slice Small Finance Bank</option>
     </select>
-    <label>Amount (₹)</label>
-    <input type="number" id="jvAmt" placeholder="₹ Amount">
-    <label>Narration / Reference</label>
-    <input type="text" id="jvNarr" placeholder="e.g. Adjustment / Transfer / Fee entry">
+    <label style="display:flex; align-items:center; gap:8px; margin:8px 0; font-size:12.5px; font-weight:600; color:var(--green); cursor:pointer;">
+      <input type="checkbox" id="modalSendReceipt" checked> Offer WhatsApp receipt after saving
+    </label>
   `, () => {
-    const date = document.getElementById('jvDate').value || new Date().toISOString().slice(0, 10);
-    const dr = document.getElementById('jvDr').value;
-    const cr = document.getElementById('jvCr').value;
-    const amount = parseFloat(document.getElementById('jvAmt').value) || 0;
-    const narration = document.getElementById('jvNarr').value.trim() || 'Journal Voucher Entry';
-    if (amount <= 0 || dr === cr) return;
+    const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
+    const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
+    const mode = document.getElementById('modalPayMode').value;
+    const wantReceipt = document.getElementById('modalSendReceipt').checked;
+    if (isNaN(amount)) return;
 
-    const ledger = getFinLedger();
-    if (!ledger.journalEntries) ledger.journalEntries = [];
-    const jv = {
-      id: 'jv_' + Date.now(),
-      voucherNo: 'JV-' + String(ledger.journalEntries.length + 1).padStart(3, '0'),
-      date,
-      debitAccount: dr,
-      creditAccount: cr,
-      amount,
-      narration
+    const prevReceived = Number(t.received) || 0;
+    const delta = Math.round((amount - prevReceived) * 100) / 100;
+    t.received = amount;
+    t.discount = discount;
+    t.done = (amount + discount) >= t.payable && t.payable > 0;
+    saveTasks();
+
+    if (delta !== 0) {
+      const ledger = getFinLedger();
+      if (mode === 'Cash') ledger.cashInHand += delta;
+      else ledger.bankSlice += delta;
+      saveFinLedger(ledger);
+    }
+
+    render();
+    if (activePage === 'financials') renderFinancialsPage();
+    if (t.id && t.id.startsWith('cal_')) {
+      updateFeeOnCalendar(t.id, amount, discount);
+    }
+
+    if (wantReceipt && amount > 0) {
+      setTimeout(() => offerReceipt(t.id, delta > 0 ? delta : 0, true), 100);
+    }
+  }, 'Save', 'Cancel');
+}
+
+function offerReceipt(taskId, paidNow, afterSave) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const payable = Number(t.payable) || 0;
+  const received = Number(t.received) || 0;
+  const discount = Number(t.discount) || 0;
+  const balance = Math.max(Math.round((payable - received - discount) * 100) / 100, 0);
+  const amount = paidNow > 0 ? paidNow : received;
+  const invNumber = String(t.invoice || '').split('|')[0].trim();
+
+  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${t.linked || t.name}"*. Thank you!\n\n✅ *Amount Received:* ₹${amount}`;
+  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${discount}`;
+  msg += balance > 0 ? `\n💰 *Balance Due:* ₹${balance}` : `\n✅ *Status:* Fully settled`;
+  if (invNumber) msg += `\n\n📄 *Invoice ${invNumber}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNumber)}`;
+  msg += `\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+
+  const waUrl = 'https://api.whatsapp.com/send?phone=' + (t.phone || '').replace(/[^0-9]/g, '') + '&text=' + encodeURIComponent(msg);
+
+  showModal('WhatsApp Payment Receipt', `
+    <div class="receipt-preview">${escapeForHtml(msg)}</div>
+    <div style="margin-top:10px;">
+      <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="width:100%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+        📲 Open WhatsApp &amp; Send Receipt
+      </a>
+    </div>
+  `, () => {}, 'Done', 'Close');
+}
+
+function sendWhatsAppReminder(taskId, balance) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  const clientName = t.linked || t.name;
+  const currentPhone = (t.phone || '').replace(/[^0-9]/g, '');
+  const cleanAmt = Math.round((Number(balance) || 0) * 100) / 100;
+  const autoFillRazorpayMe = cleanAmt > 0
+    ? `https://razorpay.me/@mustansirmalik/${cleanAmt}`
+    : 'https://razorpay.me/@mustansirmalik';
+
+  const buildReminderUrl = (rawPhone, payUrl, invNumber) => {
+    let clean = (rawPhone || '').replace(/[^0-9]/g, '');
+    if (clean.length === 10) clean = '91' + clean;
+    const invLine = invNumber ? `\n\n📄 *Invoice ${invNumber}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNumber)}` : '';
+    const finalPayLink = payUrl || autoFillRazorpayMe;
+    const linkLine = `\n\n👉 *Pay ₹${cleanAmt} securely here:*\n${finalPayLink}`;
+    const msg = `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is currently pending.\n\n💰 *Amount Due:* ₹${cleanAmt}${invLine}${linkLine}\n\nThank you for your continued trust — do reach out if you have any questions.\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+    return {
+      msg,
+      waUrl: 'https://api.whatsapp.com/send?' + (clean ? 'phone=' + clean + '&' : '') + 'text=' + encodeURIComponent(msg)
     };
-    ledger.journalEntries.push(jv);
-    applyJournalSide(ledger, dr, amount, 1);
-    applyJournalSide(ledger, cr, amount, -1);
+  };
 
-    if (!uiState.finOpen) uiState.finOpen = {};
-    uiState.finOpen.journal = true;
-    saveUi();
-    saveFinLedger(ledger);
-    render();
-    renderFinancialsPage();
-  }, 'Post Voucher', 'Cancel');
-}
+  const initialInv = String(t.invoice || '').split('|')[0].trim();
+  const initialData = buildReminderUrl(currentPhone, autoFillRazorpayMe, initialInv);
 
-function deleteJournalEntry(id) {
-  const ledger = getFinLedger();
-  const idx = (ledger.journalEntries || []).findIndex(x => x.id === id);
-  if (idx === -1) return;
-  const jv = ledger.journalEntries[idx];
-  showModal(`Delete Voucher ${jv.voucherNo}?`, `
-    <div class="hint">Reverses Dr ${JOURNAL_ACCOUNTS[jv.debitAccount] || jv.debitAccount} and Cr ${JOURNAL_ACCOUNTS[jv.creditAccount] || jv.creditAccount} for ${inr(jv.amount)}.</div>
+  showModal('📲 Payment Reminder — ' + clientName, `
+    <div class="hint">Pending Balance: <strong style="color:var(--red);">${inr(cleanAmt)}</strong> (Autofilled in payment link). Verify or enter mobile number below:</div>
+    <label>Client Mobile Number (Optional — leave blank to pick in WhatsApp)</label>
+    <input type="tel" id="mRemPhone" value="${escapeForHtml(currentPhone)}" placeholder="e.g. 9876543210">
+    <div id="mRemLinkStatus" style="font-size:11.5px; color:var(--green); margin-bottom:8px; font-weight:600;">✓ Amount ₹${cleanAmt} autofilled in payment link</div>
+    <div class="receipt-preview" id="mRemPreview">${escapeForHtml(initialData.msg)}</div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <a id="mRemWaBtn" href="${initialData.waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="flex:1; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+        📲 Send on WhatsApp
+      </a>
+      <button type="button" class="btn btn-quiet" onclick="const inp = document.createElement('textarea'); inp.value = document.getElementById('mRemPreview').textContent; document.body.appendChild(inp); inp.select(); document.execCommand('copy'); inp.remove(); this.textContent='Copied ✓';">
+        📋 Copy
+      </button>
+    </div>
   `, () => {
-    applyJournalSide(ledger, jv.debitAccount, jv.amount, -1);
-    applyJournalSide(ledger, jv.creditAccount, jv.amount, 1);
-    ledger.journalEntries.splice(idx, 1);
-    if (!ledger.deletedIds) ledger.deletedIds = [];
-    ledger.deletedIds.push(id);
-    saveFinLedger(ledger);
-    render();
-    renderFinancialsPage();
-  }, 'Delete', 'Cancel');
+    const newPh = document.getElementById('mRemPhone').value.trim();
+    if (newPh !== (t.phone || '')) {
+      t.phone = newPh;
+      saveTasks();
+      render();
+    }
+  }, 'Save Number', 'Close');
+
+  let livePayUrl = autoFillRazorpayMe;
+  let liveInvNum = initialInv;
+
+  const phoneInp = document.getElementById('mRemPhone');
+  const updatePreview = () => {
+    const updated = buildReminderUrl(phoneInp.value, livePayUrl, liveInvNum);
+    const prevEl = document.getElementById('mRemPreview');
+    const btnEl = document.getElementById('mRemWaBtn');
+    if (prevEl) prevEl.textContent = updated.msg;
+    if (btnEl) btnEl.href = updated.waUrl;
+  };
+  if (phoneInp) phoneInp.addEventListener('input', updatePreview);
+
+  const url = getWebhook();
+  if (url) {
+    fetch(url + '?' + new URLSearchParams({ action: 'razorpaylink', amount: cleanAmt, client: clientName, id: taskId }).toString())
+      .then(r => r.json())
+      .then(data => {
+        const stEl = document.getElementById('mRemLinkStatus');
+        if (data && data.status === 'ok' && data.shortUrl) {
+          livePayUrl = data.shortUrl;
+          if (stEl) { stEl.textContent = '✓ Direct Razorpay Payment Link (₹' + cleanAmt + ' locked) ready!'; stEl.style.color = 'var(--green)'; }
+          updatePreview();
+        }
+      })
+      .catch(() => {});
+  }
 }
 
-// =========================================================================
-// FINANCIALS, LOANS, EXPENSES, ZIYARAT & STATEMENTS RENDERER
-// =========================================================================
+function sendCustomLoanReminder(name, phone, amount) {
+  let clean = (phone || '').replace(/[^0-9]/g, '');
+  if (clean.length === 10) clean = '91' + clean;
+  const cleanAmt = Math.round((Number(amount) || 0) * 100) / 100;
+  const payLink = cleanAmt > 0
+    ? `https://razorpay.me/@mustansirmalik/${cleanAmt}`
+    : 'https://razorpay.me/@mustansirmalik';
+  const msg = `🧾 *Payment Reminder*\n\nDear ${name},\n\nA gentle reminder regarding the pending advance/loan balance of *${inr(cleanAmt)}*.\n\n👉 *Pay ₹${cleanAmt} securely here:*\n${payLink}\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`.replace(/&/g, 'and');
+  const waUrl = 'https://api.whatsapp.com/send?' + (clean ? 'phone=' + clean + '&' : '') + 'text=' + encodeURIComponent(msg);
+
+  showModal('📲 Payment Reminder — ' + name, `
+    <div class="receipt-preview">${escapeForHtml(msg)}</div>
+    <div style="margin-top:12px;">
+      <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="width:100%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
+        📲 Open WhatsApp &amp; Send Reminder
+      </a>
+    </div>
+  `, () => {}, 'Done', 'Close');
+}
+
 function renderFinancialsPage() {
   const finContainer = document.getElementById('financialsView');
   if (!finContainer) return;
 
   const ledger = getFinLedger();
-  const isSecOpen = (key) => isFamilyPublicView || finViewMode !== 'all' || !!(uiState.finOpen && uiState.finOpen[key]);
+  const cashInHand = Number(ledger.cashInHand) || 0;
+  const bankSlice = Number(ledger.bankSlice) || 0;
+  const totalLiquidCashBank = cashInHand + bankSlice;
 
-  // Accrual Professional Fees (All fee tasks except Juzer Presswala loan & advance credits)
-  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !/juzer presswala/i.test(t.name));
-  const totalGrossFeesBilled = feeTasks.reduce((s, t) => s + (Number(t.payable) || 0), 0);
-  const totalFeesReceivedCash = feeTasks.reduce((s, t) => s + (Number(t.received) || 0), 0);
-  const totalDiscountAllowed = feeTasks.reduce((s, t) => s + (Number(t.discount) || 0), 0);
-  const totalDebtorsReceivable = Math.max(0, totalGrossFeesBilled - totalFeesReceivedCash - totalDiscountAllowed);
-
-  // Journal adjustments for P&L Income / Business Expenses / Drawings / Trip
-  let jvIncomeAdj = 0;
-  let jvExpenseAdj = 0;
-  let jvDrawingsAdj = 0;
-  let jvTripAdj = 0;
-  (ledger.journalEntries || []).forEach(jv => {
-    if (jv.creditAccount === 'INCOME_FEES') jvIncomeAdj += jv.amount;
-    if (jv.debitAccount === 'INCOME_FEES') jvIncomeAdj -= jv.amount;
-    if (jv.debitAccount === 'EXP_BUSINESS') jvExpenseAdj += jv.amount;
-    if (jv.creditAccount === 'EXP_BUSINESS') jvExpenseAdj -= jv.amount;
-    if (jv.debitAccount === 'DRAWINGS') jvDrawingsAdj += jv.amount;
-    if (jv.creditAccount === 'DRAWINGS') jvDrawingsAdj -= jv.amount;
-    if (jv.debitAccount === 'TRIP_ZIYARAT') jvTripAdj += jv.amount;
-    if (jv.creditAccount === 'TRIP_ZIYARAT') jvTripAdj -= jv.amount;
-  });
-
-  // Classify Expenses vs Personal Drawings (Accounting standard: Drawings deducted from Capital)
-  const allExpenses = ledger.expenses || [];
-  const businessExpensesList = allExpenses.filter(e => !/drawing|personal/i.test(e.category || ''));
-  const personalDrawingsList = allExpenses.filter(e => /drawing|personal/i.test(e.category || ''));
-  const totalBusinessExpenses = businessExpensesList.reduce((s, e) => s + (Number(e.amount) || 0), 0) + jvExpenseAdj;
-  const totalPersonalDrawings = personalDrawingsList.reduce((s, e) => s + (Number(e.amount) || 0), 0) + jvDrawingsAdj;
-
-  // Net Practice Profit (Accrual Basis)
-  const netFeeRevenueAccrued = totalGrossFeesBilled - totalDiscountAllowed + jvIncomeAdj;
-  const netPracticeProfit = netFeeRevenueAccrued - totalBusinessExpenses;
-
-  // Loans Given & Taken
   const juzerNet = Math.max(0, (ledger.loansGiven.juzer.base || 0) + (ledger.loansGiven.juzer.adjustments || 0));
+  const customGivenList = (ledger.customLoans || []).filter(l => l.type === 'given');
+  const customGivenNet = customGivenList.reduce((s, l) => s + Math.max(0, (l.principal || 0) - (l.repaid || 0)), 0);
+  const totalLoansGiven = juzerNet + customGivenNet;
+
   const mhjNet = Math.max(0, (ledger.loansTaken.mhj.base || 0) + (ledger.loansTaken.mhj.adjustments || 0));
   const hatimNet = Math.max(0, (ledger.loansTaken.hatim.base || 0) + (ledger.loansTaken.hatim.adjustments || 0));
-  const customLoansGiven = (ledger.customLoans || []).filter(c => c.type === 'given').reduce((s, c) => s + Math.max(0, (c.principal || 0) - (c.repaid || 0)), 0);
-  const customLoansTaken = (ledger.customLoans || []).filter(c => c.type === 'taken').reduce((s, c) => s + Math.max(0, (c.principal || 0) - (c.repaid || 0)), 0);
+  const customTakenList = (ledger.customLoans || []).filter(l => l.type === 'taken');
+  const customTakenNet = customTakenList.reduce((s, l) => s + Math.max(0, (l.principal || 0) - (l.repaid || 0)), 0);
+  const totalLoansTaken = mhjNet + hatimNet + customTakenNet;
 
-  const totalLoansGiven = juzerNet + customLoansGiven;
-  const totalLoansTaken = mhjNet + hatimNet + customLoansTaken;
-
-  // Ziyarat Trip Outlay & Equal 3-Way Split
   const tripPayments = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.payments) || [];
   const tripContributions = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.contributions) || [];
-  const totalTripOutlay = tripPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0) + jvTripAdj;
+  const totalTripOutlay = tripPayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const totalTripContrib = tripContributions.reduce((s, c) => s + (c.amount || 0), 0);
+  const netTripOutflow = Math.max(0, totalTripOutlay - totalTripContrib + (Number(ledger.journalZiyaratAdj) || 0));
   const equalFamilyShare = totalTripOutlay / 3;
-  const tripAdvanceAsset = Math.max(0, totalTripOutlay - tripContributions.reduce((s, c) => s + (Number(c.amount) || 0), 0));
-
-  // Liquid Cash & Bank
-  const cashBal = Number(ledger.cashInHand) || 0;
-  const bankBal = Number(ledger.bankSlice) || 0;
-  const totalLiquid = cashBal + bankBal;
-
-  // Balance Sheet Reconciliation (Assets = Liabilities + Capital)
-  const totalAssets = totalLiquid + totalLoansGiven + totalDebtorsReceivable + tripAdvanceAsset;
-  const closingOwnerCapital = totalAssets - totalLoansTaken;
-  const openingCapitalDerived = closingOwnerCapital - netPracticeProfit + totalPersonalDrawings;
 
   const badgeEl = document.getElementById('finBadge');
-  if (badgeEl) badgeEl.textContent = inr(totalLiquid);
+  if (badgeEl) badgeEl.textContent = inr(totalLoansGiven);
+
+  const practiceFeeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') && !/juzer presswala/i.test(t.name));
+  const grossBilledFees = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.discount) || 0)), 0);
+  const sundryDebtorsReceivable = practiceFeeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
+
+  const isDrawingCategory = (cat) => /drawing|personal/i.test(String(cat || ''));
+  const operatingExpensesList = (ledger.expenses || []).filter(e => !isDrawingCategory(e.category));
+  const personalDrawingsList = (ledger.expenses || []).filter(e => isDrawingCategory(e.category));
+
+  const grossFeeIncome = grossBilledFees + (Number(ledger.journalIncomeAdj) || 0);
+  const totalOperatingExpenses = operatingExpensesList.reduce((s, e) => s + (e.amount || 0), 0) + (Number(ledger.journalExpenseAdj) || 0);
+  const totalPersonalDrawings = personalDrawingsList.reduce((s, e) => s + (e.amount || 0), 0) + (Number(ledger.journalDrawingsAdj) || 0);
+  const netProfit = grossFeeIncome - totalOperatingExpenses;
+
+  const totalAssets = totalLiquidCashBank + totalLoansGiven + netTripOutflow + sundryDebtorsReceivable;
+  const effectiveCapital = totalAssets - totalLoansTaken;
+  const grossCapitalBeforeDrawings = effectiveCapital + totalPersonalDrawings;
+
+  // Determine whether a section is expanded:
+  // If user selected a single-section tab (e.g., finViewMode === 'trip'), or is on public family view, expand automatically.
+  // In 'all' mode, sections start collapsed by default and open when tapped.
+  const isSecOpen = (key) => {
+    if (isFamilyPublicView && key === 'trip') return true;
+    if (finViewMode !== 'all') return true;
+    return !!(uiState.finOpen && uiState.finOpen[key]);
+  };
+
+  const allFinExpanded = ['journal', 'trip', 'loans', 'expenses', 'pl', 'bs', 'bank'].every(k => !!(uiState.finOpen && uiState.finOpen[k]));
 
   let html = '';
 
   if (!isFamilyPublicView) {
     html += `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
-        <div class="fin-mode-toggle" style="margin-bottom:0; flex:1 1 auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+        <div class="fin-mode-toggle" role="tablist">
           <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">All Ledgers</button>
+          <button type="button" class="fin-mode-btn ${finViewMode === 'journal' ? 'active' : ''}" onclick="setFinViewMode('journal')">📒 Journal (${(ledger.journalEntries || []).length})</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')">🕌 Ziyarat Trip</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'loans' ? 'active' : ''}" onclick="setFinViewMode('loans')">🤝 Loans</button>
-          <button type="button" class="fin-mode-btn ${finViewMode === 'journal' ? 'active' : ''}" onclick="setFinViewMode('journal')">📒 Journal</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">P&amp;L</button>
           <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
         </div>
         <div style="display:flex; gap:5px; flex-wrap:wrap;">
           ${finViewMode === 'all' ? `
-            <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px; padding:0 9px;" onclick="toggleAllFinSections(true)">⊞ Expand All</button>
-            <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px; padding:0 9px;" onclick="toggleAllFinSections(false)">⊟ Fold All</button>
+            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="toggleAllFinSections(${!allFinExpanded})">
+              ${allFinExpanded ? '⊟ Fold All' : '⊞ Expand All'}
+            </button>
           ` : ''}
-          <button type="button" class="btn btn-primary" style="height:30px; font-size:11px; padding:0 9px;" onclick="openJournalEntryModal()">📒 + Journal</button>
-          <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px; padding:0 9px;" onclick="openAddLoanModal()">+ Loan</button>
-          <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px; padding:0 9px;" onclick="openAtmCashWithdrawalModal()">🏧 ATM Cash</button>
-          <button type="button" class="btn btn-quiet" style="height:30px; font-size:11px; padding:0 9px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+          <button type="button" class="btn btn-primary" style="height:30px; padding:0 11px; font-size:11px;" onclick="openJournalEntryModal()">📒 + Journal</button>
+          <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
+          <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+          <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px;" onclick="openAddLoanModal()">+ Loan</button>
         </div>
       </div>
 
       <div class="fin-hero-grid">
         <div class="fin-card">
-          <div class="f-lbl">Liquid Funds (Cash + Bank)</div>
-          <div class="f-val" style="color:var(--green);">${inr(totalLiquid)}</div>
-          <div class="f-sub">Cash: ${inr(cashBal)} &bull; slice: ${inr(bankBal)}</div>
+          <div class="f-lbl">Cash in Hand</div>
+          <div class="f-val" style="color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div>
+          <div class="f-sub">Physical Cash</div>
         </div>
         <div class="fin-card">
-          <div class="f-lbl">Receivables &amp; Loans Given</div>
-          <div class="f-val" style="color:#2563EB;">${inr(totalLoansGiven + totalDebtorsReceivable)}</div>
-          <div class="f-sub">Loans: ${inr(totalLoansGiven)} &bull; Debtors: ${inr(totalDebtorsReceivable)}</div>
+          <div class="f-lbl">slice SFB Bank</div>
+          <div class="f-val" style="color:#1E3A8A;">${inr(bankSlice)}</div>
+          <div class="f-sub">Liquid Total: ${inr(totalLiquidCashBank)}</div>
         </div>
         <div class="fin-card">
-          <div class="f-lbl">Current Liabilities (Taken)</div>
-          <div class="f-val" style="color:var(--red);">${inr(totalLoansTaken)}</div>
-          <div class="f-sub">MHJ: ${inr(mhjNet)} &bull; Hatim: ${inr(hatimNet)}</div>
+          <div class="f-lbl">Debtors &amp; Loans Given</div>
+          <div class="f-val" style="color:var(--red);">${inr(totalLoansGiven + sundryDebtorsReceivable)}</div>
+          <div class="f-sub">Debtors: ${inr(sundryDebtorsReceivable)} &bull; Loans: ${inr(totalLoansGiven)}</div>
         </div>
         <div class="fin-card">
           <div class="f-lbl">Owner's Net Capital</div>
-          <div class="f-val" style="color:var(--violet);">${inr(closingOwnerCapital)}</div>
-          <div class="f-sub">Net Profit: ${inr(netPracticeProfit)} &bull; Drawings: ${inr(totalPersonalDrawings)}</div>
+          <div class="f-val" style="color:var(--violet);">${inr(effectiveCapital)}</div>
+          <div class="f-sub">Net Profit: ${inr(netProfit)}</div>
         </div>
       </div>
     `;
   }
 
-  // === 1. DOUBLE-ENTRY JOURNAL REGISTER ===
+  // === JOURNAL VOUCHER REGISTER ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'journal')) {
     const open = isSecOpen('journal');
-    const jvs = ledger.journalEntries || [];
+    const jvList = ledger.journalEntries || [];
     html += `
       <div class="statement-sheet${open ? '' : ' collapsed'}">
-        <div class="statement-header" style="background:linear-gradient(120deg, #312E81 0%, #4F46E5 100%);" onclick="toggleFinSection('journal')">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #6D28D9 100%);" onclick="toggleFinSection('journal')">
           <div class="statement-header-left">
             <span class="stmt-chev">${ICON.chev}</span>
             <div>
               <h3>📒 Double-Entry Journal Register</h3>
-              <div style="font-size:10.5px; color:#E0E7FF;">${jvs.length} posted voucher${jvs.length === 1 ? '' : 's'}</div>
+              <div style="font-size:10.5px; color:#E0E7FF;">${jvList.length} Vouchers Posted &bull; Tap to ${open ? 'hide' : 'view'} details</div>
             </div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openJournalEntryModal();">+ Journal Entry</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openJournalEntryModal();">+ New Journal</button>
         </div>
         ${open ? `
           <div class="statement-body">
-            ${jvs.length === 0 ? `
-              <div style="font-size:12px; color:var(--muted); padding:6px;">No manual journal vouchers recorded yet.</div>
+            ${jvList.length === 0 ? `
+              <div style="text-align:center; padding:12px; color:var(--muted); font-size:12px;">
+                No manual journal entries recorded yet. Tap <strong>+ New Journal</strong> to pass an adjustment, contra, or settlement entry.
+              </div>
             ` : `
               <div class="table-responsive">
                 <table class="stmt-table">
@@ -1529,23 +1604,26 @@ function renderFinancialsPage() {
                     <tr>
                       <th>Voucher</th>
                       <th>Date</th>
-                      <th>Debit (Dr)</th>
-                      <th>Credit (Cr)</th>
+                      <th>Debit (Dr) &amp; Credit (Cr) Accounts</th>
                       <th>Narration</th>
                       <th class="text-right">Amount (₹)</th>
-                      <th></th>
+                      <th style="width:32px; text-align:center;">Del</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${jvs.map(jv => `
+                    ${jvList.slice().reverse().map(jv => `
                       <tr>
-                        <td><strong>${escapeForHtml(jv.voucherNo)}</strong></td>
+                        <td style="white-space:nowrap; font-weight:700; color:var(--accent);">${escapeForHtml(jv.voucherNo || 'JV')}</td>
                         <td style="white-space:nowrap;">${escapeForHtml(jv.date)}</td>
-                        <td style="color:var(--green); font-weight:600;">${escapeForHtml(JOURNAL_ACCOUNTS[jv.debitAccount] || jv.debitAccount)}</td>
-                        <td style="color:var(--red); font-weight:600;">${escapeForHtml(JOURNAL_ACCOUNTS[jv.creditAccount] || jv.creditAccount)}</td>
+                        <td>
+                          <div style="color:var(--ink); font-weight:600;">Dr: ${escapeForHtml(getJournalAccountLabel(jv.debitAccount))}</div>
+                          <div style="color:var(--muted); padding-left:12px;">To Cr: ${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</div>
+                        </td>
                         <td>${escapeForHtml(jv.narration)}</td>
                         <td class="text-right stmt-mono">${inr(jv.amount)}</td>
-                        <td><button type="button" class="act del" onclick="deleteJournalEntry('${jv.id}')">${ICON.x}</button></td>
+                        <td style="text-align:center;">
+                          <button type="button" class="act del" onclick="deleteJournalEntry('${jv.id}')">${ICON.x}</button>
+                        </td>
                       </tr>
                     `).join('')}
                   </tbody>
@@ -1558,27 +1636,35 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 2. KATHIYAWAD ZIYARAT TRIP — 3 FAMILIES EQUAL DIVISION ===
-  if (finViewMode === 'all' || finViewMode === 'trip' || isFamilyPublicView) {
+  // === KATHIYAWAD ZIYARAT TRIP (3 FAMILIES EQUAL DIVISION) ===
+  if (isFamilyPublicView || finViewMode === 'all' || finViewMode === 'trip') {
     const open = isSecOpen('trip');
-    const families = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.families) || [];
+    const families = ledger.kathiyawadTrip.families || [];
+    const familyRows = families.map(f => {
+      const pPaid = tripPayments.filter(p => p.family === f.name).reduce((s, p) => s + (p.amount || 0), 0);
+      const cPaid = tripContributions.filter(c => c.family === f.name).reduce((s, c) => s + (c.amount || 0), 0);
+      const totalPaid = pPaid + cPaid;
+      const diff = totalPaid - equalFamilyShare;
+      return { name: f.name, members: f.members, totalPaid, equalShare: equalFamilyShare, diff };
+    });
+
     html += `
       <div class="statement-sheet${open ? '' : ' collapsed'}">
-        <div class="statement-header" style="background:linear-gradient(120deg, #065F46 0%, #0D9488 100%);" onclick="if(!isFamilyPublicView) toggleFinSection('trip');">
+        <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #0284C7 100%);" ${!isFamilyPublicView ? `onclick="toggleFinSection('trip')"` : ''}>
           <div class="statement-header-left">
             ${!isFamilyPublicView ? `<span class="stmt-chev">${ICON.chev}</span>` : ''}
             <div>
               <h3>🕌 Kathiyawad Ziyarat Trip — 3 Families Split</h3>
-              <div style="font-size:10.5px; color:#D1FAE5;">Total Outlay: ${inr(totalTripOutlay)} &bull; Equal 1/3 Share: ${inr(equalFamilyShare)} / family</div>
+              <div style="font-size:10.5px; color:#E0F2FE;">Total Outlay: ${inr(totalTripOutlay)} &bull; 1/3 Share: ${inr(equalFamilyShare)} / family</div>
             </div>
           </div>
-          ${!isFamilyPublicView ? `
-            <div style="display:flex; gap:5px; flex-wrap:wrap;" onclick="event.stopPropagation();">
-              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 8px;" onclick="shareZiyaratWithFamilies()">📲 Share Link</button>
-              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 8px;" onclick="openAddTripPaymentModal()">+ Payment</button>
-              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 8px;" onclick="openAddTripContributionModal()">+ Contribution</button>
-            </div>
-          ` : `<span style="font-size:10.5px; background:rgba(255,255,255,0.2); padding:3px 9px; border-radius:999px; font-weight:700;">Read-Only Family Statement</span>`}
+          <div style="display:flex; gap:5px; flex-wrap:wrap;" onclick="event.stopPropagation();">
+            <button type="button" class="btn btn-wa" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="shareZiyaratWithFamilies()">📲 Share</button>
+            ${!isFamilyPublicView ? `
+              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddTripPaymentModal()">+ Payment</button>
+              <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="openAddTripContributionModal()">+ Contrib</button>
+            ` : ''}
+          </div>
         </div>
         ${open ? `
           <div class="statement-body">
@@ -1587,32 +1673,22 @@ function renderFinancialsPage() {
                 <thead>
                   <tr>
                     <th>Family Unit</th>
-                    <th class="text-right">Equal 1/3 Share</th>
-                    <th class="text-right">Paid / Contributed</th>
-                    <th class="text-right">Remaining / Refund</th>
-                    <th>Settlement Status</th>
+                    <th class="text-right">Paid / Advanced</th>
+                    <th class="text-right">Equal Share (1/3)</th>
+                    <th class="text-right">Settlement Balance</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${families.map(f => {
-                    const pPaid = tripPayments.filter(p => p.family === f.name).reduce((s, p) => s + (Number(p.amount) || 0), 0);
-                    const cPaid = tripContributions.filter(c => c.family === f.name).reduce((s, c) => s + (Number(c.amount) || 0), 0);
-                    const totalPaidByFam = pPaid + cPaid;
-                    const diff = totalPaidByFam - equalFamilyShare;
-                    const isDue = diff < -0.5;
-                    const isRefund = diff > 0.5;
+                  ${familyRows.map(r => {
+                    const isDue = r.diff < -0.5;
+                    const isRefund = r.diff > 0.5;
                     return `
                       <tr>
-                        <td><strong>${escapeForHtml(f.name)}</strong><div style="font-size:10px; color:var(--muted);">${escapeForHtml(f.members || '')}</div></td>
-                        <td class="text-right stmt-mono">${inr(equalFamilyShare)}</td>
-                        <td class="text-right stmt-mono" style="color:var(--accent);">${inr(totalPaidByFam)}</td>
-                        <td class="text-right stmt-mono" style="color:${isDue ? 'var(--red)' : (isRefund ? 'var(--green)' : 'var(--ink)')};">
-                          ${isDue ? inr(Math.abs(diff)) : (isRefund ? '+' + inr(diff) : '₹0')}
-                        </td>
-                        <td>
-                          ${isDue ? `<span class="loan-pill asset">Needs to Pay ${inr(Math.abs(diff))}</span>` :
-                            (isRefund ? `<span class="loan-pill settled">Overpaid / Refund ${inr(diff)}</span>` :
-                            `<span class="loan-pill settled">Settled ✓</span>`)}
+                        <td><strong>${escapeForHtml(r.name)}</strong><br><small style="color:var(--muted);">${escapeForHtml(r.members)}</small></td>
+                        <td class="text-right stmt-mono">${inr(r.totalPaid)}</td>
+                        <td class="text-right stmt-mono">${inr(r.equalShare)}</td>
+                        <td class="text-right stmt-mono" style="color:${isDue ? 'var(--red)' : (isRefund ? 'var(--green)' : 'var(--ink)')}; font-weight:700;">
+                          ${isDue ? 'Needs to Pay: ' + inr(Math.abs(r.diff)) : (isRefund ? 'Receivable / Refund: ' + inr(r.diff) : 'Settled ✓')}
                         </td>
                       </tr>
                     `;
@@ -1621,7 +1697,7 @@ function renderFinancialsPage() {
               </table>
             </div>
 
-            <div style="font-weight:700; font-size:12px; color:#1E3A8A; margin:8px 0 5px;">Itemized Trip Payments &amp; Disbursements (${tripPayments.length})</div>
+            <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Itemized Trip Disbursements &amp; Payments</div>
             <div class="table-responsive">
               <table class="stmt-table">
                 <thead>
@@ -1631,18 +1707,18 @@ function renderFinancialsPage() {
                     <th>Particulars</th>
                     <th>Mode</th>
                     <th class="text-right">Amount (₹)</th>
-                    ${!isFamilyPublicView ? '<th></th>' : ''}
+                    ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
                   </tr>
                 </thead>
                 <tbody>
                   ${tripPayments.map(p => `
                     <tr>
-                      <td style="white-space:nowrap;">${escapeForHtml(p.date)}</td>
+                      <td style="white-space:nowrap;">${p.date}</td>
                       <td><strong>${escapeForHtml(p.family)}</strong></td>
                       <td>${escapeForHtml(p.desc)}</td>
-                      <td>${escapeForHtml(p.mode)}</td>
+                      <td style="white-space:nowrap;">${escapeForHtml(p.mode)}</td>
                       <td class="text-right stmt-mono">${inr(p.amount)}</td>
-                      ${!isFamilyPublicView ? `<td><button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button></td>` : ''}
+                      ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('payment', '${p.id}')">${ICON.x}</button></td>` : ''}
                     </tr>
                   `).join('')}
                 </tbody>
@@ -1650,28 +1726,28 @@ function renderFinancialsPage() {
             </div>
 
             ${tripContributions.length > 0 ? `
-              <div style="font-weight:700; font-size:12px; color:var(--green); margin:8px 0 5px;">Family Contributions Received (${tripContributions.length})</div>
+              <div style="font-weight:700; font-size:11.5px; margin:8px 0 5px; color:var(--ink);">Family Contributions Received</div>
               <div class="table-responsive">
                 <table class="stmt-table">
                   <thead>
                     <tr>
                       <th>Date</th>
                       <th>Family</th>
-                      <th>Member</th>
-                      <th>Deposited To</th>
+                      <th>Contributor</th>
+                      <th>Mode</th>
                       <th class="text-right">Amount (₹)</th>
-                      ${!isFamilyPublicView ? '<th></th>' : ''}
+                      ${!isFamilyPublicView ? '<th style="width:32px; text-align:center;">Del</th>' : ''}
                     </tr>
                   </thead>
                   <tbody>
                     ${tripContributions.map(c => `
                       <tr>
-                        <td style="white-space:nowrap;">${escapeForHtml(c.date)}</td>
+                        <td style="white-space:nowrap;">${c.date}</td>
                         <td><strong>${escapeForHtml(c.family)}</strong></td>
                         <td>${escapeForHtml(c.member)}</td>
-                        <td>${escapeForHtml(c.mode)}</td>
+                        <td style="white-space:nowrap;">${escapeForHtml(c.mode)}</td>
                         <td class="text-right stmt-mono" style="color:var(--green);">${inr(c.amount)}</td>
-                        ${!isFamilyPublicView ? `<td><button type="button" class="act del" onclick="deleteTripEntry('contribution', '${c.id}')">${ICON.x}</button></td>` : ''}
+                        ${!isFamilyPublicView ? `<td style="text-align:center;"><button type="button" class="act del" onclick="deleteTripEntry('contrib', '${c.id}')">${ICON.x}</button></td>` : ''}
                       </tr>
                     `).join('')}
                   </tbody>
@@ -1684,31 +1760,9 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 3. LOANS & ADVANCES PORTFOLIO (WITH + ADD ENTRY SUB-LEDGER) ===
+  // === LOANS & ADVANCES PORTFOLIO ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'loans')) {
     const open = isSecOpen('loans');
-    const renderLoanEntries = (loanKey) => {
-      const entries = (ledger.loanTransactions || []).filter(tx => tx.loanId === loanKey);
-      if (entries.length === 0) return '';
-      return `
-        <div style="margin:6px 0 8px; padding:6px 8px; background:#F8FAFC; border:1px solid var(--rule); border-radius:7px; font-size:10.5px;">
-          <div style="font-weight:700; color:var(--muted); margin-bottom:3px; text-transform:uppercase; font-size:9.5px;">Sub-Ledger Entries (${entries.length})</div>
-          ${entries.map(tx => `
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:3px 0; border-top:1px dashed var(--rule-soft);">
-              <div style="min-width:0; flex:1;">
-                <span style="color:var(--muted);">${escapeForHtml(tx.date)}</span> &bull; <strong>${escapeForHtml(tx.desc)}</strong>
-                <span style="color:var(--muted);">(${tx.kind === 'repay' ? 'Repaid' : 'Added'} via ${escapeForHtml(tx.mode)})</span>
-              </div>
-              <div style="display:flex; align-items:center; gap:5px; flex:none;">
-                <span style="font-weight:700; color:${tx.kind === 'repay' ? 'var(--green)' : 'var(--ink)'};">${tx.kind === 'repay' ? '−' : '+'}${inr(tx.amount)}</span>
-                <button type="button" class="act del" style="width:18px; height:18px;" title="Delete & reverse entry" onclick="deleteLoanTransaction('${tx.id}')">${ICON.x}</button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    };
-
     html += `
       <div class="statement-sheet${open ? '' : ' collapsed'}">
         <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #2563EB 100%);" onclick="toggleFinSection('loans')">
@@ -1731,12 +1785,10 @@ function renderFinancialsPage() {
                     <span class="loan-pill asset">Given (Asset)</span>
                   </div>
                   <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--red); margin:3px 0;">${inr(juzerNet)}</div>
-                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:5px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
-                  ${renderLoanEntries('juzer')}
+                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
                 </div>
                 <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('juzer', true)">+ Add Entry</button>
-                  <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('juzer', true)">Repayment</button>
+                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('juzer', true)">Record Repayment</button>
                   <a href="${ledger.loansGiven.juzer.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
                 </div>
               </div>
@@ -1748,12 +1800,10 @@ function renderFinancialsPage() {
                     <span class="loan-pill liab">Taken (Liability)</span>
                   </div>
                   <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(mhjNet)}</div>
-                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:5px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
-                  ${renderLoanEntries('mhj')}
+                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
                 </div>
                 <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('mhj', true)">+ Add Entry</button>
-                  <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('mhj', true)">Repayment</button>
+                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('mhj', true)">Record Repayment</button>
                   <a href="${ledger.loansTaken.mhj.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
                 </div>
               </div>
@@ -1765,12 +1815,10 @@ function renderFinancialsPage() {
                     <span class="loan-pill liab">Taken (Liability)</span>
                   </div>
                   <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:var(--amber); margin:3px 0;">${inr(hatimNet)}</div>
-                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:5px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
-                  ${renderLoanEntries('hatim')}
+                  <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
                 </div>
                 <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('hatim', true)">+ Add Entry</button>
-                  <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('hatim', true)">Repayment</button>
+                  <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('hatim', true)">Record Repayment</button>
                   <a href="${ledger.loansTaken.hatim.sheetUrl}" target="_blank" rel="noopener" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; display:inline-flex; align-items:center; text-decoration:none;">Sheet</a>
                 </div>
               </div>
@@ -1786,13 +1834,11 @@ function renderFinancialsPage() {
                         <span class="loan-pill ${rem <= 0 ? 'settled' : (isGiven ? 'asset' : 'liab')}">${rem <= 0 ? 'Settled' : (isGiven ? 'Given (Asset)' : 'Taken (Liability)')}</span>
                       </div>
                       <div style="font-family:var(--serif); font-size:19px; font-weight:700; color:${rem <= 0 ? 'var(--green)' : (isGiven ? 'var(--red)' : 'var(--amber)')}; margin:3px 0;">${inr(rem)}</div>
-                      <div style="font-size:10.5px; color:var(--muted); margin-bottom:5px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
-                      ${renderLoanEntries(cl.id)}
+                      <div style="font-size:10.5px; color:var(--muted); margin-bottom:7px;">Principal: ${inr(cl.principal)} &bull; Via ${escapeForHtml(cl.mode)}${cl.note ? ' &bull; ' + escapeForHtml(cl.note) : ''}</div>
                     </div>
                     <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
-                      <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('${cl.id}', false)">+ Add Entry</button>
-                      ${rem > 0 ? `<button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${cl.id}', false)">Repayment</button>` : ''}
-                      ${rem > 0 && isGiven ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}', '${escapeForHtml(cl.phone || '')}', ${rem})">📲 Remind</button>` : ''}
+                      ${rem > 0 ? `<button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${cl.id}', false)">Record Repayment</button>` : ''}
+                      ${rem > 0 && isGiven ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}', '${escapeForHtml(cl.phone || '')}', ${rem})">📲 Reminder</button>` : ''}
                       <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px; color:var(--red);" onclick="deleteCustomLoan('${cl.id}')">Delete</button>
                     </div>
                   </div>
@@ -1805,20 +1851,20 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 4. EXPENSES & PERSONAL DRAWINGS ===
+  // === EXPENSES LEDGER ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'expenses')) {
     const open = isSecOpen('expenses');
     html += `
       <div class="statement-sheet${open ? '' : ' collapsed'}">
-        <div class="statement-header" style="background:linear-gradient(120deg, #9F1239 0%, #E11D48 100%);" onclick="toggleFinSection('expenses')">
+        <div class="statement-header" style="background:linear-gradient(120deg, #BE123C 0%, #D97706 100%);" onclick="toggleFinSection('expenses')">
           <div class="statement-header-left">
             <span class="stmt-chev">${ICON.chev}</span>
             <div>
               <h3>💸 Expenses &amp; Personal Drawings</h3>
-              <div style="font-size:10.5px; color:#FFE4E6;">Business Exp (P&amp;L): ${inr(totalBusinessExpenses)} &bull; Personal Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
+              <div style="font-size:10.5px; color:#FFE4E6;">P&amp;L Expenses: ${inr(totalOperatingExpenses)} &bull; Drawings (Capital): ${inr(totalPersonalDrawings)}</div>
             </div>
           </div>
-          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openAddExpenseModal();">+ Record Expense</button>
+          <button type="button" class="btn btn-quiet" style="height:26px; font-size:10.5px; padding:0 9px;" onclick="event.stopPropagation(); openAddExpenseModal();">+ Record</button>
         </div>
         ${open ? `
           <div class="statement-body">
@@ -1827,28 +1873,33 @@ function renderFinancialsPage() {
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Payee / Particulars</th>
-                    <th>Category</th>
-                    <th>Posting</th>
+                    <th>Payee / Particular</th>
+                    <th>Category &amp; Treatment</th>
                     <th>Paid From</th>
                     <th class="text-right">Amount (₹)</th>
-                    <th></th>
+                    <th style="width:32px; text-align:center;">Del</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${allExpenses.map(e => {
-                    const isDraw = /drawing|personal/i.test(e.category || '');
+                  ${(ledger.expenses || []).map(exp => {
+                    const isDrawing = isDrawingCategory(exp.category);
                     return `
-                      <tr>
-                        <td style="white-space:nowrap;">${escapeForHtml(e.date)}</td>
-                        <td><strong>${escapeForHtml(e.payee)}</strong>${e.note ? `<div style="font-size:10px; color:var(--muted);">${escapeForHtml(e.note)}</div>` : ''}</td>
-                        <td>${escapeForHtml(e.category)}</td>
-                        <td><span class="loan-pill ${isDraw ? 'liab' : 'asset'}">${isDraw ? 'Capital A/c' : 'P&L Exp'}</span></td>
-                        <td>${escapeForHtml(e.source)}</td>
-                        <td class="text-right stmt-mono">${inr(e.amount)}</td>
-                        <td><button type="button" class="act del" onclick="deleteExpenseEntry('${e.id}')">${ICON.x}</button></td>
-                      </tr>
-                    `;
+                    <tr>
+                      <td style="white-space:nowrap;">${exp.date}</td>
+                      <td><strong>${escapeForHtml(exp.payee)}</strong>${exp.note ? `<br><small style="color:var(--muted);">${escapeForHtml(exp.note)}</small>` : ''}</td>
+                      <td>
+                        <span style="font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; ${isDrawing ? 'background:#FDF2F8; color:#9D174D;' : 'background:#F1F5F9; color:#334155;'}">
+                          ${escapeForHtml(exp.category)}
+                        </span>
+                        <div style="font-size:9.5px; color:var(--muted); margin-top:2px;">${isDrawing ? '→ Capital A/c (Drawings)' : '→ Profit & Loss A/c'}</div>
+                      </td>
+                      <td style="white-space:nowrap;">${escapeForHtml(exp.source)}</td>
+                      <td class="text-right stmt-mono" style="color:var(--red);">${inr(exp.amount)}</td>
+                      <td style="text-align:center;">
+                        <button type="button" class="act del" onclick="deleteExpenseEntry('${exp.id}')">${ICON.x}</button>
+                      </td>
+                    </tr>
+                  `;
                   }).join('')}
                 </tbody>
               </table>
@@ -1859,20 +1910,20 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 5. PROFIT & LOSS STATEMENT (ACCRUAL BASIS) ===
+  // === PROFIT & LOSS STATEMENT ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'pl')) {
     const open = isSecOpen('pl');
     html += `
       <div class="statement-sheet${open ? '' : ' collapsed'}">
-        <div class="statement-header" style="background:linear-gradient(120deg, #064E3B 0%, #059669 100%);" onclick="toggleFinSection('pl')">
+        <div class="statement-header" style="background:linear-gradient(120deg, #047857 0%, #0D9488 100%);" onclick="toggleFinSection('pl')">
           <div class="statement-header-left">
             <span class="stmt-chev">${ICON.chev}</span>
             <div>
-              <h3>📈 Profit &amp; Loss Statement (Accrual Basis)</h3>
-              <div style="font-size:10.5px; color:#D1FAE5;">Net Revenue: ${inr(netFeeRevenueAccrued)} &bull; Net Practice Profit: ${inr(netPracticeProfit)}</div>
+              <h3>Profit &amp; Loss Statement (Accrual Basis)</h3>
+              <div style="font-size:10.5px; color:#D1FAE5;">Income: ${inr(grossFeeIncome)} &bull; Expenses: ${inr(totalOperatingExpenses)} &bull; Net Profit: ${inr(netProfit)}</div>
             </div>
           </div>
-          <span style="font-size:10.5px; background:rgba(255,255,255,0.2); padding:3px 9px; border-radius:999px; font-weight:700;">FY 2026-27</span>
+          <span style="font-size:11px; color:#FFFFFF; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:999px; font-weight:700;">Net: ${inr(netProfit)}</span>
         </div>
         ${open ? `
           <div class="statement-body">
@@ -1880,27 +1931,59 @@ function renderFinancialsPage() {
               <table class="stmt-table">
                 <thead>
                   <tr>
-                    <th>Particulars / Heads of Account</th>
+                    <th>Particulars</th>
                     <th class="text-right">Amount (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td colspan="2" style="background:#ECFDF5; font-weight:800; color:var(--green);">A. INCOME (ACCRUED PROFESSIONAL FEES)</td></tr>
-                  <tr><td>Gross Professional Fees Billed (Realized + Receivable)</td><td class="text-right stmt-mono">${inr(totalGrossFeesBilled)}</td></tr>
-                  ${totalDiscountAllowed > 0 ? `<tr><td style="color:var(--muted);">Less: Discounts &amp; Concessions Allowed</td><td class="text-right stmt-mono" style="color:var(--muted);">− ${inr(totalDiscountAllowed)}</td></tr>` : ''}
-                  ${jvIncomeAdj !== 0 ? `<tr><td>Journal Voucher Income Adjustments</td><td class="text-right stmt-mono">${inr(jvIncomeAdj)}</td></tr>` : ''}
-                  <tr style="background:#F8FAFC; font-weight:700;"><td>Total Net Revenue [A]</td><td class="text-right stmt-mono" style="color:var(--green);">${inr(netFeeRevenueAccrued)}</td></tr>
-
-                  <tr><td colspan="2" style="background:#FFF1F2; font-weight:800; color:var(--red);">B. OPERATING EXPENSES (EXCLUDING PERSONAL DRAWINGS)</td></tr>
-                  ${businessExpensesList.map(e => `
-                    <tr><td>${escapeForHtml(e.category)} — ${escapeForHtml(e.payee)}</td><td class="text-right stmt-mono">${inr(e.amount)}</td></tr>
+                  <tr style="background:#ECFDF5; font-weight:700;">
+                    <td colspan="2" style="color:#065F46;">A. Revenue &amp; Professional Fees (Realized + Fees Receivable)</td>
+                  </tr>
+                  ${practiceFeeTasks.map(ft => {
+                    const netFee = Math.max(0, (Number(ft.payable) || 0) - (Number(ft.discount) || 0));
+                    const recd = Number(ft.received) || 0;
+                    const due = Math.max(0, netFee - recd);
+                    return `
+                      <tr>
+                        <td>
+                          <strong>${escapeForHtml(ft.linked || ft.name)}</strong>
+                          <div style="font-size:10.5px; color:var(--muted);">
+                            ${escapeForHtml(ft.name)} &bull; ${due > 0 ? `<span style="color:var(--amber); font-weight:600;">Received: ${inr(recd)} | Receivable (Debtor): ${inr(due)}</span>` : '<span style="color:var(--green);">Fully Realized</span>'}
+                          </div>
+                        </td>
+                        <td class="text-right stmt-mono">${inr(netFee)}</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                  ${Number(ledger.journalIncomeAdj) !== 0 && ledger.journalIncomeAdj ? `
+                    <tr>
+                      <td>Journal Professional Income Adjustments</td>
+                      <td class="text-right stmt-mono">${inr(ledger.journalIncomeAdj)}</td>
+                    </tr>
+                  ` : ''}
+                  <tr style="font-weight:700; background:#F8FAFC;">
+                    <td>Total Accrued Professional Income [A]</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td>
+                  </tr>
+                  <tr style="background:#FFF1F2; font-weight:700;">
+                    <td colspan="2" style="color:#9F1239;">B. Direct &amp; Operating Business Expenses</td>
+                  </tr>
+                  ${operatingExpensesList.length === 0 && !(Number(ledger.journalExpenseAdj) > 0) ? `<tr><td colspan="2" style="color:var(--muted);">No operating expenses recorded.</td></tr>` : ''}
+                  ${operatingExpensesList.map(exp => `
+                    <tr>
+                      <td>${escapeForHtml(exp.payee)} <small style="color:var(--muted);">(${escapeForHtml(exp.category)})</small></td>
+                      <td class="text-right stmt-mono">${inr(exp.amount)}</td>
+                    </tr>
                   `).join('')}
-                  ${jvExpenseAdj !== 0 ? `<tr><td>Journal Voucher Expense Adjustments</td><td class="text-right stmt-mono">${inr(jvExpenseAdj)}</td></tr>` : ''}
-                  <tr style="background:#F8FAFC; font-weight:700;"><td>Total Operating Expenses [B]</td><td class="text-right stmt-mono" style="color:var(--red);">${inr(totalBusinessExpenses)}</td></tr>
-
-                  <tr style="background:#EFF6FF; font-weight:800; font-size:13px;">
-                    <td style="color:#1E3A8A;">NET PRACTICE PROFIT (A − B) &rarr; Transferred to Capital A/c</td>
-                    <td class="text-right stmt-mono" style="color:var(--green); font-size:15px;">${inr(netPracticeProfit)}</td>
+                  ${Number(ledger.journalExpenseAdj) !== 0 && ledger.journalExpenseAdj ? `
+                    <tr>
+                      <td>Journal Operating Expense Adjustments</td>
+                      <td class="text-right stmt-mono">${inr(ledger.journalExpenseAdj)}</td>
+                    </tr>
+                  ` : ''}
+                  <tr style="font-weight:700; background:#FAFCFE; border-top:1.5px solid var(--rule);">
+                    <td>NET PRACTICE PROFIT (A &minus; B)</td>
+                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1911,20 +1994,20 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 6. BALANCE SHEET STATEMENT ===
+  // === BALANCE SHEET STATEMENT ===
   if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'bs')) {
     const open = isSecOpen('bs');
     html += `
       <div class="statement-sheet${open ? '' : ' collapsed'}">
-        <div class="statement-header" style="background:linear-gradient(120deg, #0F172A 0%, #1E293B 100%);" onclick="toggleFinSection('bs')">
+        <div class="statement-header" style="background:linear-gradient(120deg, #1E293B 0%, #312E81 100%);" onclick="toggleFinSection('bs')">
           <div class="statement-header-left">
             <span class="stmt-chev">${ICON.chev}</span>
             <div>
-              <h3>⚖️ Balance Sheet Statement</h3>
-              <div style="font-size:10.5px; color:#CBD5E1;">Total Assets: ${inr(totalAssets)} = Total Liabilities &amp; Capital: ${inr(totalLoansTaken + closingOwnerCapital)}</div>
+              <h3>Balance Sheet Statement</h3>
+              <div style="font-size:10.5px; color:#E0E7FF;">Capital: ${inr(effectiveCapital)} &bull; Liab: ${inr(totalLoansTaken)} &bull; Assets: ${inr(totalAssets)}</div>
             </div>
           </div>
-          <span style="font-size:10.5px; background:rgba(255,255,255,0.2); padding:3px 9px; border-radius:999px; font-weight:700;">Balanced ✓</span>
+          <span style="font-size:11px; color:#FFFFFF; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:999px; font-weight:700;">Total: ${inr(totalAssets)}</span>
         </div>
         ${open ? `
           <div class="statement-body">
@@ -1940,52 +2023,49 @@ function renderFinancialsPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><strong>Owner's Capital Account:</strong></td>
-                    <td></td>
-                    <td><strong>Liquid Cash &amp; Bank:</strong></td>
-                    <td></td>
+                    <td>
+                      <strong>Owner's Capital Account</strong>
+                      <div style="font-size:10.5px; color:var(--muted); margin-top:2px;">
+                        Capital &amp; Reserves (incl. Net Profit ${inr(netProfit)}): ${inr(grossCapitalBeforeDrawings)}
+                        ${totalPersonalDrawings > 0 ? `<br><span style="color:#BE185D; font-weight:600;">Less: Personal Drawings: &minus; ${inr(totalPersonalDrawings)}</span>` : ''}
+                      </div>
+                    </td>
+                    <td class="text-right stmt-mono" style="color:var(--green); font-weight:700;">${inr(effectiveCapital)}</td>
+                    <td><strong>Cash &amp; Bank Balances</strong><br><small style="color:var(--muted);">Cash (${inr(cashInHand)}) + slice SFB (${inr(bankSlice)})</small></td>
+                    <td class="text-right stmt-mono">${inr(totalLiquidCashBank)}</td>
                   </tr>
                   <tr>
-                    <td style="padding-left:18px;">Opening / Adjusted Capital</td>
-                    <td class="text-right stmt-mono">${inr(openingCapitalDerived)}</td>
-                    <td style="padding-left:18px;">Cash in Hand</td>
-                    <td class="text-right stmt-mono" style="color:${cashBal < 0 ? 'var(--red)' : 'var(--ink)'};">${inr(cashBal)}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding-left:18px; color:var(--green);">Add: Net Practice Profit (P&amp;L)</td>
-                    <td class="text-right stmt-mono" style="color:var(--green);">+ ${inr(netPracticeProfit)}</td>
-                    <td style="padding-left:18px;">slice Small Finance Bank</td>
-                    <td class="text-right stmt-mono" style="color:var(--green);">${inr(bankBal)}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding-left:18px; color:var(--red);">Less: Personal Drawings</td>
-                    <td class="text-right stmt-mono" style="color:var(--red);">− ${inr(totalPersonalDrawings)}</td>
-                    <td><strong>Sundry Debtors (Fees Receivable):</strong></td>
-                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalDebtorsReceivable)}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Current Liabilities (Loans Taken):</strong></td>
-                    <td></td>
-                    <td><strong>Loans &amp; Advances Given:</strong></td>
-                    <td></td>
-                  </tr>
-                  <tr>
-                    <td style="padding-left:18px;">MHJ (Principal Loan Taken)</td>
+                    <td><strong>Loan Taken &mdash; MHJ</strong></td>
                     <td class="text-right stmt-mono" style="color:var(--amber);">${inr(mhjNet)}</td>
-                    <td style="padding-left:18px;">Juzer Presswala &amp; Loans Given</td>
-                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(totalLoansGiven)}</td>
+                    <td>
+                      <strong>Sundry Debtors (Fees Receivable)</strong>
+                      <div style="font-size:10.5px; color:var(--muted);">2nd effect of P&amp;L accrued fees (${practiceFeeTasks.filter(ft => Math.max(0, (Number(ft.payable)||0) - (Number(ft.received)||0) - (Number(ft.discount)||0)) > 0).length} pending)</div>
+                    </td>
+                    <td class="text-right stmt-mono" style="color:var(--red); font-weight:700;">${inr(sundryDebtorsReceivable)}</td>
                   </tr>
                   <tr>
-                    <td style="padding-left:18px;">Hatim Bhai &amp; Other Loans Taken</td>
-                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet + customLoansTaken)}</td>
-                    <td style="padding-left:18px;">Kathiyawad Ziyarat Net Advance</td>
-                    <td class="text-right stmt-mono">${inr(tripAdvanceAsset)}</td>
+                    <td><strong>Loan Taken &mdash; Hatim Bhai</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(hatimNet)}</td>
+                    <td><strong>Loans Given &mdash; Juzer Presswala</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(juzerNet)}</td>
                   </tr>
-                  <tr style="background:#EFF6FF; font-weight:800; font-size:13px;">
-                    <td>TOTAL CAPITAL &amp; LIABILITIES</td>
-                    <td class="text-right stmt-mono" style="color:#1E3A8A;">${inr(closingOwnerCapital + totalLoansTaken)}</td>
+                  <tr>
+                    <td><strong>Other Loans Taken (${customTakenList.length})</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--amber);">${inr(customTakenNet)}</td>
+                    <td><strong>Other Loans Given (${customGivenList.length})</strong></td>
+                    <td class="text-right stmt-mono" style="color:var(--red);">${inr(customGivenNet)}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td><strong>Kathiyawad Ziyarat Advance Asset</strong></td>
+                    <td class="text-right stmt-mono" style="color:#0284C7;">${inr(netTripOutflow)}</td>
+                  </tr>
+                  <tr style="font-weight:700; background:#EFF6FF; border-top:2px solid #1E3A8A;">
+                    <td>TOTAL LIABILITIES &amp; EQUITY</td>
+                    <td class="text-right stmt-mono">${inr(totalAssets)}</td>
                     <td>TOTAL ASSETS</td>
-                    <td class="text-right stmt-mono" style="color:#1E3A8A;">${inr(totalAssets)}</td>
+                    <td class="text-right stmt-mono">${inr(totalAssets)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1996,28 +2076,28 @@ function renderFinancialsPage() {
     `;
   }
 
-  // === 7. OFFICIAL SETTLEMENT BANK ACCOUNT ===
-  if (!isFamilyPublicView && finViewMode === 'all') {
+  // === OFFICIAL SETTLEMENT BANK ACCOUNT ===
+  if (!isFamilyPublicView) {
     const open = isSecOpen('bank');
     html += `
-      <div class="statement-sheet${open ? '' : ' collapsed'}">
-        <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #3B82F6 100%);" onclick="toggleFinSection('bank')">
+      <div class="statement-sheet${open ? '' : ' collapsed'}" style="border:1px solid #C7D2FE;">
+        <div class="statement-header" style="background:linear-gradient(90deg, #EFF6FF 0%, #F5F3FF 100%); color:#1E3A8A;" onclick="toggleFinSection('bank')">
           <div class="statement-header-left">
-            <span class="stmt-chev">${ICON.chev}</span>
+            <span class="stmt-chev" style="background:rgba(30,58,138,0.1);">${ICON.chev}</span>
             <div>
-              <h3>🏦 Official Settlement Bank Account</h3>
-              <div style="font-size:10.5px; color:#DBEAFE;">slice Small Finance Bank &bull; A/c: 033311501064738</div>
+              <h3 style="color:#1E3A8A;">🏦 Official Settlement Bank Account</h3>
+              <div style="font-size:10.5px; color:var(--muted);">slice Small Finance Bank &bull; A/c: 033311501064738</div>
             </div>
           </div>
-          <span style="font-size:11px; font-weight:700;">${inr(bankBal)}</span>
+          <span style="font-size:10.5px; color:var(--accent); font-weight:700;">${open ? 'Hide' : 'Details'}</span>
         </div>
         ${open ? `
-          <div class="statement-body">
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; font-size:12px;">
-              <div><span style="color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase;">Account Holder</span><br><strong>Mustansir Malik</strong></div>
-              <div><span style="color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase;">Account Number</span><br><strong style="font-family:var(--serif); font-size:14px; color:var(--accent);">033311501064738</strong></div>
-              <div><span style="color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase;">IFSC Code</span><br><strong style="font-family:var(--serif); font-size:14px; color:var(--accent);">NESF0000333</strong></div>
-              <div><span style="color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase;">Customer ID</span><br><strong>380050119119</strong></div>
+          <div class="statement-body" style="background:#FAFCFF; font-size:11.5px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:6px;">
+              <div><span style="color:var(--muted);">Holder:</span> <b>Mustannsirr Mallik</b></div>
+              <div><span style="color:var(--muted);">Bank:</span> <b>slice Small Finance Bank</b></div>
+              <div><span style="color:var(--muted);">Account:</span> <b style="font-family:var(--serif); color:var(--accent);">033311501064738</b></div>
+              <div><span style="color:var(--muted);">IFSC:</span> <b style="font-family:var(--serif); color:var(--accent);">NESF0000333</b></div>
             </div>
           </div>
         ` : ''}
@@ -2028,205 +2108,288 @@ function renderFinancialsPage() {
   finContainer.innerHTML = html;
 }
 
-// =========================================================================
-// LOANS & ADVANCES MODAL HANDLERS
-// =========================================================================
-function openAddLoanEntryModal(id, isBuiltIn) {
-  const ledger = getFinLedger();
-  let title = '';
-  let currentBalance = 0;
-  let isGiven = true;
+function render(listOnly) {
+  const summaryEl = document.getElementById('summaryArea');
+  const app = document.getElementById('app');
+  if (!app) return;
 
-  if (isBuiltIn) {
-    if (id === 'juzer') {
-      title = ledger.loansGiven.juzer.name;
-      currentBalance = Math.max(0, ledger.loansGiven.juzer.base + (ledger.loansGiven.juzer.adjustments || 0));
-      isGiven = true;
-    } else if (id === 'mhj') {
-      title = ledger.loansTaken.mhj.name;
-      currentBalance = Math.max(0, ledger.loansTaken.mhj.base + (ledger.loansTaken.mhj.adjustments || 0));
-      isGiven = false;
-    } else if (id === 'hatim') {
-      title = ledger.loansTaken.hatim.name;
-      currentBalance = Math.max(0, ledger.loansTaken.hatim.base + (ledger.loansTaken.hatim.adjustments || 0));
-      isGiven = false;
-    }
-  } else {
-    const cl = (ledger.customLoans || []).find(x => x.id === id);
-    if (!cl) return;
-    title = cl.name;
-    currentBalance = Math.max(0, cl.principal - (cl.repaid || 0));
-    isGiven = cl.type === 'given';
+  const ledger = getFinLedger();
+  const cashInHand = ledger.cashInHand;
+  const bankSlice = ledger.bankSlice;
+  const totalLiquid = cashInHand + bankSlice;
+
+  const juzerNet = Math.max(0, ledger.loansGiven.juzer.base + (ledger.loansGiven.juzer.adjustments || 0));
+  const customGivenNet = (ledger.customLoans || []).filter(l => l.type === 'given').reduce((s, l) => s + Math.max(0, l.principal - (l.repaid || 0)), 0);
+  const totalLoansGiven = juzerNet + customGivenNet;
+
+  const badgeEl = document.getElementById('finBadge');
+  if (badgeEl) badgeEl.textContent = inr(totalLoansGiven);
+
+  const doneCount = tasks.filter(t => t.done).length;
+  const pendingCount = tasks.filter(t => !t.done).length;
+
+  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES']);
+  const extraCats = [...new Set(tasks.filter(t => t.type === 'professional' && t.cat && !knownCats.has(t.cat)).map(t => t.cat))];
+
+  const filterBtn = (key, label, dotColor) =>
+    `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
+
+  const allCollapsed = ['MHJ', 'SHK', 'OWN', 'personal', 'FEES'].every(k => !!uiState.collapsed[k]);
+
+  let summaryHtml = `
+    <div class="summary-sheet">
+      <div class="hero-stats">
+        <div class="hero-card"><div class="n">${doneCount}</div><div class="l">Done</div></div>
+        <div class="hero-card"><div class="n">${pendingCount}</div><div class="l">Pending</div></div>
+        <div class="hero-card"><div class="n">₹13k</div><div class="l">Ziyarat</div></div>
+        <div class="hero-card"><div class="n">${inr(totalLiquid)}</div><div class="l">Liquid</div></div>
+      </div>
+      <div class="totals">
+        <div class="tot"><div class="l">Cash in Hand</div><div class="fig" style="color:${cashInHand >= 0 ? 'var(--green)' : 'var(--red)'};">${inr(cashInHand)}</div></div>
+        <div class="tot"><div class="l">slice SFB Bank</div><div class="fig" style="color:#1E3A8A;">${inr(bankSlice)}</div></div>
+        <div class="tot sum"><div class="l">Total Loans &amp; Advances Given</div><div class="fig out">${inr(totalLoansGiven)}</div></div>
+      </div>
+    </div>
+    <div class="filters seg" role="group">
+      ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
+    </div>
+    <div class="filters chips" role="group">
+      ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK Husain Arif', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
+      ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
+      <button type="button" class="filter-btn" style="margin-left:auto; background:#F1F5F9; color:#475569;" onclick="toggleAllGroups(${!allCollapsed})">
+        ${allCollapsed ? '⊞ Expand All' : '⊟ Fold All'}
+      </button>
+    </div>
+  `;
+
+  let filtered = tasks;
+  if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal');
+  else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional');
+  else if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN');
+  else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ');
+  else if (filter === 'shk') filtered = tasks.filter(t => t.cat === 'SHK');
+  else if (filter === 'fees') filtered = tasks.filter(t => t.cat === 'FEES' || t.type === 'fee');
+  else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
+  else if (filter === 'done') filtered = tasks.filter(t => t.done);
+  else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
+
+  const q = (document.getElementById('searchBox') ? document.getElementById('searchBox').value : '').trim().toLowerCase();
+  if (q) {
+    filtered = filtered.filter(t => (t.name + ' ' + (t.linked || '') + ' ' + (t.remark || '')).toLowerCase().includes(q));
   }
 
-  showModal(`➕ Add Entry to ${title}`, `
-    <div class="hint">Current Balance (${isGiven ? 'Receivable' : 'Payable'}): <strong>${inr(currentBalance)}</strong></div>
-    <label>Date</label>
-    <input type="date" id="leDate" value="${new Date().toISOString().slice(0, 10)}">
-    <label>Particulars / Description</label>
-    <input type="text" id="leDesc" placeholder="${isGiven ? 'e.g. Further cash advance / Medical bill' : 'e.g. Additional borrowing / Expense'}">
-    <label>Amount to Add (₹)</label>
-    <input type="number" id="leAmt" placeholder="₹ Amount">
-    <label>Account / Payment Mode</label>
-    <select id="leMode">
-      <option value="slice SFB">slice Small Finance Bank</option>
-      <option value="Cash">Cash in Hand</option>
-      <option value="Adjustment">Direct Adjustment (No Cash/Bank Impact)</option>
-    </select>
-  `, () => {
-    const date = document.getElementById('leDate').value || new Date().toISOString().slice(0, 10);
-    const desc = document.getElementById('leDesc').value.trim() || (isGiven ? 'Additional Advance Given' : 'Additional Loan Taken');
-    const amt = parseFloat(document.getElementById('leAmt').value) || 0;
-    const mode = document.getElementById('leMode').value;
-    if (amt <= 0) return;
-
-    const curLedger = getFinLedger();
-    if (!curLedger.loanTransactions) curLedger.loanTransactions = [];
-    curLedger.loanTransactions.push({
-      id: 'ltx_' + Date.now(),
-      loanId: id,
-      isBuiltIn,
-      isGiven,
-      kind: 'add',
-      date,
-      desc,
-      amount: amt,
-      mode
-    });
-
-    if (isBuiltIn) {
-      if (id === 'juzer') curLedger.loansGiven.juzer.adjustments = (curLedger.loansGiven.juzer.adjustments || 0) + amt;
-      else if (id === 'mhj') curLedger.loansTaken.mhj.adjustments = (curLedger.loansTaken.mhj.adjustments || 0) + amt;
-      else if (id === 'hatim') curLedger.loansTaken.hatim.adjustments = (curLedger.loansTaken.hatim.adjustments || 0) + amt;
-    } else {
-      const cl = (curLedger.customLoans || []).find(x => x.id === id);
-      if (cl) cl.principal = (Number(cl.principal) || 0) + amt;
-    }
-
-    if (mode === 'Cash') curLedger.cashInHand += (isGiven ? -amt : amt);
-    else if (mode === 'slice SFB') curLedger.bankSlice += (isGiven ? -amt : amt);
-
-    if (!uiState.finOpen) uiState.finOpen = {};
-    uiState.finOpen.loans = true;
-    saveUi();
-    saveFinLedger(curLedger);
-    render();
-    renderFinancialsPage();
-  }, 'Add Entry', 'Cancel');
-}
-
-function recordLoanRepayment(id, isBuiltIn) {
-  const ledger = getFinLedger();
-  let title = '';
-  let currentBalance = 0;
-  let isGiven = true;
-
-  if (isBuiltIn) {
-    if (id === 'juzer') {
-      title = ledger.loansGiven.juzer.name;
-      currentBalance = Math.max(0, ledger.loansGiven.juzer.base + (ledger.loansGiven.juzer.adjustments || 0));
-      isGiven = true;
-    } else if (id === 'mhj') {
-      title = ledger.loansTaken.mhj.name;
-      currentBalance = Math.max(0, ledger.loansTaken.mhj.base + (ledger.loansTaken.mhj.adjustments || 0));
-      isGiven = false;
-    } else if (id === 'hatim') {
-      title = ledger.loansTaken.hatim.name;
-      currentBalance = Math.max(0, ledger.loansTaken.hatim.base + (ledger.loansTaken.hatim.adjustments || 0));
-      isGiven = false;
-    }
+  let html = '';
+  if (filtered.length === 0) {
+    html = '<div style="text-align:center; padding:24px; color:var(--muted);">No matching tasks found.</div>';
   } else {
-    const cl = (ledger.customLoans || []).find(x => x.id === id);
-    if (!cl) return;
-    title = cl.name;
-    currentBalance = Math.max(0, cl.principal - (cl.repaid || 0));
-    isGiven = cl.type === 'given';
-  }
-
-  showModal('Record Repayment — ' + title, `
-    <div class="hint">Pending Balance: <strong>${inr(currentBalance)}</strong></div>
-    <label>Date</label>
-    <input type="date" id="repayDate" value="${new Date().toISOString().slice(0, 10)}">
-    <label>Repayment Amount (₹)</label>
-    <input type="number" id="repayAmt" placeholder="₹ Amount">
-    <label>Note / Particulars (Optional)</label>
-    <input type="text" id="repayDesc" placeholder="e.g. Partial settlement">
-    <label>Account / Payment Mode</label>
-    <select id="repayMode">
-      <option value="slice SFB">slice Small Finance Bank</option>
-      <option value="Cash">Cash in Hand</option>
-    </select>
-  `, () => {
-    const date = document.getElementById('repayDate').value || new Date().toISOString().slice(0, 10);
-    const amt = parseFloat(document.getElementById('repayAmt').value) || 0;
-    const desc = document.getElementById('repayDesc').value.trim() || 'Repayment Settlement';
-    const mode = document.getElementById('repayMode').value;
-    if (amt <= 0) return;
-
-    const curLedger = getFinLedger();
-    if (!curLedger.loanTransactions) curLedger.loanTransactions = [];
-    curLedger.loanTransactions.push({
-      id: 'ltx_' + Date.now(),
-      loanId: id,
-      isBuiltIn,
-      isGiven,
-      kind: 'repay',
-      date,
-      desc,
-      amount: amt,
-      mode
+    const groupDefs = [
+      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' }
+    ];
+    extraCats.forEach((cat, i) => {
+      groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: EXTRA_COLORS[i % EXTRA_COLORS.length], match: t => t.cat === cat });
     });
+    groupDefs.push(
+      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
+      { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' },
+      { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' && !['MHJ', 'SHK', 'OWN', 'FEES'].includes(t.cat) },
+      { key: 'FEES', label: 'Fees & Receivables', color: 'var(--c-fees)', match: t => t.type === 'fee' || t.cat === 'FEES' }
+    );
 
-    if (isBuiltIn) {
-      if (id === 'juzer') curLedger.loansGiven.juzer.adjustments = (curLedger.loansGiven.juzer.adjustments || 0) - amt;
-      else if (id === 'mhj') curLedger.loansTaken.mhj.adjustments = (curLedger.loansTaken.mhj.adjustments || 0) - amt;
-      else if (id === 'hatim') curLedger.loansTaken.hatim.adjustments = (curLedger.loansTaken.hatim.adjustments || 0) - amt;
-    } else {
-      const cl = (curLedger.customLoans || []).find(x => x.id === id);
-      if (cl) cl.repaid = (cl.repaid || 0) + amt;
-    }
+    const forceOpen = filter !== 'all' || q.length > 0;
 
-    const cashDelta = isGiven ? amt : -amt;
-    if (mode === 'Cash') curLedger.cashInHand += cashDelta;
-    else curLedger.bankSlice += cashDelta;
+    groupDefs.forEach(g => {
+      const groupTasks = filtered.filter(g.match);
+      if (groupTasks.length === 0) return;
 
-    saveFinLedger(curLedger);
-    render();
-    renderFinancialsPage();
-  }, 'Save Repayment', 'Cancel');
-}
+      const open = groupTasks.filter(t => !t.done);
+      const closed = groupTasks.filter(t => t.done);
+      const ordered = open.concat(closed);
+      const collapsed = !forceOpen && !!uiState.collapsed[g.key];
 
-function deleteLoanTransaction(txId) {
-  const ledger = getFinLedger();
-  const idx = (ledger.loanTransactions || []).findIndex(x => x.id === txId);
-  if (idx === -1) return;
-  const tx = ledger.loanTransactions[idx];
-  showModal('Delete Loan Entry?', `
-    <div class="hint">Reverses <strong>${escapeForHtml(tx.desc)}</strong> (${inr(tx.amount)}) and restores the loan &amp; cash/bank balances.</div>
-  `, () => {
-    const sign = tx.kind === 'repay' ? 1 : -1;
-    if (tx.isBuiltIn) {
-      if (tx.loanId === 'juzer') ledger.loansGiven.juzer.adjustments = (ledger.loansGiven.juzer.adjustments || 0) + sign * tx.amount;
-      else if (tx.loanId === 'mhj') ledger.loansTaken.mhj.adjustments = (ledger.loansTaken.mhj.adjustments || 0) + sign * tx.amount;
-      else if (tx.loanId === 'hatim') ledger.loansTaken.hatim.adjustments = (ledger.loansTaken.hatim.adjustments || 0) + sign * tx.amount;
-    } else {
-      const cl = (ledger.customLoans || []).find(x => x.id === tx.loanId);
-      if (cl) {
-        if (tx.kind === 'repay') cl.repaid = Math.max(0, (cl.repaid || 0) - tx.amount);
-        else cl.principal = Math.max(0, (cl.principal || 0) - tx.amount);
+      html += `
+        <div class="cat-section${collapsed ? ' collapsed' : ''}">
+          <div class="cat-heading" style="border-left:4px solid ${g.color};" onclick="toggleGroup('${g.key}')">
+            ${ICON.chev}
+            <span class="dot" style="background:${g.color}"></span>
+            <span class="title">${g.label}</span>
+            <span class="count"><b>${open.length} pending</b>${closed.length ? ' · ' + closed.length + ' done' : ''}</span>
+          </div>
+      `;
+
+      if (!collapsed) {
+        html += '<div class="task-grid">';
+        const renderItem = (t) => {
+          const idx = ordered.indexOf(t);
+          const isFee = t.type === 'fee';
+          const bal = isFee ? Math.max(0, (t.payable || 0) - (t.received || 0) - (t.discount || 0)) : 0;
+          return `
+            <div class="task" style="border-left:4px solid ${g.color};">
+              <span class="num">${idx + 1}.</span>
+              <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">
+              <div class="task-body">
+                <div class="task-top">
+                  <div class="task-name" style="${t.done ? 'text-decoration:line-through; color:var(--muted);' : ''}">${escapeForHtml(t.name)}</div>
+                  ${isFee ? `<div class="amt ${bal <= 0 ? 'clear' : 'owed'}">${bal <= 0 ? 'Settled' : inr(bal)}</div>` : ''}
+                  <button type="button" class="act del" onclick="deleteTask('${t.id}')">${ICON.x}</button>
+                </div>
+                ${isFee ? `<div class="task-sub">${inr(t.received)} of ${inr(t.payable)} received${t.invoice ? ' &bull; ' + t.invoice : ''}</div>` : ''}
+                ${t.remark ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
+                <div class="task-meta">
+                  ${isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : ''}
+                  ${isFee ? `<button type="button" class="act" onclick="generateOrOpenInvoice('${t.id}')">${ICON.doc} ${t.invoice ? 'View Invoice' : 'Generate Invoice'}</button>` : ''}
+                  ${isFee && bal > 0 ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${bal})">${ICON.chat} Send WhatsApp reminder</button>` : ''}
+                  ${isFee && t.received > 0 ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}', 0)">Send receipt</button>` : ''}
+                  ${!t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">Remark</button>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        };
+
+        open.forEach(t => { html += renderItem(t); });
+
+        if (closed.length) {
+          const showAll = filter === 'done' || q.length > 0;
+          const expanded = showAll || !!doneOpen[g.key];
+          if (!showAll) {
+            html += `<button type="button" class="done-toggle" onclick="toggleDone('${g.key}')">${expanded ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>`;
+          }
+          if (expanded) closed.forEach(t => { html += renderItem(t); });
+        }
+
+        html += '</div>';
       }
-    }
+      html += '</div>';
+    });
+  }
 
-    let cashRev = 0;
-    if (tx.kind === 'add') cashRev = tx.isGiven ? tx.amount : -tx.amount;
-    else cashRev = tx.isGiven ? -tx.amount : tx.amount;
+  if (!listOnly && summaryEl) summaryEl.innerHTML = summaryHtml;
+  app.innerHTML = html;
+}
 
-    if (tx.mode === 'Cash') ledger.cashInHand += cashRev;
-    else if (tx.mode === 'slice SFB') ledger.bankSlice += cashRev;
+function onSearch(val) { render(true); }
+function clearSearch() {
+  const box = document.getElementById('searchBox');
+  if (box) box.value = '';
+  render(true);
+}
 
-    ledger.loanTransactions.splice(idx, 1);
+function setFinViewMode(mode) {
+  finViewMode = mode;
+  renderFinancialsPage();
+}
+
+function getJournalAccountLabel(code) {
+  const map = {
+    CASH: 'Cash in Hand',
+    BANK_SLICE: 'slice SFB Bank',
+    LOAN_JUZER: 'Juzer Presswala (Loan Given - Asset)',
+    LOAN_MHJ: 'MHJ (Loan Taken - Liability)',
+    LOAN_HATIM: 'Hatim Bhai (Loan Taken - Liability)',
+    INCOME_FEES: 'Professional Fees Income (P&L)',
+    EXPENSE_OP: 'Business Operating Expense (P&L)',
+    DRAWINGS: 'Personal Drawings (Capital Deduction)',
+    CAPITAL: "Owner's Capital Account",
+    ZIYARAT: 'Kathiyawad Ziyarat Trip Advance'
+  };
+  return map[code] || code;
+}
+
+function applyJournalEffect(ledger, debitAcc, creditAcc, amt, sign) {
+  const delta = amt * sign;
+  const adjust = (acc, isDebit) => {
+    const dir = isDebit ? 1 : -1;
+    if (acc === 'CASH') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + delta * dir;
+    else if (acc === 'BANK_SLICE') ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta * dir;
+    else if (acc === 'LOAN_JUZER') ledger.loansGiven.juzer.adjustments = (Number(ledger.loansGiven.juzer.adjustments) || 0) + delta * dir;
+    else if (acc === 'LOAN_MHJ') ledger.loansTaken.mhj.adjustments = (Number(ledger.loansTaken.mhj.adjustments) || 0) - delta * dir;
+    else if (acc === 'LOAN_HATIM') ledger.loansTaken.hatim.adjustments = (Number(ledger.loansTaken.hatim.adjustments) || 0) - delta * dir;
+    else if (acc === 'INCOME_FEES') ledger.journalIncomeAdj = (Number(ledger.journalIncomeAdj) || 0) - delta * dir;
+    else if (acc === 'EXPENSE_OP') ledger.journalExpenseAdj = (Number(ledger.journalExpenseAdj) || 0) + delta * dir;
+    else if (acc === 'DRAWINGS') ledger.journalDrawingsAdj = (Number(ledger.journalDrawingsAdj) || 0) + delta * dir;
+    else if (acc === 'ZIYARAT') ledger.journalZiyaratAdj = (Number(ledger.journalZiyaratAdj) || 0) + delta * dir;
+  };
+  adjust(debitAcc, true);
+  adjust(creditAcc, false);
+}
+
+function openJournalEntryModal() {
+  const opts = `
+    <option value="CASH">Cash in Hand</option>
+    <option value="BANK_SLICE">slice SFB Bank</option>
+    <option value="LOAN_JUZER">Juzer Presswala (Loan Given)</option>
+    <option value="LOAN_MHJ">MHJ (Loan Taken)</option>
+    <option value="LOAN_HATIM">Hatim Bhai (Loan Taken)</option>
+    <option value="INCOME_FEES">Professional Fees Income (P&amp;L)</option>
+    <option value="EXPENSE_OP">Business Operating Expense (P&amp;L)</option>
+    <option value="DRAWINGS">Personal Drawings (Capital Deduction)</option>
+    <option value="CAPITAL">Owner's Capital Account</option>
+    <option value="ZIYARAT">Kathiyawad Ziyarat Trip Advance</option>
+  `;
+  showModal('📒 Pass Double-Entry Journal Voucher', `
+    <label>Voucher Date</label>
+    <input type="date" id="jvDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Debit Account (Dr)</label>
+    <select id="jvDebit">${opts}</select>
+    <label>Credit Account (Cr)</label>
+    <select id="jvCredit">
+      <option value="BANK_SLICE">slice SFB Bank</option>
+      <option value="CASH">Cash in Hand</option>
+      <option value="LOAN_JUZER">Juzer Presswala (Loan Given)</option>
+      <option value="LOAN_MHJ">MHJ (Loan Taken)</option>
+      <option value="LOAN_HATIM">Hatim Bhai (Loan Taken)</option>
+      <option value="INCOME_FEES">Professional Fees Income (P&amp;L)</option>
+      <option value="EXPENSE_OP">Business Operating Expense (P&amp;L)</option>
+      <option value="DRAWINGS">Personal Drawings (Capital Deduction)</option>
+      <option value="CAPITAL">Owner's Capital Account</option>
+      <option value="ZIYARAT">Kathiyawad Ziyarat Trip Advance</option>
+    </select>
+    <label>Amount (₹)</label>
+    <input type="number" id="jvAmount" placeholder="₹ Amount">
+    <label>Narration / Particulars</label>
+    <input type="text" id="jvNarration" placeholder="e.g. Contra transfer / Settlement adjustment">
+  `, () => {
+    const date = document.getElementById('jvDate').value || new Date().toISOString().slice(0, 10);
+    const debitAccount = document.getElementById('jvDebit').value;
+    const creditAccount = document.getElementById('jvCredit').value;
+    const amount = parseFloat(document.getElementById('jvAmount').value) || 0;
+    const narration = document.getElementById('jvNarration').value.trim() || 'Journal Adjustment';
+    if (amount <= 0 || debitAccount === creditAccount) return;
+
+    const ledger = getFinLedger();
+    if (!ledger.journalEntries) ledger.journalEntries = [];
+    const voucherNo = 'JV-' + String(ledger.journalEntries.length + 1).padStart(3, '0');
+    ledger.journalEntries.push({
+      id: 'jv_' + Date.now(),
+      voucherNo,
+      date,
+      debitAccount,
+      creditAccount,
+      amount,
+      narration
+    });
+    applyJournalEffect(ledger, debitAccount, creditAccount, amount, 1);
+    if (!uiState.finOpen) uiState.finOpen = {};
+    uiState.finOpen.journal = true;
+    saveUi();
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Post Voucher', 'Cancel');
+}
+
+function deleteJournalEntry(id) {
+  const ledger = getFinLedger();
+  const idx = (ledger.journalEntries || []).findIndex(x => x.id === id);
+  if (idx === -1) return;
+  const jv = ledger.journalEntries[idx];
+  showModal('Delete Journal Voucher ' + (jv.voucherNo || '') + '?', `
+    <div class="hint">This will reverse both the Debit (${getJournalAccountLabel(jv.debitAccount)}) and Credit (${getJournalAccountLabel(jv.creditAccount)}) of ${inr(jv.amount)}.</div>
+  `, () => {
+    applyJournalEffect(ledger, jv.debitAccount, jv.creditAccount, jv.amount, -1);
+    ledger.journalEntries.splice(idx, 1);
     if (!ledger.deletedIds) ledger.deletedIds = [];
-    ledger.deletedIds.push(txId);
+    ledger.deletedIds.push(id);
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
@@ -2337,6 +2500,67 @@ function openAddLoanModal() {
   }, 'Save Loan', 'Cancel');
 }
 
+function recordLoanRepayment(id, isBuiltIn) {
+  const ledger = getFinLedger();
+  let title = '';
+  let currentBalance = 0;
+  let isGiven = true;
+
+  if (isBuiltIn) {
+    if (id === 'juzer') {
+      title = ledger.loansGiven.juzer.name;
+      currentBalance = Math.max(0, ledger.loansGiven.juzer.base + (ledger.loansGiven.juzer.adjustments || 0));
+      isGiven = true;
+    } else if (id === 'mhj') {
+      title = ledger.loansTaken.mhj.name;
+      currentBalance = Math.max(0, ledger.loansTaken.mhj.base + (ledger.loansTaken.mhj.adjustments || 0));
+      isGiven = false;
+    } else if (id === 'hatim') {
+      title = ledger.loansTaken.hatim.name;
+      currentBalance = Math.max(0, ledger.loansTaken.hatim.base + (ledger.loansTaken.hatim.adjustments || 0));
+      isGiven = false;
+    }
+  } else {
+    const cl = (ledger.customLoans || []).find(x => x.id === id);
+    if (!cl) return;
+    title = cl.name;
+    currentBalance = Math.max(0, cl.principal - (cl.repaid || 0));
+    isGiven = cl.type === 'given';
+  }
+
+  showModal('Record Repayment — ' + title, `
+    <div class="hint">Pending Balance: <strong>${inr(currentBalance)}</strong></div>
+    <label>Repayment Amount (₹)</label>
+    <input type="number" id="repayAmt" placeholder="₹ Amount">
+    <label>Account / Payment Mode</label>
+    <select id="repayMode">
+      <option value="slice SFB">slice Small Finance Bank</option>
+      <option value="Cash">Cash in Hand</option>
+    </select>
+  `, () => {
+    const amt = parseFloat(document.getElementById('repayAmt').value) || 0;
+    const mode = document.getElementById('repayMode').value;
+    if (amt <= 0) return;
+
+    if (isBuiltIn) {
+      if (id === 'juzer') ledger.loansGiven.juzer.adjustments = (ledger.loansGiven.juzer.adjustments || 0) - amt;
+      else if (id === 'mhj') ledger.loansTaken.mhj.adjustments = (ledger.loansTaken.mhj.adjustments || 0) - amt;
+      else if (id === 'hatim') ledger.loansTaken.hatim.adjustments = (ledger.loansTaken.hatim.adjustments || 0) - amt;
+    } else {
+      const cl = (ledger.customLoans || []).find(x => x.id === id);
+      if (cl) cl.repaid = (cl.repaid || 0) + amt;
+    }
+
+    const cashDelta = isGiven ? amt : -amt;
+    if (mode === 'Cash') ledger.cashInHand += cashDelta;
+    else ledger.bankSlice += cashDelta;
+
+    saveFinLedger(ledger);
+    render();
+    renderFinancialsPage();
+  }, 'Save Repayment', 'Cancel');
+}
+
 function deleteCustomLoan(id) {
   const ledger = getFinLedger();
   const idx = (ledger.customLoans || []).findIndex(x => x.id === id);
@@ -2359,9 +2583,6 @@ function deleteCustomLoan(id) {
   }, 'Delete', 'Cancel');
 }
 
-// =========================================================================
-// ZIYARAT TRIP & EXPENSES MODAL HANDLERS
-// =========================================================================
 function shareZiyaratWithFamilies() {
   const ledger = getFinLedger();
   const tripPayments = (ledger.kathiyawadTrip && ledger.kathiyawadTrip.payments) || [];
@@ -2644,144 +2865,6 @@ function deleteExpenseEntry(id) {
   }, 'Delete', 'Cancel');
 }
 
-// =========================================================================
-// TASK OPERATIONS (TOGGLE, PAYMENT, RECEIPT, ADD, REMARK, DUE DATE, DELETE)
-// =========================================================================
-function toggleTask(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  t.done = !t.done;
-  saveTasks();
-  render();
-  if (t.id && t.id.startsWith('cal_')) toggleOnCalendar(t.id, t.done);
-
-  if (t.done && t.type === 'professional') {
-    const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052' };
-    const defaultPhone = (t.cat && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
-    showModal('Fee for "' + t.name + '"?', `
-      <label>Billable Amount (₹)</label>
-      <input type="number" id="modalPayable" placeholder="₹ Payable">
-      <label>Received Now (₹)</label>
-      <input type="number" id="modalReceived" placeholder="₹ Received" value="0">
-      <label>Client Phone (Optional)</label>
-      <input type="tel" id="modalPhone" placeholder="e.g. 9876543210" value="${defaultPhone}">
-    `, () => {
-      const payable = parseFloat(document.getElementById('modalPayable').value);
-      const received = parseFloat(document.getElementById('modalReceived').value) || 0;
-      const phone = document.getElementById('modalPhone').value.trim();
-      if (!isNaN(payable) && payable > 0) {
-        const localId = 'u' + Date.now();
-        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || '', due: '', done: received >= payable, urgent: false, payable, received, discount: 0, linked: t.name, phone };
-        tasks.push(feeTask);
-        if (received > 0) {
-          const ledger = getFinLedger();
-          ledger.bankSlice = (Number(ledger.bankSlice) || 0) + received;
-          saveFinLedger(ledger);
-        }
-        saveTasks();
-        render();
-        pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || '').then(calId => {
-          if (calId) { feeTask.id = calId; saveTasks(); }
-        });
-      }
-    }, 'Save Fee', 'Skip');
-  }
-}
-
-function recordPayment(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  showModal('Record Payment — ' + t.name, `
-    <div class="hint">Currently ${inr(t.received)} of ${inr(t.payable)} received</div>
-    <label>Total Received So Far (₹)</label>
-    <input type="number" id="modalReceivedAmt" value="${t.received}">
-    <label>Discount Allowed (₹)</label>
-    <input type="number" id="modalDiscountAmt" value="${t.discount || 0}">
-    <label>Deposit Account</label>
-    <select id="modalPayMode">
-      <option value="slice SFB">slice Small Finance Bank</option>
-      <option value="Cash">Cash in Hand</option>
-    </select>
-  `, () => {
-    const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
-    const discount = parseFloat(document.getElementById('modalDiscountAmt').value) || 0;
-    const mode = document.getElementById('modalPayMode').value;
-    if (isNaN(amount)) return;
-    const prevReceived = Number(t.received) || 0;
-    const delta = amount - prevReceived;
-    t.received = amount;
-    t.discount = discount;
-    t.done = (amount + discount) >= t.payable && t.payable > 0;
-
-    if (delta !== 0) {
-      const ledger = getFinLedger();
-      if (mode === 'Cash') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + delta;
-      else ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta;
-      saveFinLedger(ledger);
-    }
-
-    saveTasks();
-    render();
-    if (activePage === 'financials') renderFinancialsPage();
-    if (activePage === 'invoices') renderInvoicesPage();
-    if (t.id && t.id.startsWith('cal_')) updateFeeOnCalendar(t.id, amount, discount);
-
-    if (delta > 0 && !t.name.includes('Advance Credit Balance')) {
-      setTimeout(() => offerReceipt(t.id, delta), 0);
-    }
-  }, 'Save', 'Cancel');
-}
-
-function offerReceipt(taskId, paidNow) {
-  const t = tasks.find(x => x.id === taskId);
-  if (!t) return;
-  const label = t.linked || t.name;
-  const payable = Number(t.payable) || 0;
-  const received = Number(t.received) || 0;
-  const discount = Number(t.discount) || 0;
-  const balance = Math.max(0, payable - received - discount);
-  const amount = paidNow > 0 ? paidNow : received;
-  const invNo = String(t.invoice || '').split('|')[0].trim();
-
-  let msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received your payment for *"${label}"*. Thank you!\n\n✅ *Amount Received:* ₹${amount}`;
-  if (discount > 0) msg += `\n🏷️ *Discount Allowed:* ₹${discount}`;
-  if (payable > 0) msg += balance > 0 ? `\n💰 *Balance Due:* ₹${balance}` : `\n✅ *Status:* Fully settled`;
-  if (invNo) msg += `\n\n📄 *Invoice ${invNo}:*\nhttps://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=${encodeURIComponent(invNo)}`;
-  msg += `\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax & Accounts Consultant, Indore_`;
-  msg = msg.replace(/&/g, 'and');
-
-  let cleanPh = (t.phone || '').replace(/[^0-9]/g, '');
-  if (cleanPh.length === 10) cleanPh = '91' + cleanPh;
-  const waUrl = 'https://api.whatsapp.com/send?' + (cleanPh ? 'phone=' + cleanPh + '&' : '') + 'text=' + encodeURIComponent(msg);
-
-  showModal('📲 Send Payment Receipt?', `
-    <div class="receipt-preview" style="margin-bottom:10px;">${escapeForHtml(msg)}</div>
-    <a href="${waUrl}" target="_blank" rel="noopener" class="btn btn-wa" style="width:100%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">
-      📲 Send Receipt on WhatsApp
-    </a>
-  `, () => {}, 'Done', 'Close');
-}
-
-function setDueDate(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  const cur = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
-  showModal('Due Date — ' + t.name, `
-    <label>Pick a Due Date</label>
-    <input type="date" id="modalDueDate" value="${cur}">
-  `, () => {
-    const val = document.getElementById('modalDueDate').value;
-    if (!val) return;
-    t.dueDate = new Date(val + 'T09:00:00').toISOString();
-    saveTasks();
-    render();
-    if (t.id && t.id.startsWith('cal_')) {
-      const url = getWebhook();
-      if (url) fetch(url + '?' + new URLSearchParams({ action: 'setduedate', id: t.id, dueDate: val }).toString()).catch(() => {});
-    }
-  }, 'Save', 'Cancel');
-}
-
 async function pushToCalendar(name, tag, dueDate) {
   const url = getWebhook();
   if (!url) return null;
@@ -2840,16 +2923,9 @@ function addTask() {
       discount: 0, linked: linked, phone: phone
     };
     tasks.push(feeTask);
-    if (received > 0) {
-      const ledger = getFinLedger();
-      ledger.bankSlice = (Number(ledger.bankSlice) || 0) + received;
-      saveFinLedger(ledger);
-    }
     input.value = '';
     document.getElementById('feePayable').value = '';
     document.getElementById('feeReceived').value = '';
-    document.getElementById('feeLinked').value = '';
-    document.getElementById('feePhone').value = '';
     saveTasks();
     render();
     pushFeeToCalendar(name, payable, received, linked, phone, 'OWN').then(calId => {
@@ -2894,181 +2970,6 @@ function onCategoryChange() {
   document.getElementById('feeFields').style.display = (select.value === 'FEES') ? 'flex' : 'none';
 }
 
-// =========================================================================
-// MAIN TASKS & RECONCILED SUMMARY RENDERER
-// =========================================================================
-function render(listOnly) {
-  const summaryEl = document.getElementById('summaryArea');
-  const app = document.getElementById('app');
-  if (!app) return;
-
-  const ledger = getFinLedger();
-  const cashBal = Number(ledger.cashInHand) || 0;
-  const bankBal = Number(ledger.bankSlice) || 0;
-  const totalLiquid = cashBal + bankBal;
-
-  const juzerNet = Math.max(0, (ledger.loansGiven.juzer.base || 0) + (ledger.loansGiven.juzer.adjustments || 0));
-  const customLoansGiven = (ledger.customLoans || []).filter(c => c.type === 'given').reduce((s, c) => s + Math.max(0, (c.principal || 0) - (c.repaid || 0)), 0);
-  const totalLoansGiven = juzerNet + customLoansGiven;
-
-  const doneCount = tasks.filter(t => t.done).length;
-  const pendingCount = tasks.filter(t => !t.done).length;
-
-  const badgeEl = document.getElementById('finBadge');
-  if (badgeEl) badgeEl.textContent = inr(totalLiquid);
-
-  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES', 'PERSONAL']);
-  const extraCats = [...new Set(tasks.filter(t => t.type === 'professional' && t.cat && !knownCats.has(t.cat)).map(t => t.cat))];
-
-  let filtered = tasks;
-  if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal');
-  else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional');
-  else if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN');
-  else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ');
-  else if (filter === 'shk') filtered = tasks.filter(t => t.cat === 'SHK');
-  else if (filter === 'fees') filtered = tasks.filter(t => t.type === 'fee');
-  else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
-  else if (filter === 'done') filtered = tasks.filter(t => t.done);
-  else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
-
-  const q = searchQuery.trim().toLowerCase();
-  const searchActive = q.length > 0;
-  if (searchActive) {
-    const words = q.split(/\s+/);
-    filtered = filtered.filter(t => {
-      const hay = [t.name, t.linked, t.invoice, t.remark, t.phone, t.cat].join(' ').toLowerCase();
-      return words.every(w => hay.includes(w));
-    });
-  }
-
-  const filterBtn = (key, label, dotColor) =>
-    `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
-
-  if (!listOnly && summaryEl) {
-    summaryEl.innerHTML = `
-      <div class="summary-sheet">
-        <div class="hero-stats">
-          <div class="hero-card"><div class="n">${doneCount}</div><div class="l">Done</div></div>
-          <div class="hero-card"><div class="n">${pendingCount}</div><div class="l">Pending</div></div>
-          <div class="hero-card" style="cursor:pointer;" onclick="switchPage('financials')"><div class="n">${inr(totalLiquid)}</div><div class="l">Liquid ↗</div></div>
-          <div class="hero-card" style="cursor:pointer;" onclick="switchPage('financials')"><div class="n">${inr(totalLoansGiven)}</div><div class="l">Loans Given ↗</div></div>
-        </div>
-        ${uiState.showSummaryDetails ? `
-          <div class="totals">
-            <div class="tot"><div class="l">Cash in Hand</div><div class="fig" style="color:${cashBal < 0 ? 'var(--red)' : 'var(--ink)'};">${inr(cashBal)}</div></div>
-            <div class="tot"><div class="l">slice Small Finance Bank</div><div class="fig" style="color:var(--green);">${inr(bankBal)}</div></div>
-            <div class="tot sum"><div class="l">Total Reconciled Liquidity</div><div class="fig">${inr(totalLiquid)}</div></div>
-          </div>
-        ` : ''}
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 12px; background:#F8FAFC; border-top:1px solid var(--rule-soft); font-size:11px;">
-          <button type="button" class="act" onclick="toggleSummaryDetails()">${uiState.showSummaryDetails ? '▴ Hide Cash/Bank' : '▾ Cash & Bank Details'}</button>
-          <button type="button" class="act" onclick="switchPage('financials')">Open Financials &amp; Ziyarat &rarr;</button>
-        </div>
-      </div>
-
-      <div class="filters seg">
-        ${filterBtn('all', 'All')}${filterBtn('personal', 'Personal')}${filterBtn('professional', 'Professional')}${filterBtn('pending', 'Pending')}${filterBtn('done', 'Done')}
-      </div>
-      <div class="filters chips">
-        ${filterBtn('own', 'OWN', 'var(--c-own)')}${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}${filterBtn('shk', 'SHK', 'var(--c-shk)')}${filterBtn('fees', 'Fees', 'var(--c-fees)')}
-        ${extraCats.map((c, i) => filterBtn(c, c.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
-        <button type="button" class="filter-btn" onclick="toggleAllGroups(true)">⊟ Fold All</button>
-        <button type="button" class="filter-btn" onclick="toggleAllGroups(false)">⊞ Expand All</button>
-      </div>
-    `;
-  }
-
-  let html = '';
-  const forceOpen = filter !== 'all' || searchActive;
-  let shownCount = 0;
-
-  if (filtered.length === 0) {
-    html = `<div style="text-align:center; padding:24px; color:var(--muted); background:#fff; border-radius:12px; border:1px dashed var(--rule);">No tasks match your filter.</div>`;
-  } else {
-    const groupDefs = [
-      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' }
-    ];
-    extraCats.forEach((cat, i) => {
-      groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: EXTRA_COLORS[i % EXTRA_COLORS.length], match: t => t.cat === cat });
-    });
-    groupDefs.push(
-      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
-      { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' },
-      { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' },
-      { key: 'FEES', label: 'Fees & Receivables', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
-    );
-
-    const renderCard = (t, idx) => {
-      const isFee = t.type === 'fee';
-      const balance = isFee ? Math.max(0, (t.payable || 0) - (t.received || 0) - (t.discount || 0)) : 0;
-      const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
-      const invNo = String(t.invoice || '').split('|')[0].trim();
-
-      return `
-        <div class="task${t.done ? ' done' : ''}">
-          <span class="num">${idx + 1}.</span>
-          ${isFee ? '' : `<input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">`}
-          <div class="task-body">
-            <div class="task-top">
-              <div class="task-name">${escapeForHtml(t.name)}</div>
-              ${isFee ? (balance > 0 ? `<div class="amt owed">${inr(balance)}</div>` : `<div class="amt clear">Settled</div>`) : ''}
-              <button type="button" class="act del" onclick="deleteTask('${t.id}')">${ICON.x}</button>
-            </div>
-            ${isFee ? `<div class="task-sub">${inr(t.received)} of ${inr(t.payable)} received${invNo ? ' &bull; <strong>' + escapeForHtml(invNo) + '</strong>' : ''}</div>` : ''}
-            ${t.remark && !t.done ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
-            <div class="task-meta">
-              ${dueDateLabel && !t.done ? `<span style="color:var(--muted);">Due ${dueDateLabel}</span>` : ''}
-              ${isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Payment</button>` : ''}
-              ${isFee ? `<button type="button" class="act" onclick="generateOrOpenInvoice('${t.id}')">${invNo ? '📄 Invoice' : '✨ Invoice'}</button>` : ''}
-              ${isFee && balance > 0 ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat} Send WhatsApp reminder</button>` : ''}
-              ${isFee && (t.received || 0) > 0 ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}', 0)">${ICON.doc} Receipt</button>` : ''}
-              ${!t.done ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">Due date</button>` : ''}
-              ${!t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">Remark</button>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
-    };
-
-    const isFinished = t => t.done && (t.type !== 'fee' || ((t.payable || 0) - (t.received || 0) - (t.discount || 0)) <= 0);
-
-    groupDefs.forEach(g => {
-      const groupTasks = filtered.filter(g.match);
-      if (groupTasks.length === 0) return;
-      shownCount += groupTasks.length;
-      const open = groupTasks.filter(t => !isFinished(t));
-      const closed = groupTasks.filter(isFinished);
-      const ordered = open.concat(closed);
-      const collapsed = !forceOpen && !!uiState.collapsed[g.key];
-      const key = escapeForHtml(g.key);
-
-      html += `
-        <div class="cat-section${collapsed ? ' collapsed' : ''}">
-          <div class="cat-heading" onclick="toggleGroup('${key}')">
-            ${ICON.chev}
-            <span class="dot" style="background:${g.color}"></span>
-            <span class="title">${escapeForHtml(g.label)}</span>
-            <span class="count">${open.length} pending${closed.length ? ' · ' + closed.length + ' done' : ''}</span>
-          </div>
-          ${!collapsed ? `
-            <div class="task-grid">
-              ${open.map(t => renderCard(t, ordered.indexOf(t))).join('')}
-              ${closed.length ? `
-                <button type="button" class="done-toggle" onclick="toggleDone('${key}')">${doneOpen[g.key] ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>
-                ${(doneOpen[g.key] || filter === 'done' || searchActive) ? closed.map(t => renderCard(t, ordered.indexOf(t))).join('') : ''}
-              ` : ''}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
-  }
-
-  app.innerHTML = html;
-  const info = document.getElementById('searchInfo');
-  if (info) info.textContent = searchActive ? shownCount + ' of ' + tasks.length + ' tasks' : '';
-}
-
 function resetData() {
   showModal('Reset & Resync with Calendar?', `
     <div class="hint">Reloads tasks from Google Calendar and synchronizes with cloud storage.</div>
@@ -3094,7 +2995,6 @@ function checkPublicZiyaratView() {
 
   switchPage('financials');
   setFinViewMode('trip');
-  syncCloudFinLedger();
   return true;
 }
 
@@ -3117,8 +3017,6 @@ function startDashboard() {
   loadTasks();
   pullFromCalendar();
   syncCloudFinLedger();
-  if (window.location.hash === '#financials') switchPage('financials');
-  else if (window.location.hash === '#invoices') switchPage('invoices');
 }
 
 function boot() {
