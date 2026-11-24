@@ -625,6 +625,410 @@ window.addEventListener('scroll', () => {
   if (b) b.style.display = window.scrollY > 450 ? 'block' : 'none';
 }, { passive: true });
 
+// ---- Core Task Persistence, Modal & Two-Way Calendar/Cloud Sync ----
+const seedTasks = [
+  {
+    id: 'cal_lghida9k5kgvrvqamrebcdv18c',
+    name: 'Loan & Advances - Juzer Presswala',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'PERSONAL',
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    payable: 107690,
+    received: 0,
+    discount: 0,
+    linked: 'Juzer Presswala (Loan & Advances)',
+    phone: '7869282535',
+    invoice: '',
+    remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues 1,07,690'
+  },
+  {
+    id: 'cal_vcmcfguocnmhf6psqui072vnts',
+    name: 'Loan & Advances - Juzer Presswala (₹1,07,690)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T08:40:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Tracked in Google Sheet: Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190'
+  },
+  {
+    id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc',
+    name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T09:15:00.000Z',
+    done: false,
+    urgent: false,
+    remark: 'Payable to Hatim Bhai (Mob: 9826768052). Tracked in Google Sheet'
+  },
+  {
+    id: 'cal_ed85ko32qqb708i2pvumghm51c',
+    name: 'Loan & Advance Taken - MHJ (₹86,000)',
+    type: 'personal',
+    cat: null,
+    due: '',
+    dueDate: '2026-11-05T10:00:00.000Z',
+    done: false,
+    urgent: true,
+    remark: 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000. Tracked in Google Sheet'
+  },
+  {
+    id: 'cal_njelbrg4plf1eqlj2mk8sp9m0s_20261101T040000Z',
+    name: 'Monthly Salary Receivable (₹24,000)',
+    type: 'professional',
+    cat: 'MHJ',
+    due: '',
+    dueDate: '2026-11-01T04:00:00.000Z',
+    done: false,
+    urgent: true,
+    remark: 'Recurring Monthly Salary from MHJ. Due on 1st of every month'
+  },
+  {
+    id: 'cal_81rbvi7lq0o4l0rki46o92fmns_20261101T040000Z',
+    name: 'Salary Receivable - Hakimi Vihar Society',
+    type: 'fee',
+    cat: 'FEES',
+    feeCat: 'OWN',
+    due: '',
+    dueDate: '2026-11-01T04:00:00.000Z',
+    done: false,
+    urgent: false,
+    payable: 4000,
+    received: 0,
+    discount: 0,
+    linked: 'Hakimi Vihar Society',
+    phone: '',
+    invoice: '',
+    remark: 'Recurring Monthly Accounting Salary from Hakimi Vihar Society (Due 1st)'
+  }
+];
+
+async function loadTasks() {
+  let saved = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) saved = parsed;
+    }
+  } catch (e) {
+    saved = [];
+  }
+  const savedIds = new Set(saved.map(t => t.id));
+  const newFromSeed = seedTasks.filter(t => !savedIds.has(t.id));
+  tasks = saved.concat(newFromSeed);
+  saveTasks();
+  render();
+  if (activePage === 'financials') renderFinancialsPage();
+  if (activePage === 'invoices') renderInvoicesPage();
+}
+
+function saveTasks() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    const syncEl = document.getElementById('lastSync');
+    if (syncEl) syncEl.textContent = 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {}
+}
+
+function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
+  const overlay = document.getElementById('modalOverlay');
+  if (!overlay) return;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalFields').innerHTML = fieldsHtml;
+  overlay.style.display = 'flex';
+  const btn = document.getElementById('modalConfirmBtn');
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  newBtn.textContent = confirmLabel || 'Save';
+  newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
+  newBtn.onclick = () => {
+    const res = onConfirm();
+    if (res !== false) closeModal();
+  };
+  const cancelBtn = document.querySelector('#modalOverlay button[onclick="closeModal()"]');
+  if (cancelBtn) cancelBtn.textContent = skipLabel || 'Cancel';
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function onCategoryChange() {
+  const select = document.getElementById('newCat');
+  if (!select) return;
+  if (select.value === '__NEW__') {
+    showModal('Add a new category', `
+      <label>Category name (e.g. a new employer or client group)</label>
+      <input type="text" id="modalNewCatName" placeholder="e.g. ABC Company">
+    `, () => {
+      const raw = document.getElementById('modalNewCatName').value.trim();
+      if (!raw) { select.value = 'PERSONAL'; return; }
+      const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      if (!tag) { select.value = 'PERSONAL'; return; }
+      let exists = false;
+      for (const opt of select.options) { if (opt.value === tag) { exists = true; break; } }
+      if (!exists) {
+        const newOption = document.createElement('option');
+        newOption.value = tag;
+        newOption.textContent = 'Professional — ' + raw;
+        select.insertBefore(newOption, select.querySelector('option[value="__NEW__"]'));
+      }
+      select.value = tag;
+      document.getElementById('feeFields').style.display = 'none';
+    }, 'Create', 'Cancel');
+    select.value = 'PERSONAL';
+  } else {
+    const feeBox = document.getElementById('feeFields');
+    if (feeBox) feeBox.style.display = select.value === 'FEES' ? 'flex' : 'none';
+  }
+}
+
+function addTask() {
+  const input = document.getElementById('newTask');
+  const catVal = document.getElementById('newCat').value;
+  const name = input.value.trim();
+  if (!name) return;
+
+  if (catVal === 'FEES') {
+    const payable = parseFloat(document.getElementById('feePayable').value) || 0;
+    const received = parseFloat(document.getElementById('feeReceived').value) || 0;
+    const linked = document.getElementById('feeLinked').value.trim();
+    const phone = document.getElementById('feePhone').value.trim();
+    const localId = 'u' + Date.now();
+    const task = { id: localId, name, type: 'fee', cat: 'FEES', feeCat: '', due: '', done: received >= payable && payable > 0, urgent: false, payable, received, discount: 0, linked, phone };
+    tasks.push(task);
+    input.value = '';
+    document.getElementById('feePayable').value = '';
+    document.getElementById('feeReceived').value = '';
+    document.getElementById('feeLinked').value = '';
+    document.getElementById('feePhone').value = '';
+    saveTasks();
+    render();
+    if (activePage === 'invoices') renderInvoicesPage();
+    pushFeeToCalendar(name, payable, received, linked, phone, '').then(calId => {
+      if (calId) { task.id = calId; saveTasks(); }
+    });
+    return;
+  }
+
+  const type = catVal === 'PERSONAL' ? 'personal' : (catVal === 'INVITATION' ? 'invitation' : 'professional');
+  const cat = catVal === 'PERSONAL' ? null : catVal;
+  const localId = 'u' + Date.now();
+  const dueDateInput = document.getElementById('newDueDate');
+  const dueDateVal = dueDateInput ? dueDateInput.value : '';
+  const task = { id: localId, name, type, cat, due: '', dueDate: dueDateVal ? new Date(dueDateVal + 'T09:00:00').toISOString() : null, done: false, urgent: false };
+  tasks.push(task);
+  input.value = '';
+  if (dueDateInput) dueDateInput.value = '';
+  saveTasks();
+  render();
+  pushToCalendar(name, catVal, dueDateVal).then(calId => {
+    if (calId) {
+      task.id = calId;
+      saveTasks();
+      if (task.done) toggleOnCalendar(task.id, task.done);
+    }
+  });
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.done = !t.done;
+  saveTasks();
+  render();
+  if (t.id.startsWith('cal_')) toggleOnCalendar(t.id, t.done);
+
+  if (t.done && t.type === 'professional') {
+    const GROUP_DEFAULT_PHONES = { SHK: '9425320184', HATIM_BHAI_ADV: '9826768052' };
+    const defaultPhone = (t.cat && GROUP_DEFAULT_PHONES[t.cat]) ? GROUP_DEFAULT_PHONES[t.cat] : '';
+    showModal('Fee for "' + t.name + '"?', `
+      <label>Payable amount (leave blank to skip)</label>
+      <input type="number" id="modalPayable" placeholder="₹ Payable">
+      <label>Received now</label>
+      <input type="number" id="modalReceived" placeholder="₹ Received" value="0">
+      <label>Client phone (optional, for WhatsApp reminder)</label>
+      <input type="tel" id="modalPhone" placeholder="e.g. 9876543210" value="${defaultPhone}">
+    `, () => {
+      const payable = parseFloat(document.getElementById('modalPayable').value);
+      const received = parseFloat(document.getElementById('modalReceived').value) || 0;
+      const phone = document.getElementById('modalPhone').value.trim();
+      if (!isNaN(payable) && payable > 0) {
+        const localId = 'u' + Date.now();
+        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || '', due: '', done: received >= payable, urgent: false, payable, received, discount: 0, linked: t.name, phone };
+        tasks.push(feeTask);
+        saveTasks();
+        render();
+        pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || '').then(calId => {
+          if (calId) { feeTask.id = calId; saveTasks(); }
+        });
+      }
+    }, 'Save Fee', 'Skip');
+  }
+}
+
+function setDueDate(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const currentVal = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
+  showModal('Due date — ' + t.name, `
+    <label>Pick a due date</label>
+    <input type="date" id="modalDueDate" value="${currentVal}">
+  `, async () => {
+    const val = document.getElementById('modalDueDate').value;
+    if (!val) return;
+    t.dueDate = new Date(val + 'T09:00:00').toISOString();
+    saveTasks();
+    render();
+    if (t.id.startsWith('cal_')) {
+      const url = getWebhook();
+      try { await fetch(url + '?' + new URLSearchParams({ action: 'setduedate', id: t.id, dueDate: val }).toString()); } catch (e) {}
+    }
+  }, 'Save', 'Cancel');
+}
+
+async function pushToCalendar(name, tag, dueDate) {
+  const url = getWebhook();
+  if (!url) return null;
+  try {
+    const paramsObj = { action: 'add', name, tag };
+    if (dueDate) paramsObj.dueDate = dueDate;
+    const res = await fetch(url + '?' + new URLSearchParams(paramsObj).toString());
+    const data = await res.json();
+    return data.id || null;
+  } catch (e) { return null; }
+}
+
+async function pushFeeToCalendar(name, payable, received, linked, phone, feeCat) {
+  const url = getWebhook();
+  if (!url) return null;
+  try {
+    const res = await fetch(url + '?' + new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '', feeCat: feeCat || '' }).toString());
+    const data = await res.json();
+    return data.id || null;
+  } catch (e) { return null; }
+}
+
+async function toggleOnCalendar(taskId, done) {
+  const url = getWebhook();
+  if (!url) return;
+  try { await fetch(url + '?' + new URLSearchParams({ action: 'toggle', id: taskId, done: done ? 'true' : 'false' }).toString()); } catch (e) {}
+}
+
+async function updateFeeOnCalendar(taskId, received, discount) {
+  const url = getWebhook();
+  if (!url) return;
+  try { await fetch(url + '?' + new URLSearchParams({ action: 'updatefee', id: taskId, received, discount: discount || 0 }).toString()); } catch (e) {}
+}
+
+async function deleteFromCalendar(taskId) {
+  const url = getWebhook();
+  if (!url || !taskId.startsWith('cal_')) return;
+  try { await fetch(url + '?' + new URLSearchParams({ action: 'delete', id: taskId }).toString()); } catch (e) {}
+}
+
+async function pullFromCalendar() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    const events = await res.json();
+    if (!Array.isArray(events)) return;
+    const calIds = new Set(events.map(ev => ev.id));
+    const existingIds = new Set(tasks.map(t => t.id));
+    let changedCount = 0;
+
+    events.forEach(ev => {
+      if (existingIds.has(ev.id)) {
+        const local = tasks.find(x => x.id === ev.id);
+        if (local) {
+          if (local.name !== ev.title) { local.name = ev.title; changedCount++; }
+          if (local.done !== ev.done) { local.done = ev.done; changedCount++; }
+          if (local.dueDate !== (ev.dueDate || null)) { local.dueDate = ev.dueDate || null; changedCount++; }
+          if (local.remark !== (ev.remark || '')) { local.remark = ev.remark || ''; changedCount++; }
+          if (ev.tag === 'FEES') {
+            local.payable = ev.payable || 0;
+            local.received = ev.received || 0;
+            local.discount = ev.discount || 0;
+            local.linked = ev.linked || '';
+            local.phone = ev.phone || '';
+            local.invoice = ev.invoice || '';
+            local.feeCat = ev.feeCat || '';
+          }
+        }
+        return;
+      }
+      const tag = ev.tag;
+      const type = tag === 'PERSONAL' ? 'personal' : (tag === 'INVITATION' ? 'invitation' : (tag === 'FEES' ? 'fee' : 'professional'));
+      const cat = tag === 'PERSONAL' ? null : tag;
+      const task = { id: ev.id, name: ev.title, type, cat, due: '', dueDate: ev.dueDate || null, done: ev.done, urgent: false, remark: ev.remark || '' };
+      if (tag === 'FEES') {
+        task.payable = ev.payable || 0;
+        task.received = ev.received || 0;
+        task.discount = ev.discount || 0;
+        task.linked = ev.linked || '';
+        task.phone = ev.phone || '';
+        task.invoice = ev.invoice || '';
+        task.feeCat = ev.feeCat || '';
+      }
+      tasks.push(task);
+      changedCount++;
+    });
+
+    const beforeLen = tasks.length;
+    tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
+    if (tasks.length !== beforeLen || changedCount > 0) {
+      saveTasks();
+      render();
+      if (activePage === 'financials') renderFinancialsPage();
+      if (activePage === 'invoices') renderInvoicesPage();
+    }
+    const syncEl = document.getElementById('lastSync');
+    if (syncEl) syncEl.textContent = 'Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    const syncEl = document.getElementById('lastSync');
+    if (syncEl) syncEl.textContent = 'Offline / Local';
+  }
+}
+
+async function pushFinLedgerToCloud() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'savefinledger', ledger: finLedger })
+    });
+  } catch (e) {
+    try {
+      await fetch(url + '?' + new URLSearchParams({ action: 'savefinledger', data: JSON.stringify(finLedger) }).toString());
+    } catch (e2) {}
+  }
+}
+
+async function syncCloudFinLedger() {
+  const url = getWebhook();
+  if (!url) return;
+  try {
+    const res = await fetch(url + '?action=getfinledger');
+    const data = await res.json();
+    if (data && data.status === 'ok' && data.ledger) {
+      finLedger = mergeFinLedgers(finLedger, data.ledger);
+      saveFinLedger(true);
+      render();
+      if (activePage === 'financials') renderFinancialsPage();
+    }
+  } catch (e) {}
+}
+
 // ---- Invitation Detection Helper ----
 const INVITATION_REGEX = /\b(invitation|invitations|invite|shadi|shaadi|wedding|walima|nikah|nikaah|majlis|dawat|daawat|reception|niyaz|engagement|sagai|misaaq|misaq|birthday|anniversary|jashn|dinner|lunch|feast|dareesa)\b/i;
 
@@ -714,42 +1118,67 @@ function getDefaultFinLedger() {
 }
 
 let finLedger = getDefaultFinLedger();
+
+function normalizeFinLedger(rawObj) {
+  const def = getDefaultFinLedger();
+  if (!rawObj || typeof rawObj !== 'object') return def;
+  const toArr = (val, fallback) => {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') return Object.values(val);
+    return fallback;
+  };
+  const out = {
+    updatedAt: Number(rawObj.updatedAt) || def.updatedAt,
+    deletedIds: toArr(rawObj.deletedIds, []),
+    cashInHand: typeof rawObj.cashInHand === 'number' && !isNaN(rawObj.cashInHand) ? rawObj.cashInHand : def.cashInHand,
+    bankBalance: typeof rawObj.bankBalance === 'number' && !isNaN(rawObj.bankBalance) ? rawObj.bankBalance : def.bankBalance,
+    tripName: rawObj.tripName || def.tripName,
+    customExpenseCategories: toArr(rawObj.customExpenseCategories, def.customExpenseCategories),
+    tripDisbursements: toArr(rawObj.tripDisbursements, def.tripDisbursements),
+    tripContributions: toArr(rawObj.tripContributions, []),
+    loansGiven: toArr(rawObj.loansGiven, def.loansGiven),
+    loansTaken: toArr(rawObj.loansTaken, def.loansTaken),
+    expenses: toArr(rawObj.expenses, def.expenses),
+    journalEntries: toArr(rawObj.journalEntries, [])
+  };
+  out.loansGiven.forEach(l => { if (l && !Array.isArray(l.entries)) l.entries = []; });
+  out.loansTaken.forEach(l => { if (l && !Array.isArray(l.entries)) l.entries = []; });
+  return out;
+}
+
 try {
   const rawFin = localStorage.getItem(FIN_LEDGER_KEY);
-  if (rawFin) {
-    const parsed = JSON.parse(rawFin);
-    finLedger = Object.assign(getDefaultFinLedger(), parsed);
-    if (!Array.isArray(finLedger.deletedIds)) finLedger.deletedIds = [];
-    if (!Array.isArray(finLedger.journalEntries)) finLedger.journalEntries = [];
-    if (!Array.isArray(finLedger.customExpenseCategories)) finLedger.customExpenseCategories = getDefaultFinLedger().customExpenseCategories;
-    finLedger.loansGiven.forEach(l => { if (!Array.isArray(l.entries)) l.entries = []; });
-    finLedger.loansTaken.forEach(l => { if (!Array.isArray(l.entries)) l.entries = []; });
-  }
-} catch (e) {}
+  if (rawFin) finLedger = normalizeFinLedger(JSON.parse(rawFin));
+} catch (e) {
+  finLedger = getDefaultFinLedger();
+}
 
 function saveFinLedger(skipCloud) {
+  finLedger = normalizeFinLedger(finLedger);
   finLedger.updatedAt = Date.now();
   try { localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(finLedger)); } catch (e) {}
   if (!skipCloud) pushFinLedgerToCloud();
 }
 
-function mergeFinLedgers(local, cloud) {
-  if (!cloud || typeof cloud !== 'object') return local;
-  const delSet = new Set([...(local.deletedIds || []), ...(cloud.deletedIds || [])]);
+function mergeFinLedgers(localRaw, cloudRaw) {
+  const local = normalizeFinLedger(localRaw);
+  if (!cloudRaw || typeof cloudRaw !== 'object') return local;
+  const cloud = normalizeFinLedger(cloudRaw);
+  const delSet = new Set([...local.deletedIds, ...cloud.deletedIds]);
   const mergeList = (a = [], b = []) => {
     const map = new Map();
-    [...a, ...b].forEach(item => {
+    [...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])].forEach(item => {
       if (item && item.id && !delSet.has(item.id)) map.set(item.id, item);
     });
     return Array.from(map.values());
   };
   const useCloudScalar = (cloud.updatedAt || 0) >= (local.updatedAt || 0);
-  const cats = Array.from(new Set([...(local.customExpenseCategories || []), ...(cloud.customExpenseCategories || [])]));
-  return {
+  const cats = Array.from(new Set([...local.customExpenseCategories, ...cloud.customExpenseCategories]));
+  return normalizeFinLedger({
     updatedAt: Math.max(local.updatedAt || 0, cloud.updatedAt || 0),
     deletedIds: Array.from(delSet),
-    cashInHand: useCloudScalar && typeof cloud.cashInHand === 'number' ? cloud.cashInHand : local.cashInHand,
-    bankBalance: useCloudScalar && typeof cloud.bankBalance === 'number' ? cloud.bankBalance : local.bankBalance,
+    cashInHand: useCloudScalar ? cloud.cashInHand : local.cashInHand,
+    bankBalance: useCloudScalar ? cloud.bankBalance : local.bankBalance,
     tripName: cloud.tripName || local.tripName,
     customExpenseCategories: cats,
     tripDisbursements: mergeList(local.tripDisbursements, cloud.tripDisbursements),
@@ -758,324 +1187,6 @@ function mergeFinLedgers(local, cloud) {
     loansTaken: mergeList(local.loansTaken, cloud.loansTaken),
     expenses: mergeList(local.expenses, cloud.expenses),
     journalEntries: mergeList(local.journalEntries, cloud.journalEntries)
-  };
-}
-
-async function syncCloudFinLedger() {
-  const url = getWebhook();
-  if (!url) return;
-  try {
-    const res = await fetch(url + '?action=getfinledger');
-    const data = await res.json();
-    if (data && data.status === 'ok' && data.ledger) {
-      finLedger = mergeFinLedgers(finLedger, data.ledger);
-      try { localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(finLedger)); } catch (e) {}
-      if (activePage === 'financials') renderFinancialsPage();
-      render();
-    }
-  } catch (e) {}
-}
-
-async function pushFinLedgerToCloud() {
-  const url = getWebhook();
-  if (!url) return;
-  try {
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'savefinledger', ledger: finLedger })
-    });
-  } catch (e) {
-    try {
-      const encoded = encodeURIComponent(JSON.stringify(finLedger));
-      if (encoded.length < 6000) await fetch(url + '?action=savefinledger&data=' + encoded);
-    } catch (e2) {}
-  }
-}
-
-// ---- Google Calendar Task Synchronization ----
-async function pushToCalendar(name, tag, dueDate) {
-  const url = getWebhook();
-  if (!url) return null;
-  try {
-    const paramsObj = { action: 'add', name, tag };
-    if (dueDate) paramsObj.dueDate = dueDate;
-    const res = await fetch(url + '?' + new URLSearchParams(paramsObj).toString());
-    const data = await res.json();
-    return data.id || null;
-  } catch (e) { return null; }
-}
-
-async function deleteFromCalendar(taskId) {
-  const url = getWebhook();
-  if (!url || !taskId.startsWith('cal_')) return;
-  try { await fetch(url + '?' + new URLSearchParams({ action: 'delete', id: taskId }).toString()); } catch (e) {}
-}
-
-async function toggleOnCalendar(taskId, done) {
-  const url = getWebhook();
-  if (!url || !taskId.startsWith('cal_')) return;
-  try { await fetch(url + '?' + new URLSearchParams({ action: 'toggle', id: taskId, done: done ? 'true' : 'false' }).toString()); } catch (e) {}
-}
-
-async function pushFeeToCalendar(name, payable, received, linked, phone, feeCat) {
-  const url = getWebhook();
-  if (!url) return null;
-  try {
-    const res = await fetch(url + '?' + new URLSearchParams({ action: 'addfee', name, payable, received, linked, phone: phone || '', feeCat: feeCat || '' }).toString());
-    const data = await res.json();
-    return data.id || null;
-  } catch (e) { return null; }
-}
-
-async function updateFeeOnCalendar(taskId, received, discount) {
-  const url = getWebhook();
-  if (!url || !taskId.startsWith('cal_')) return;
-  try { await fetch(url + '?' + new URLSearchParams({ action: 'updatefee', id: taskId, received, discount: discount || 0 }).toString()); } catch (e) {}
-}
-
-async function pullFromCalendar() {
-  const url = getWebhook();
-  if (!url) return;
-  try {
-    const res = await fetch(url);
-    const events = await res.json();
-    if (!Array.isArray(events)) return;
-    const calIds = new Set(events.map(ev => ev.id));
-    const existingIds = new Set(tasks.map(t => t.id));
-    let changedAny = false;
-
-    events.forEach(ev => {
-      if (existingIds.has(ev.id)) {
-        const local = tasks.find(x => x.id === ev.id);
-        if (local) {
-          if (local.name !== ev.title) { local.name = ev.title; changedAny = true; }
-          if (local.done !== ev.done) { local.done = ev.done; changedAny = true; }
-          if (local.dueDate !== (ev.dueDate || null)) { local.dueDate = ev.dueDate || null; changedAny = true; }
-          if (local.remark !== (ev.remark || '')) { local.remark = ev.remark || ''; changedAny = true; }
-          if (ev.tag === 'FEES') {
-            if (local.payable !== (ev.payable || 0)) { local.payable = ev.payable || 0; changedAny = true; }
-            if (local.received !== (ev.received || 0)) { local.received = ev.received || 0; changedAny = true; }
-            if (local.discount !== (ev.discount || 0)) { local.discount = ev.discount || 0; changedAny = true; }
-            if (local.linked !== (ev.linked || '')) { local.linked = ev.linked || ''; changedAny = true; }
-            if (local.phone !== (ev.phone || '')) { local.phone = ev.phone || ''; changedAny = true; }
-            if (local.invoice !== (ev.invoice || '')) { local.invoice = ev.invoice || ''; changedAny = true; }
-          }
-        }
-        return;
-      }
-      const tag = ev.tag;
-      const type = tag === 'PERSONAL' ? 'personal' : (tag === 'INVITATION' ? 'invitation' : (tag === 'FEES' ? 'fee' : 'professional'));
-      const cat = (tag === 'PERSONAL') ? null : tag;
-      const task = { id: ev.id, name: ev.title, type, cat, due: '', dueDate: ev.dueDate || null, done: ev.done, urgent: false, remark: ev.remark || '' };
-      if (tag === 'FEES') {
-        task.payable = ev.payable || 0;
-        task.received = ev.received || 0;
-        task.discount = ev.discount || 0;
-        task.linked = ev.linked || '';
-        task.phone = ev.phone || '';
-        task.invoice = ev.invoice || '';
-        task.feeCat = ev.feeCat || '';
-      }
-      tasks.push(task);
-      changedAny = true;
-    });
-
-    const beforeCount = tasks.length;
-    tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
-    if (tasks.length !== beforeCount) changedAny = true;
-
-    if (changedAny) {
-      saveTasks();
-      render();
-      if (activePage === 'financials') renderFinancialsPage();
-      if (activePage === 'invoices') renderInvoicesPage();
-    }
-    const syncEl = document.getElementById('lastSync');
-    if (syncEl) syncEl.textContent = 'Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {
-    const syncEl = document.getElementById('lastSync');
-    if (syncEl) syncEl.textContent = 'Offline / Cached';
-  }
-}
-
-const seedTasks = [
-  { id: 'cal_lghida9k5kgvrvqamrebcdv18c', name: 'Loan & Advances - Juzer Presswala', type: 'fee', cat: 'FEES', feeCat: 'PERSONAL', dueDate: '2026-11-05T08:40:00.000Z', done: false, urgent: false, payable: 107690, received: 0, discount: 0, linked: 'Juzer Presswala (Loan & Advances)', phone: '7869282535', invoice: '', remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190' },
-  { id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc', name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)', type: 'personal', cat: null, dueDate: '2026-11-05T09:15:00.000Z', done: false, urgent: false, remark: 'Payable to Hatim Bhai (Mob: 9826768052)' },
-  { id: 'cal_ed85ko32qqb708i2pvumghm51c', name: 'Loan & Advance Taken - MHJ (₹86,000)', type: 'personal', cat: null, dueDate: '2026-11-05T10:00:00.000Z', done: false, urgent: true, remark: 'Payable to MHJ (Mob: 9425054543)' },
-  { id: 'cal_njelbrg4plf1eqlj2mk8sp9m0s_20261101T040000Z', name: 'Monthly Salary Receivable (₹24,000)', type: 'professional', cat: 'MHJ', dueDate: '2026-11-01T04:00:00.000Z', done: false, urgent: true, remark: 'Recurring Monthly Salary from MHJ' },
-  { id: 'cal_81rbvi7lq0o4l0rki46o92fmns_20261101T040000Z', name: 'Salary Receivable - Hakimi Vihar Society', type: 'fee', cat: 'FEES', feeCat: 'OWN', dueDate: '2026-11-01T04:00:00.000Z', done: false, urgent: false, payable: 4000, received: 0, discount: 0, linked: 'Hakimi Vihar Society', phone: '', invoice: '', remark: 'Recurring Monthly Accounting Salary' }
-];
-
-async function loadTasks() {
-  let saved = [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) saved = JSON.parse(raw);
-  } catch (e) {}
-  const savedIds = new Set(saved.map(t => t.id));
-  tasks = saved.concat(seedTasks.filter(t => !savedIds.has(t.id)));
-  saveTasks();
-  render();
-  if (activePage === 'financials') renderFinancialsPage();
-  if (activePage === 'invoices') renderInvoicesPage();
-}
-
-function saveTasks() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    const syncEl = document.getElementById('lastSync');
-    if (syncEl) syncEl.textContent = 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {}
-}
-
-// ---- Modals & Task Handlers ----
-function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalFields').innerHTML = fieldsHtml;
-  document.getElementById('modalOverlay').style.display = 'flex';
-  const btn = document.getElementById('modalConfirmBtn');
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-  newBtn.textContent = confirmLabel || 'Save';
-  newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
-  newBtn.onclick = () => {
-    const res = onConfirm();
-    if (res !== false) closeModal();
-  };
-  const cancelBtn = document.querySelector('#modalOverlay button[onclick="closeModal()"]');
-  if (cancelBtn) cancelBtn.textContent = skipLabel || 'Skip';
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').style.display = 'none';
-}
-
-function toggleFeeFields() {
-  const isFee = document.getElementById('newCat').value === 'FEES';
-  document.getElementById('feeFields').style.display = isFee ? 'flex' : 'none';
-}
-
-function onCategoryChange() {
-  const select = document.getElementById('newCat');
-  if (select.value === '__NEW__') {
-    showModal('Add a new category', `
-      <label>Category name</label>
-      <input type="text" id="modalNewCatName" placeholder="e.g. ABC Company">
-    `, () => {
-      const raw = document.getElementById('modalNewCatName').value.trim();
-      if (!raw) { select.value = 'PERSONAL'; return; }
-      const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-      if (!tag) { select.value = 'PERSONAL'; return; }
-      let exists = false;
-      for (const opt of select.options) { if (opt.value === tag) { exists = true; break; } }
-      if (!exists) {
-        const newOption = document.createElement('option');
-        newOption.value = tag;
-        newOption.textContent = 'Professional — ' + raw;
-        select.insertBefore(newOption, select.querySelector('option[value="__NEW__"]'));
-      }
-      select.value = tag;
-      toggleFeeFields();
-    }, 'Create', 'Cancel');
-    select.value = 'PERSONAL';
-  } else {
-    toggleFeeFields();
-  }
-}
-
-function addTask() {
-  const input = document.getElementById('newTask');
-  const catVal = document.getElementById('newCat').value;
-  const name = input.value.trim();
-  if (!name) return;
-
-  if (catVal === 'FEES') {
-    const payable = parseFloat(document.getElementById('feePayable').value) || 0;
-    const received = parseFloat(document.getElementById('feeReceived').value) || 0;
-    const linked = document.getElementById('feeLinked').value.trim();
-    const phone = document.getElementById('feePhone').value.trim();
-    const localId = 'u' + Date.now();
-    const task = { id: localId, name, type: 'fee', cat: 'FEES', feeCat: '', dueDate: null, done: received >= payable && payable > 0, urgent: false, payable, received, discount: 0, linked, phone };
-    tasks.push(task);
-    input.value = '';
-    document.getElementById('feePayable').value = '';
-    document.getElementById('feeReceived').value = '';
-    document.getElementById('feeLinked').value = '';
-    document.getElementById('feePhone').value = '';
-    saveTasks();
-    render();
-    pushFeeToCalendar(name, payable, received, linked, phone, '').then(calId => { if (calId) { task.id = calId; saveTasks(); } });
-    return;
-  }
-
-  const type = catVal === 'PERSONAL' ? 'personal' : (catVal === 'INVITATION' ? 'invitation' : 'professional');
-  const cat = catVal === 'PERSONAL' ? null : catVal;
-  const localId = 'u' + Date.now();
-  const dueDateVal = document.getElementById('newDueDate').value;
-  const task = { id: localId, name, type, cat, dueDate: dueDateVal ? new Date(dueDateVal + 'T09:00:00').toISOString() : null, done: false, urgent: false };
-  tasks.push(task);
-  input.value = '';
-  document.getElementById('newDueDate').value = '';
-  saveTasks();
-  render();
-  pushToCalendar(name, catVal, dueDateVal).then(calId => { if (calId) { task.id = calId; saveTasks(); } });
-}
-
-function toggleTask(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  t.done = !t.done;
-  saveTasks();
-  render();
-  if (t.id.startsWith('cal_')) toggleOnCalendar(t.id, t.done);
-
-  if (t.done && t.type === 'professional') {
-    const defaultPhone = t.cat === 'SHK' ? '9425320184' : '';
-    showModal('Fee for "' + t.name + '"?', `
-      <label>Billable amount (₹)</label>
-      <input type="number" id="modalPayable" placeholder="₹ Payable">
-      <label>Received now (₹)</label>
-      <input type="number" id="modalReceived" value="0">
-      <label>Client phone (optional)</label>
-      <input type="tel" id="modalPhone" placeholder="e.g. 9876543210" value="${defaultPhone}">
-    `, () => {
-      const payable = parseFloat(document.getElementById('modalPayable').value);
-      const received = parseFloat(document.getElementById('modalReceived').value) || 0;
-      const phone = document.getElementById('modalPhone').value.trim();
-      if (!isNaN(payable) && payable > 0) {
-        if (received > 0) {
-          finLedger.bankBalance = Math.round((finLedger.bankBalance + received) * 100) / 100;
-          saveFinLedger();
-        }
-        const localId = 'u' + Date.now();
-        const feeTask = { id: localId, name: t.name, type: 'fee', cat: 'FEES', feeCat: t.cat || '', dueDate: null, done: received >= payable, urgent: false, payable, received, discount: 0, linked: t.name, phone };
-        tasks.push(feeTask);
-        saveTasks();
-        render();
-        pushFeeToCalendar(t.name, payable, received, t.name, phone, t.cat || '').then(calId => { if (calId) { feeTask.id = calId; saveTasks(); } });
-      }
-    });
-  }
-}
-
-function setDueDate(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  const currentVal = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
-  showModal('Due date — ' + t.name, `
-    <label>Pick a due date</label>
-    <input type="date" id="modalDueDate" value="${currentVal}">
-  `, async () => {
-    const val = document.getElementById('modalDueDate').value;
-    if (!val) return;
-    t.dueDate = new Date(val + 'T09:00:00').toISOString();
-    saveTasks();
-    render();
-    if (t.id.startsWith('cal_')) {
-      const url = getWebhook();
-      try { await fetch(url + '?' + new URLSearchParams({ action: 'setduedate', id: t.id, dueDate: val }).toString()); } catch (e) {}
-    }
   });
 }
 
