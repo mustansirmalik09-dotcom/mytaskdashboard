@@ -632,7 +632,7 @@ function isInvitationTask(t) {
   if (!t) return false;
   if (t.type === 'invitation' || t.cat === 'INVITATION') return true;
   if (t.type === 'fee') return false;
-  const text = ((t.name || '') + ' ' + (t.remark || '')).trim();
+  const text = (String(t.name || '') + ' ' + String(t.remark || '')).trim();
   return INVITATION_REGEX.test(text);
 }
 
@@ -2488,211 +2488,226 @@ function render(listOnly) {
   const app = document.getElementById('app');
   if (!app) return;
 
-  const done = tasks.filter(t => t.done).length;
-  const pending = tasks.filter(t => !t.done).length;
-  const nowTs = Date.now();
-  const isOverdue = t => !t.done && t.dueDate && new Date(t.dueDate).getTime() < nowTs;
-
-  const feeTasks = tasks.filter(t => t.type === 'fee' && !t.name.includes('Advance Credit Balance'));
-  const totalPayable = feeTasks.reduce((s, t) => s + (t.payable || 0), 0);
-  const totalReceived = feeTasks.reduce((s, t) => s + (t.received || 0), 0);
-  const totalDiscount = feeTasks.reduce((s, t) => s + (t.discount || 0), 0);
-  const totalOutstanding = Math.max(totalPayable - totalReceived - totalDiscount, 0);
-
-  const liquidTotal = Math.round((finLedger.cashInHand + finLedger.bankBalance) * 100) / 100;
-  const totalLoansGiven = finLedger.loansGiven.reduce((s, l) => s + Math.max((l.amount || 0) - (l.repaid || 0), 0), 0);
-
-  const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES', 'INVITATION']);
-  const extraCats = [...new Set(tasks.filter(t => t.type === 'professional' && t.cat && !knownCats.has(t.cat)).map(t => t.cat))];
-
-  let filtered = tasks;
-  if (filter === 'personal') filtered = tasks.filter(t => t.type === 'personal' && !isInvitationTask(t));
-  else if (filter === 'invitation') filtered = tasks.filter(t => isInvitationTask(t));
-  else if (filter === 'professional') filtered = tasks.filter(t => t.type === 'professional' && !isInvitationTask(t));
-  else if (filter === 'own') filtered = tasks.filter(t => t.cat === 'OWN');
-  else if (filter === 'mhj') filtered = tasks.filter(t => t.cat === 'MHJ');
-  else if (filter === 'shk') filtered = tasks.filter(t => t.cat === 'SHK');
-  else if (filter === 'fees') filtered = tasks.filter(t => t.type === 'fee');
-  else if (filter === 'pending') filtered = tasks.filter(t => !t.done);
-  else if (filter === 'done') filtered = tasks.filter(t => t.done);
-  else if (extraCats.includes(filter)) filtered = tasks.filter(t => t.cat === filter);
-
-  const q = searchQuery.trim().toLowerCase();
-  const searchActive = q.length > 0;
-  if (searchActive) {
-    const words = q.split(/\s+/);
-    filtered = filtered.filter(t => {
-      const hay = [t.name, t.linked, t.invoice, t.remark, t.phone, t.cat].join(' ').toLowerCase();
-      return words.every(w => hay.includes(w));
-    });
-  }
-
-  filtered = [...filtered].sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1;
-    if (!a.done && !b.done) {
-      if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
-      const aHas = !!a.dueDate, bHas = !!b.dueDate;
-      if (aHas !== bHas) return aHas ? -1 : 1;
-      if (aHas && bHas) return new Date(a.dueDate) - new Date(b.dueDate);
-    }
-    return 0;
-  });
-
-  const filterBtn = (key, label, dotColor) =>
-    `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
-
-  const invCount = tasks.filter(t => isInvitationTask(t) && !t.done).length;
-
-  let summaryHtml = `
-    <div class="summary-sheet">
-      <div class="hero-stats">
-        <div class="hero-card"><div class="n">${done}</div><div class="l">Done</div></div>
-        <div class="hero-card"><div class="n">${pending}</div><div class="l">Pending</div></div>
-        <div class="hero-card" style="cursor:pointer;" onclick="switchPage('financials')"><div class="n">${inr(liquidTotal)}</div><div class="l">Liquid ↗</div></div>
-        <div class="hero-card" style="cursor:pointer;" onclick="switchPage('financials')"><div class="n">${inr(totalLoansGiven)}</div><div class="l">Loans Given ↗</div></div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 12px; background:#F8FAFC; border-top:1px solid var(--rule-soft); font-size:11px;">
-        <button type="button" style="border:0; background:none; color:var(--accent); font-weight:700; cursor:pointer; padding:0;" onclick="toggleSummaryDetails()">
-          ${uiState.showSummaryDetails ? '▴ Hide Cash & Receivables' : '▾ Cash & Bank Details'}
-        </button>
-        <button type="button" style="border:0; background:none; color:var(--accent); font-weight:700; cursor:pointer; padding:0;" onclick="switchPage('financials')">Open Financials &amp; Ziyarat &rarr;</button>
-      </div>
-      ${uiState.showSummaryDetails ? `
-        <div class="totals">
-          <div class="tot"><div class="l">Cash in Hand / slice SFB Bank</div><div class="fig">${inr(finLedger.cashInHand)} / ${inr(finLedger.bankBalance)}</div></div>
-          <div class="tot"><div class="l">Fees Receivable / Collected</div><div class="fig">${inr(totalPayable)} / ${inr(totalReceived)}</div></div>
-          <div class="tot sum"><div class="l">Net Pending Client Fees</div><div class="fig out">${inr(totalOutstanding)}</div></div>
-        </div>
-      ` : ''}
-    </div>
-
-    <div class="filters seg">
-      ${filterBtn('all', 'All')}
-      ${filterBtn('personal', 'Personal')}
-      ${filterBtn('invitation', '💌 Invitations' + (invCount ? ' (' + invCount + ')' : ''))}
-      ${filterBtn('professional', 'Professional')}
-      ${filterBtn('pending', 'Pending')}
-      ${filterBtn('done', 'Done')}
-    </div>
-    <div class="filters chips">
-      ${filterBtn('own', 'OWN', 'var(--c-own)')}
-      ${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}
-      ${filterBtn('shk', 'SHK', 'var(--c-shk)')}
-      ${filterBtn('invitation', 'Invitations', 'var(--c-invitation)')}
-      ${filterBtn('fees', 'Fees', 'var(--c-fees)')}
-      ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
-      <button type="button" class="filter-btn" onclick="toggleAllGroups(true)">⊟ Fold All</button>
-      <button type="button" class="filter-btn" onclick="toggleAllGroups(false)">⊞ Expand All</button>
-    </div>
-  `;
-
-  let html = '';
-  const forceOpen = filter !== 'all' || searchActive;
-  let shownCount = 0;
-
-  if (filtered.length === 0) {
-    html = '<div class="empty">No tasks match your filter.</div>';
-  } else {
-    const groupDefs = [
-      { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' }
-    ];
-    extraCats.forEach((cat, i) => {
-      groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: EXTRA_COLORS[i % EXTRA_COLORS.length], match: t => t.cat === cat });
-    });
-    groupDefs.push(
-      { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
-      { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' },
-      { key: 'INVITATION', label: '💌 Invitations & Events', color: 'var(--c-invitation)', match: t => isInvitationTask(t) },
-      { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' && !isInvitationTask(t) },
-      { key: 'FEES', label: 'Fees & Receivables', color: 'var(--c-fees)', match: t => t.type === 'fee' && !t.name.includes('Advance Credit Balance') }
-    );
-
-    const renderCard = (t, idx) => {
-      const isFee = t.type === 'fee';
-      const balance = isFee ? Math.max((t.payable || 0) - (t.received || 0) - (t.discount || 0), 0) : 0;
-      const taskOverdue = isOverdue(t);
-      const dueDateLabel = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
-      return `
-        <div class="task${t.done ? ' done' : ''}">
-          <span class="num">${idx + 1}.</span>
-          ${isFee ? '' : `<input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${t.id}')">`}
-          <div class="task-body">
-            <div class="task-top">
-              <div class="task-name">${escapeForHtml(t.name)}</div>
-              ${isFee ? (balance > 0 ? `<div class="amt owed">${inr(balance)}</div>` : `<div class="amt clear">Settled</div>`) : ''}
-              <button type="button" class="act del" onclick="deleteTask('${t.id}')" title="Delete">${ICON.x}</button>
-            </div>
-            ${isFee ? `<div class="task-sub">${inr(t.received)} of ${inr(t.payable)} received ${t.invoice ? '• ' + escapeForHtml(t.invoice) : ''}</div>` : ''}
-            ${dueDateLabel && !t.done ? `<div class="task-sub" style="color:${taskOverdue ? 'var(--red)' : 'var(--muted)'}; font-weight:600;">Due ${dueDateLabel}</div>` : ''}
-            ${t.remark && !t.done ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
-            <div class="task-meta">
-              ${isFee ? `<button type="button" class="act pay" onclick="recordPayment('${t.id}')">Record payment</button>` : ''}
-              ${isFee && balance > 0 ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${t.id}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : ''}
-              ${isFee && t.received > 0 ? `<button type="button" class="act wa" onclick="offerReceipt('${t.id}')">${ICON.doc}Receipt</button>` : ''}
-              ${isFee ? `<button type="button" class="act" onclick="openOrGenerateInvoice('${t.id}')">${ICON.doc}Invoice</button>` : ''}
-              ${!t.done ? `<button type="button" class="act" onclick="setDueDate('${t.id}')">Due date</button>` : ''}
-              ${!t.done ? `<button type="button" class="act" onclick="setRemark('${t.id}')">Remark</button>` : ''}
-              ${!isFee && !isInvitationTask(t) && !t.done ? `<button type="button" class="act" style="color:var(--c-invitation);" onclick="moveTaskToInvitation('${t.id}')">💌 Invitation</button>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
+  try {
+    const safeTasks = Array.isArray(tasks) ? tasks.filter(Boolean) : [];
+    const done = safeTasks.filter(t => t.done).length;
+    const pending = safeTasks.filter(t => !t.done).length;
+    const nowTs = Date.now();
+    const isOverdue = t => {
+      if (t.done || !t.dueDate) return false;
+      const ms = new Date(t.dueDate).getTime();
+      return !isNaN(ms) && ms < nowTs;
     };
 
-    const feeBalance = t => (t.type === 'fee' && !t.name.includes('Advance Credit Balance')) ? ((t.payable || 0) - (t.received || 0) - (t.discount || 0)) : 0;
-    const isFinished = t => t.done && feeBalance(t) <= 0;
+    const feeTasks = safeTasks.filter(t => t.type === 'fee' && !String(t.name || '').includes('Advance Credit Balance'));
+    const totalPayable = feeTasks.reduce((s, t) => s + (Number(t.payable) || 0), 0);
+    const totalReceived = feeTasks.reduce((s, t) => s + (Number(t.received) || 0), 0);
+    const totalDiscount = feeTasks.reduce((s, t) => s + (Number(t.discount) || 0), 0);
+    const totalOutstanding = Math.max(totalPayable - totalReceived - totalDiscount, 0);
 
-    groupDefs.forEach(g => {
-      const groupTasks = filtered.filter(g.match);
-      if (groupTasks.length === 0) return;
-      shownCount += groupTasks.length;
-      const open = groupTasks.filter(t => !isFinished(t));
-      const closed = groupTasks.filter(isFinished);
-      const ordered = open.concat(closed);
-      const collapsed = !forceOpen && !!uiState.collapsed[g.key];
+    const liquidTotal = Math.round(((Number(finLedger.cashInHand) || 0) + (Number(finLedger.bankBalance) || 0)) * 100) / 100;
+    const totalLoansGiven = (finLedger.loansGiven || []).reduce((s, l) => s + Math.max((Number(l.amount) || 0) - (Number(l.repaid) || 0), 0), 0);
 
-      html += `<div class="cat-section${collapsed ? ' collapsed' : ''}">
-        <div class="cat-heading" onclick="toggleGroup('${g.key}')">
-          ${ICON.chev}
-          <span class="dot" style="background:${g.color}"></span>
-          <span class="title">${g.label}</span>
-          <span class="count">${open.length} pending${closed.length ? ' · ' + closed.length + ' done' : ''}</span>
-        </div>`;
-      if (!collapsed) {
-        html += '<div class="task-grid">';
-        open.forEach(t => { html += renderCard(t, ordered.indexOf(t)); });
-        if (closed.length) {
-          const expanded = filter === 'done' || searchActive || !!doneOpen[g.key];
-          if (filter !== 'done' && !searchActive) {
-            html += `<button type="button" class="done-toggle" onclick="toggleDone('${g.key}')">${expanded ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>`;
+    const knownCats = new Set(['MHJ', 'SHK', 'OWN', 'FEES', 'INVITATION']);
+    const extraCats = [...new Set(safeTasks.filter(t => t.type === 'professional' && t.cat && !knownCats.has(t.cat)).map(t => String(t.cat)))];
+
+    let filtered = safeTasks;
+    if (filter === 'personal') filtered = safeTasks.filter(t => t.type === 'personal' && !isInvitationTask(t));
+    else if (filter === 'invitation') filtered = safeTasks.filter(t => isInvitationTask(t));
+    else if (filter === 'professional') filtered = safeTasks.filter(t => t.type === 'professional' && !isInvitationTask(t));
+    else if (filter === 'own') filtered = safeTasks.filter(t => t.cat === 'OWN');
+    else if (filter === 'mhj') filtered = safeTasks.filter(t => t.cat === 'MHJ');
+    else if (filter === 'shk') filtered = safeTasks.filter(t => t.cat === 'SHK');
+    else if (filter === 'fees') filtered = safeTasks.filter(t => t.type === 'fee');
+    else if (filter === 'pending') filtered = safeTasks.filter(t => !t.done);
+    else if (filter === 'done') filtered = safeTasks.filter(t => t.done);
+    else if (extraCats.includes(filter)) filtered = safeTasks.filter(t => t.cat === filter);
+
+    const q = (searchQuery || '').trim().toLowerCase();
+    const searchActive = q.length > 0;
+    if (searchActive) {
+      const words = q.split(/\s+/);
+      filtered = filtered.filter(t => {
+        const hay = [t.name, t.linked, t.invoice, t.remark, t.phone, t.cat].map(v => String(v || '')).join(' ').toLowerCase();
+        return words.every(w => hay.includes(w));
+      });
+    }
+
+    filtered = [...filtered].sort((a, b) => {
+      if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+      if (!a.done && !b.done) {
+        if (!!a.urgent !== !!b.urgent) return a.urgent ? -1 : 1;
+        const aHas = !!a.dueDate, bHas = !!b.dueDate;
+        if (aHas !== bHas) return aHas ? -1 : 1;
+        if (aHas && bHas) return new Date(a.dueDate) - new Date(b.dueDate);
+      }
+      return 0;
+    });
+
+    const filterBtn = (key, label, dotColor) =>
+      `<button type="button" class="filter-btn ${filter === key ? 'active' : ''}" onclick="setFilter('${key}')">${dotColor ? `<i class="dot" style="background:${dotColor}"></i>` : ''}${label}</button>`;
+
+    const invCount = safeTasks.filter(t => isInvitationTask(t) && !t.done).length;
+
+    let summaryHtml = `
+      <div class="summary-sheet">
+        <div class="hero-stats">
+          <div class="hero-card"><div class="n">${done}</div><div class="l">Done</div></div>
+          <div class="hero-card"><div class="n">${pending}</div><div class="l">Pending</div></div>
+          <div class="hero-card" style="cursor:pointer;" onclick="switchPage('financials')"><div class="n">${inr(liquidTotal)}</div><div class="l">Liquid ↗</div></div>
+          <div class="hero-card" style="cursor:pointer;" onclick="switchPage('financials')"><div class="n">${inr(totalLoansGiven)}</div><div class="l">Loans Given ↗</div></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 12px; background:#F8FAFC; border-top:1px solid var(--rule-soft); font-size:11px;">
+          <button type="button" style="border:0; background:none; color:var(--accent); font-weight:700; cursor:pointer; padding:0;" onclick="toggleSummaryDetails()">
+            ${uiState.showSummaryDetails ? '▴ Hide Cash & Receivables' : '▾ Cash & Bank Details'}
+          </button>
+          <button type="button" style="border:0; background:none; color:var(--accent); font-weight:700; cursor:pointer; padding:0;" onclick="switchPage('financials')">Open Financials &amp; Ziyarat &rarr;</button>
+        </div>
+        ${uiState.showSummaryDetails ? `
+          <div class="totals">
+            <div class="tot"><div class="l">Cash in Hand / slice SFB Bank</div><div class="fig">${inr(finLedger.cashInHand)} / ${inr(finLedger.bankBalance)}</div></div>
+            <div class="tot"><div class="l">Fees Receivable / Collected</div><div class="fig">${inr(totalPayable)} / ${inr(totalReceived)}</div></div>
+            <div class="tot sum"><div class="l">Net Pending Client Fees</div><div class="fig out">${inr(totalOutstanding)}</div></div>
+          </div>
+        ` : ''}
+      </div>
+
+      <div class="filters seg">
+        ${filterBtn('all', 'All')}
+        ${filterBtn('personal', 'Personal')}
+        ${filterBtn('invitation', '💌 Invitations' + (invCount ? ' (' + invCount + ')' : ''))}
+        ${filterBtn('professional', 'Professional')}
+        ${filterBtn('pending', 'Pending')}
+        ${filterBtn('done', 'Done')}
+      </div>
+      <div class="filters chips">
+        ${filterBtn('own', 'OWN', 'var(--c-own)')}
+        ${filterBtn('mhj', 'MHJ', 'var(--c-mhj)')}
+        ${filterBtn('shk', 'SHK', 'var(--c-shk)')}
+        ${filterBtn('invitation', 'Invitations', 'var(--c-invitation)')}
+        ${filterBtn('fees', 'Fees', 'var(--c-fees)')}
+        ${extraCats.map((cat, i) => filterBtn(cat, cat.replace(/_/g, ' '), EXTRA_COLORS[i % EXTRA_COLORS.length])).join('')}
+        <button type="button" class="filter-btn" onclick="toggleAllGroups(true)">⊟ Fold All</button>
+        <button type="button" class="filter-btn" onclick="toggleAllGroups(false)">⊞ Expand All</button>
+      </div>
+    `;
+
+    let html = '';
+    const forceOpen = filter !== 'all' || searchActive;
+    let shownCount = 0;
+
+    if (filtered.length === 0) {
+      html = '<div class="empty" style="text-align:center; padding:24px; color:var(--muted); background:#fff; border:1px solid var(--rule); border-radius:12px;">No tasks match your filter.</div>';
+    } else {
+      const groupDefs = [
+        { key: 'MHJ', label: 'Professional — MHJ', color: 'var(--c-mhj)', match: t => t.cat === 'MHJ' }
+      ];
+      extraCats.forEach((cat, i) => {
+        groupDefs.push({ key: cat, label: 'Professional — ' + cat.replace(/_/g, ' '), color: EXTRA_COLORS[i % EXTRA_COLORS.length], match: t => t.cat === cat });
+      });
+      groupDefs.push(
+        { key: 'SHK', label: 'Professional — SHK Husain Arif', color: 'var(--c-shk)', match: t => t.cat === 'SHK' },
+        { key: 'OWN', label: 'Professional — OWN', color: 'var(--c-own)', match: t => t.cat === 'OWN' },
+        { key: 'INVITATION', label: '💌 Invitations & Events', color: 'var(--c-invitation)', match: t => isInvitationTask(t) },
+        { key: 'personal', label: 'Personal', color: 'var(--c-personal)', match: t => t.type === 'personal' && !isInvitationTask(t) },
+        { key: 'FEES', label: 'Fees & Receivables', color: 'var(--c-fees)', match: t => t.type === 'fee' && !String(t.name || '').includes('Advance Credit Balance') }
+      );
+
+      const renderCard = (t, idx) => {
+        const isFee = t.type === 'fee';
+        const balance = isFee ? Math.max((Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0), 0) : 0;
+        const taskOverdue = isOverdue(t);
+        let dueDateLabel = '';
+        if (t.dueDate) {
+          const dObj = new Date(t.dueDate);
+          if (!isNaN(dObj.getTime())) dueDateLabel = dObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        }
+        const safeId = escapeForHtml(String(t.id || ''));
+        return `
+          <div class="task${t.done ? ' done' : ''}">
+            <span class="num">${idx + 1}.</span>
+            ${isFee ? '' : `<input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask('${safeId}')">`}
+            <div class="task-body">
+              <div class="task-top">
+                <div class="task-name">${escapeForHtml(t.name || 'Untitled')}</div>
+                ${isFee ? (balance > 0 ? `<div class="amt owed">${inr(balance)}</div>` : `<div class="amt clear">Settled</div>`) : ''}
+                <button type="button" class="act del" onclick="deleteTask('${safeId}')" title="Delete">${ICON.x}</button>
+              </div>
+              ${isFee ? `<div class="task-sub">${inr(t.received)} of ${inr(t.payable)} received ${t.invoice ? '• ' + escapeForHtml(t.invoice) : ''}</div>` : ''}
+              ${dueDateLabel && !t.done ? `<div class="task-sub" style="color:${taskOverdue ? 'var(--red)' : 'var(--muted)'}; font-weight:600;">Due ${dueDateLabel}</div>` : ''}
+              ${t.remark && !t.done ? `<div class="note">${ICON.note}<span>${escapeForHtml(t.remark)}</span></div>` : ''}
+              <div class="task-meta">
+                ${isFee ? `<button type="button" class="act pay" onclick="recordPayment('${safeId}')">Record payment</button>` : ''}
+                ${isFee && balance > 0 ? `<button type="button" class="act wa" onclick="sendWhatsAppReminder('${safeId}', ${balance})">${ICON.chat}Send WhatsApp reminder</button>` : ''}
+                ${isFee && (Number(t.received) || 0) > 0 ? `<button type="button" class="act wa" onclick="offerReceipt('${safeId}')">${ICON.doc}Receipt</button>` : ''}
+                ${isFee ? `<button type="button" class="act" onclick="openOrGenerateInvoice('${safeId}')">${ICON.doc}Invoice</button>` : ''}
+                ${!t.done ? `<button type="button" class="act" onclick="setDueDate('${safeId}')">Due date</button>` : ''}
+                ${!t.done ? `<button type="button" class="act" onclick="setRemark('${safeId}')">Remark</button>` : ''}
+                ${!isFee && !isInvitationTask(t) && !t.done ? `<button type="button" class="act" style="color:var(--c-invitation);" onclick="moveTaskToInvitation('${safeId}')">💌 Invitation</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      const feeBalance = t => (t.type === 'fee' && !String(t.name || '').includes('Advance Credit Balance')) ? ((Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)) : 0;
+      const isFinished = t => t.done && feeBalance(t) <= 0;
+
+      groupDefs.forEach(g => {
+        const groupTasks = filtered.filter(g.match);
+        if (groupTasks.length === 0) return;
+        shownCount += groupTasks.length;
+        const open = groupTasks.filter(t => !isFinished(t));
+        const closed = groupTasks.filter(isFinished);
+        const ordered = open.concat(closed);
+        const collapsed = !forceOpen && !!uiState.collapsed[g.key];
+
+        html += `<div class="cat-section${collapsed ? ' collapsed' : ''}">
+          <div class="cat-heading" onclick="toggleGroup('${g.key}')">
+            ${ICON.chev}
+            <span class="dot" style="background:${g.color}"></span>
+            <span class="title">${g.label}</span>
+            <span class="count">${open.length} pending${closed.length ? ' · ' + closed.length + ' done' : ''}</span>
+          </div>`;
+        if (!collapsed) {
+          html += '<div class="task-grid">';
+          open.forEach(t => { html += renderCard(t, ordered.indexOf(t)); });
+          if (closed.length) {
+            const expanded = filter === 'done' || searchActive || !!doneOpen[g.key];
+            if (filter !== 'done' && !searchActive) {
+              html += `<button type="button" class="done-toggle" onclick="toggleDone('${g.key}')">${expanded ? '▴ Hide completed' : '✓ ' + closed.length + ' completed · show'}</button>`;
+            }
+            if (expanded) closed.forEach(t => { html += renderCard(t, ordered.indexOf(t)); });
           }
-          if (expanded) closed.forEach(t => { html += renderCard(t, ordered.indexOf(t)); });
+          html += '</div>';
         }
         html += '</div>';
-      }
-      html += '</div>';
-    });
-  }
+      });
+    }
 
-  if (!listOnly && summaryEl) summaryEl.innerHTML = summaryHtml;
-  app.innerHTML = html;
-  const infoEl = document.getElementById('searchInfo');
-  if (infoEl) infoEl.textContent = searchActive ? `${shownCount} of ${tasks.length} tasks` : '';
+    if (!listOnly && summaryEl) summaryEl.innerHTML = summaryHtml;
+    app.innerHTML = html;
+    const infoEl = document.getElementById('searchInfo');
+    if (infoEl) infoEl.textContent = searchActive ? `${shownCount} of ${safeTasks.length} tasks` : '';
+  } catch (err) {
+    console.error('Render error:', err);
+    app.innerHTML = '<div style="padding:18px; background:#FFF1F2; border:1px solid #FECDD3; border-radius:12px; color:#BE123C; font-size:13px;">Render recovery: ' + escapeForHtml(err.message) + ' — <button type="button" class="btn btn-quiet" onclick="localStorage.removeItem(\'tasks-v2\'); location.reload();">Reload Fresh</button></div>';
+  }
 }
 
-// ---- Authentication & Public Family Portal Boot ----
 const DASHBOARD_PASSWORD = 'Mustansir@2026';
 const AUTH_KEY = 'dashboard-auth-ok';
 
 function checkAuth() {
   const input = document.getElementById('authInput');
-  if (input.value === DASHBOARD_PASSWORD) {
+  if (input && input.value === DASHBOARD_PASSWORD) {
     localStorage.setItem(AUTH_KEY, 'yes');
     document.getElementById('authGate').style.display = 'none';
     startDashboard();
   } else {
-    document.getElementById('authError').style.display = 'block';
-    input.value = '';
+    const errEl = document.getElementById('authError');
+    if (errEl) errEl.style.display = 'block';
+    if (input) input.value = '';
   }
 }
 
