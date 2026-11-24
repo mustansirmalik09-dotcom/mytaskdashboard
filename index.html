@@ -712,6 +712,11 @@ function mergeFinLedgers(local, cloud) {
     merged.bankSlice = loc.bankSlice;
     merged.loansGiven = loc.loansGiven;
     merged.loansTaken = loc.loansTaken;
+    merged.journalIncomeAdj = loc.journalIncomeAdj;
+    merged.journalExpenseAdj = loc.journalExpenseAdj;
+    merged.journalDrawingsAdj = loc.journalDrawingsAdj;
+    merged.journalZiyaratAdj = loc.journalZiyaratAdj;
+    merged.journalCapitalAdj = loc.journalCapitalAdj;
   }
 
   const mergeById = (arr1, arr2) => {
@@ -829,7 +834,8 @@ function loadTasks() {
   } catch (e) { saved = []; }
 
   const savedIds = new Set(saved.map(t => t.id));
-  const missingSeed = defaultSeed.filter(t => !savedIds.has(t.id));
+  const savedNames = new Set(saved.map(t => String(t && t.name || '').trim().toLowerCase()));
+  const missingSeed = defaultSeed.filter(t => !savedIds.has(t.id) && !savedNames.has(String(t.name || '').trim().toLowerCase()));
   tasks = saved.concat(missingSeed).filter(t => t && !/Monthly Salary Receivable/i.test(t.name || '') && !/Hakimi Vihar Society/i.test(t.name || ''));
 
   saveTasks();
@@ -939,9 +945,22 @@ async function pullFromCalendar() {
     tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
     if (tasks.length !== beforeLen) changedAny = true;
 
+    // Deduplicate any seed/local duplicate whose title matches a synced Calendar event
+    const seenTaskKeys = new Set();
+    const deduped = [];
+    tasks.forEach(t => {
+      if (!t) return;
+      const k = (t.type || '') + '|' + String(t.name || '').trim().toLowerCase();
+      if (seenTaskKeys.has(k)) { changedAny = true; return; }
+      seenTaskKeys.add(k);
+      deduped.push(t);
+    });
+    tasks = deduped;
+
     if (changedAny) {
       saveTasks();
       render();
+      if (activePage === 'financials') renderFinancialsPage();
       if (activePage === 'invoices') renderInvoicesPage();
     }
     const el = document.getElementById('lastSync');
@@ -1353,9 +1372,13 @@ function openReconcileLedgerModal() {
   const juzerCur = Math.max(0, (Number(ledger.loansGiven.juzer.base) || 0) + (Number(ledger.loansGiven.juzer.adjustments) || 0));
   const mhjCur = Math.max(0, (Number(ledger.loansTaken.mhj.base) || 0) + (Number(ledger.loansTaken.mhj.adjustments) || 0));
   const hatimCur = Math.max(0, (Number(ledger.loansTaken.hatim.base) || 0) + (Number(ledger.loansTaken.hatim.adjustments) || 0));
+  const negCashWarn = (Number(ledger.cashInHand) || 0) < 0
+    ? `<div style="background:var(--red-soft); border:1px solid var(--red-border); color:var(--red); padding:7px 10px; border-radius:8px; font-size:11.5px; margin-bottom:10px;"><strong>Discrepancy Alert:</strong> Cash in Hand is negative (${inr(ledger.cashInHand)}). Enter your actual physical cash below to correct it.</div>`
+    : '';
 
   showModal('🛠️ Reconcile & Fix Financial Entries', `
-    <div class="hint">Verify or directly correct your exact ledger balances below. Saving overwrites disturbed numbers and syncs to Google Cloud immediately.</div>
+    ${negCashWarn}
+    <div class="hint">Verify or directly correct your exact ledger balances below. Saving overwrites disturbed numbers, cleans duplicate entries, and syncs to Google Cloud immediately.</div>
     <label>Cash in Hand (₹)</label>
     <input type="number" id="recCash" value="${ledger.cashInHand}">
     <label>slice SFB Bank Balance (₹)</label>
@@ -1699,14 +1722,28 @@ function deleteExpenseEntry(id) {
   if (idx === -1) return;
   const exp = ledger.expenses[idx];
   showModal('Delete Entry: ' + exp.payee + '?', `<div class="hint">Refunds ${inr(exp.amount)} back to ${escapeForHtml(exp.source)}.</div>`, () => {
-    if (exp.source === 'Cash') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + (Number(exp.amount) || 0);
-    else ledger.bankSlice = (Number(ledger.bankSlice) || 0) + (Number(exp.amount) || 0);
-    ledger.expenses.splice(idx, 1);
-    ledger.deletedIds.push(id);
-    saveFinLedger(ledger);
+    const freshLedger = getFinLedger();
+    const fIdx = freshLedger.expenses.findIndex(x => x.id === id);
+    if (fIdx === -1) return;
+    const fExp = freshLedger.expenses[fIdx];
+    if (fExp.source === 'Cash') freshLedger.cashInHand = (Number(freshLedger.cashInHand) || 0) + (Number(fExp.amount) || 0);
+    else freshLedger.bankSlice = (Number(freshLedger.bankSlice) || 0) + (Number(fExp.amount) || 0);
+    freshLedger.expenses.splice(fIdx, 1);
+    freshLedger.deletedIds.push(id);
+    saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
   }, 'Delete', 'Cancel');
+}
+
+function onTripFamilySelect(familyName) {
+  const modeEl = document.getElementById('tpMode');
+  if (!modeEl) return;
+  if (familyName && familyName !== 'Mustannsirr Family') {
+    modeEl.value = 'Paid Directly by Family';
+  } else if (modeEl.value === 'Paid Directly by Family') {
+    modeEl.value = 'slice SFB';
+  }
 }
 
 function openAddTripPaymentModal() {
@@ -1714,7 +1751,7 @@ function openAddTripPaymentModal() {
     <label>Date</label>
     <input type="date" id="tpDate" value="${new Date().toISOString().slice(0, 10)}">
     <label>Paid By Family</label>
-    <select id="tpFamily">
+    <select id="tpFamily" onchange="onTripFamilySelect(this.value)">
       <option value="Mustannsirr Family">Mustannsirr Family</option>
       <option value="Father-in-law Family">Father-in-law Family</option>
       <option value="Sister-in-law Family">Sister-in-law Family</option>
@@ -1725,6 +1762,7 @@ function openAddTripPaymentModal() {
     <select id="tpMode">
       <option value="slice SFB">slice SFB Bank</option>
       <option value="Cash">Cash in Hand</option>
+      <option value="Paid Directly by Family">Paid Directly by Family (No Cash/Bank Impact)</option>
     </select>
     <label>Amount (₹)</label>
     <input type="number" id="tpAmt" placeholder="₹ Amount">
@@ -1738,7 +1776,7 @@ function openAddTripPaymentModal() {
     const ledger = getFinLedger();
     ledger.kathiyawadTrip.payments.push({ id: 'tp_' + Date.now(), date, family, desc, mode, amount });
     if (mode === 'Cash') ledger.cashInHand = (Number(ledger.cashInHand) || 0) - amount;
-    else ledger.bankSlice = (Number(ledger.bankSlice) || 0) - amount;
+    else if (mode === 'slice SFB') ledger.bankSlice = (Number(ledger.bankSlice) || 0) - amount;
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
@@ -1790,7 +1828,7 @@ function deleteTripEntry(kind, id) {
   showModal('Delete Trip Entry?', `<div class="hint">Reverses ${inr(item.amount)} from ${escapeForHtml(item.mode)}.</div>`, () => {
     const delta = kind === 'payment' ? (Number(item.amount) || 0) : -(Number(item.amount) || 0);
     if (item.mode === 'Cash') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + delta;
-    else ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta;
+    else if (item.mode === 'slice SFB') ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta;
     list.splice(idx, 1);
     ledger.deletedIds.push(id);
     saveFinLedger(ledger);
@@ -1833,10 +1871,16 @@ function setFinViewMode(mode) {
   renderFinancialsPage();
 }
 
+function isLoanFeeTask(t) {
+  if (!t) return false;
+  const txt = String(t.name || '') + ' ' + String(t.linked || '');
+  return /juzer presswala|loan\s*&?\s*advance/i.test(txt);
+}
+
 function renderInvoicesPage() {
   const invEl = document.getElementById('invoicesView');
   if (!invEl) return;
-  const feeTasks = tasks.filter(t => t && t.type === 'fee' && !/juzer presswala/i.test(String(t.name || '')));
+  const feeTasks = tasks.filter(t => t && t.type === 'fee' && !isLoanFeeTask(t));
   const totalBilled = feeTasks.reduce((s, t) => s + (Number(t.payable) || 0), 0);
   const totalCollected = feeTasks.reduce((s, t) => s + (Number(t.received) || 0), 0);
   const totalDue = feeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
@@ -1925,15 +1969,15 @@ function renderFinancialsPage() {
     const totalPersonalDrawings = allExp.filter(e => isDrawingCategory(e.category)).reduce((s, e) => s + (Number(e.amount) || 0), 0) + (Number(ledger.journalDrawingsAdj) || 0);
     const totalOperatingExpenses = allExp.filter(e => !isDrawingCategory(e.category)).reduce((s, e) => s + (Number(e.amount) || 0), 0) + (Number(ledger.journalExpenseAdj) || 0);
 
-    const feeTasks = tasks.filter(t => t && t.type === 'fee' && !/juzer presswala/i.test(String(t.name || '')));
+    const feeTasks = tasks.filter(t => t && t.type === 'fee' && !isLoanFeeTask(t));
     const grossFeeIncome = feeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.discount) || 0)), 0) + (Number(ledger.journalIncomeAdj) || 0);
     const sundryDebtorsReceivable = feeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
 
     const netProfit = grossFeeIncome - totalOperatingExpenses;
 
     const totalAssets = totalLiquidCashBank + totalLoansGiven + netTripOutflow + sundryDebtorsReceivable;
-    const effectiveCapital = totalAssets - totalLoansTaken + (Number(ledger.journalCapitalAdj) || 0);
-    const grossCapitalBeforeDrawings = effectiveCapital + totalPersonalDrawings;
+    const effectiveCapital = totalAssets - totalLoansTaken;
+    const openingCapitalReserves = effectiveCapital - netProfit + totalPersonalDrawings;
 
     const allFinFolded = ['journal', 'trip', 'loans', 'expenses', 'pl', 'bs'].every(k => !!finCollapsed[k]);
     const isSecOpen = (key) => isFamilyPublicView || finViewMode !== 'all' || !finCollapsed[key];
@@ -2279,9 +2323,10 @@ function renderFinancialsPage() {
                 <h4 style="margin:0 0 6px; color:#1E3A8A;">Liabilities &amp; Owner's Equity</h4>
                 <table class="stmt-table">
                   <tbody>
-                    <tr><td>Gross Owner's Capital (incl. Net Profit)</td><td class="text-right stmt-mono">${inr(grossCapitalBeforeDrawings)}</td></tr>
+                    <tr><td>Opening Capital / Prior Reserves</td><td class="text-right stmt-mono">${inr(openingCapitalReserves)}</td></tr>
+                    <tr><td style="color:var(--green);">Add: Net Profit from P&amp;L</td><td class="text-right stmt-mono" style="color:var(--green);">+${inr(netProfit)}</td></tr>
                     <tr><td style="color:var(--red);">Less: Personal Drawings</td><td class="text-right stmt-mono" style="color:var(--red);">-${inr(totalPersonalDrawings)}</td></tr>
-                    <tr style="background:#F8FAFC; font-weight:700;"><td>Net Owner's Capital Account</td><td class="text-right stmt-mono">${inr(effectiveCapital)}</td></tr>
+                    <tr style="background:#F8FAFC; font-weight:700;"><td>Closing Net Owner's Capital Account</td><td class="text-right stmt-mono">${inr(effectiveCapital)}</td></tr>
                     <tr><td>Loans &amp; Advances Taken (MHJ, Hatim &amp; Others)</td><td class="text-right stmt-mono">${inr(totalLoansTaken)}</td></tr>
                     <tr style="background:#EFF6FF; font-weight:700;"><td>Total Liabilities &amp; Equity</td><td class="text-right stmt-mono">${inr(effectiveCapital + totalLoansTaken)}</td></tr>
                   </tbody>
@@ -2291,11 +2336,11 @@ function renderFinancialsPage() {
                 <h4 style="margin:0 0 6px; color:#065F46;">Assets</h4>
                 <table class="stmt-table">
                   <tbody>
-                    <tr><td>Cash in Hand</td><td class="text-right stmt-mono">${inr(cashInHand)}</td></tr>
+                    <tr><td>Cash in Hand</td><td class="text-right stmt-mono" style="color:${cashInHand < 0 ? 'var(--red)' : 'inherit'};">${inr(cashInHand)}</td></tr>
                     <tr><td>slice Small Finance Bank</td><td class="text-right stmt-mono">${inr(bankSlice)}</td></tr>
                     <tr><td>Sundry Debtors (Pending Fees Receivable)</td><td class="text-right stmt-mono">${inr(sundryDebtorsReceivable)}</td></tr>
                     <tr><td>Loans &amp; Advances Given (Juzer &amp; Others)</td><td class="text-right stmt-mono">${inr(totalLoansGiven)}</td></tr>
-                    <tr><td>Kathiyawad Ziyarat Net Advance</td><td class="text-right stmt-mono">${inr(netTripOutflow)}</td></tr>
+                    <tr><td>Kathiyawad Ziyarat Net Advance<br><small style="color:var(--muted);">Outlay ${inr(totalTripOutlay)} &minus; Contrib ${inr(totalTripContrib)} (Your 1/3 share: ${inr(equalFamilyShare)})</small></td><td class="text-right stmt-mono">${inr(netTripOutflow)}</td></tr>
                     <tr style="background:#ECFDF5; font-weight:700;"><td>Total Assets</td><td class="text-right stmt-mono">${inr(totalAssets)}</td></tr>
                   </tbody>
                 </table>
