@@ -209,6 +209,12 @@
     background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px;
     box-shadow: var(--shadow-sm);
   }
+  .task.done-task {
+    background: #F8FAFC; border-style: dashed; opacity: 0.84;
+  }
+  .task.done-task .task-name {
+    text-decoration: line-through; color: var(--muted);
+  }
   .task .num { font-size: 11px; color: var(--muted-light); font-weight: 600; padding-top: 2px; }
   .task input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; accent-color: #2563EB; cursor: pointer; }
   .task-body { flex: 1; min-width: 0; }
@@ -237,8 +243,13 @@
   .act.del { color: var(--muted-light); padding: 2px; }
   .act.del:hover { color: var(--red); }
   .done-toggle {
-    grid-column: 1 / -1; padding: 7px 12px; background: #FFFFFF; border: 1px dashed var(--rule);
+    grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 12px; background: #F8FAFC; border: 1px dashed var(--field);
     border-radius: 8px; color: var(--muted); font: 600 11.5px var(--sans); cursor: pointer; text-align: left;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .done-toggle:hover {
+    background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border);
   }
 
   /* Financials & Statements */
@@ -579,7 +590,7 @@ function closeModal() {
 // ---- Financial Ledger & Accounting Engine ----
 function getDefaultFinLedger() {
   return {
-    updatedAt: Date.now(),
+    updatedAt: 0,
     cashInHand: -6000,
     bankSlice: 17216.83,
     journalIncomeAdj: 0,
@@ -691,11 +702,16 @@ async function pushFinLedgerToCloud(ledger) {
   const url = getWebhook();
   if (!url) return;
   try {
-    await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
+      redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'savefinledger', ledger })
     });
+    if (res && res.ok) {
+      const el = document.getElementById('lastSync');
+      if (el) el.textContent = 'Cloud Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
   } catch (e) {}
 }
 
@@ -703,11 +719,16 @@ function mergeFinLedgers(local, cloud) {
   if (!cloud || typeof cloud !== 'object') return normalizeFinLedger(local);
   const loc = normalizeFinLedger(local);
   const cld = normalizeFinLedger(cloud);
-  const merged = Object.assign({}, loc, cld);
+  const localTs = Number(loc.updatedAt) || 0;
+  const cloudTs = Number(cld.updatedAt) || 0;
+  const localIsNewer = localTs > cloudTs;
+
+  const merged = localIsNewer ? Object.assign({}, cld, loc) : Object.assign({}, loc, cld);
   const delSet = new Set([...(loc.deletedIds || []), ...(cld.deletedIds || [])]);
   merged.deletedIds = Array.from(delSet);
+  merged.updatedAt = Math.max(localTs, cloudTs);
 
-  if ((loc.updatedAt || 0) >= (cld.updatedAt || 0)) {
+  if (localIsNewer) {
     merged.cashInHand = loc.cashInHand;
     merged.bankSlice = loc.bankSlice;
     merged.loansGiven = loc.loansGiven;
@@ -717,12 +738,24 @@ function mergeFinLedgers(local, cloud) {
     merged.journalDrawingsAdj = loc.journalDrawingsAdj;
     merged.journalZiyaratAdj = loc.journalZiyaratAdj;
     merged.journalCapitalAdj = loc.journalCapitalAdj;
+  } else {
+    merged.cashInHand = cld.cashInHand;
+    merged.bankSlice = cld.bankSlice;
+    merged.loansGiven = cld.loansGiven;
+    merged.loansTaken = cld.loansTaken;
+    merged.journalIncomeAdj = cld.journalIncomeAdj;
+    merged.journalExpenseAdj = cld.journalExpenseAdj;
+    merged.journalDrawingsAdj = cld.journalDrawingsAdj;
+    merged.journalZiyaratAdj = cld.journalZiyaratAdj;
+    merged.journalCapitalAdj = cld.journalCapitalAdj;
   }
 
-  const mergeById = (arr1, arr2) => {
+  const mergeById = (locArr, cldArr) => {
     const map = new Map();
-    (Array.isArray(arr2) ? arr2 : []).forEach(item => { if (item && item.id && !delSet.has(item.id)) map.set(item.id, item); });
-    (Array.isArray(arr1) ? arr1 : []).forEach(item => { if (item && item.id && !delSet.has(item.id)) map.set(item.id, item); });
+    const older = localIsNewer ? cldArr : locArr;
+    const newer = localIsNewer ? locArr : cldArr;
+    (Array.isArray(older) ? older : []).forEach(item => { if (item && item.id && !delSet.has(item.id)) map.set(item.id, item); });
+    (Array.isArray(newer) ? newer : []).forEach(item => { if (item && item.id && !delSet.has(item.id)) map.set(item.id, item); });
     return Array.from(map.values());
   };
 
@@ -736,18 +769,20 @@ function mergeFinLedgers(local, cloud) {
   return normalizeFinLedger(merged);
 }
 
-async function syncCloudFinLedger() {
+async function syncCloudFinLedger(forceCloud) {
   const url = getWebhook();
   if (!url) return;
   try {
-    const res = await fetch(url + '?action=getfinledger');
+    const res = await fetch(url + '?action=getfinledger&_t=' + Date.now(), { cache: 'no-store' });
     const data = await res.json();
     if (data && data.status === 'ok' && data.ledger) {
       const local = getFinLedger();
-      const merged = mergeFinLedgers(local, data.ledger);
-      localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(merged));
+      const finalLedger = forceCloud ? normalizeFinLedger(data.ledger) : mergeFinLedgers(local, data.ledger);
+      localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(finalLedger));
       render();
       if (activePage === 'financials') renderFinancialsPage();
+      const el = document.getElementById('lastSync');
+      if (el) el.textContent = 'Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
   } catch (e) {}
 }
@@ -1378,6 +1413,9 @@ function openReconcileLedgerModal() {
 
   showModal('🛠️ Reconcile & Fix Financial Entries', `
     ${negCashWarn}
+    <div style="display:flex; gap:6px; margin-bottom:10px;">
+      <button type="button" class="btn btn-quiet" style="flex:1; height:32px; font-size:11.5px; border-color:var(--accent-border); background:var(--accent-soft); color:var(--accent);" onclick="closeModal(); syncCloudFinLedger(true);">☁️ Pull Latest from Cloud</button>
+    </div>
     <div class="hint">Verify or directly correct your exact ledger balances below. Saving overwrites disturbed numbers, cleans duplicate entries, and syncs to Google Cloud immediately.</div>
     <label>Cash in Hand (₹)</label>
     <input type="number" id="recCash" value="${ledger.cashInHand}">
@@ -1862,7 +1900,10 @@ function switchPage(page) {
   document.getElementById('tabFinancials').classList.toggle('active', page === 'financials');
   document.getElementById('tabInvoices').classList.toggle('active', page === 'invoices');
 
-  if (page === 'financials') renderFinancialsPage();
+  if (page === 'financials') {
+    renderFinancialsPage();
+    syncCloudFinLedger();
+  }
   if (page === 'invoices') renderInvoicesPage();
 }
 
@@ -2374,7 +2415,7 @@ function render() {
 
   const pending = tasks.filter(t => t && !t.done).length;
   const completed = tasks.filter(t => t && t.done).length;
-  const feeDue = tasks.filter(t => t && t.type === 'fee' && !/juzer presswala/i.test(t.name || '')).reduce((a, t) => a + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
+  const feeDue = tasks.filter(t => t && t.type === 'fee' && !isLoanFeeTask(t)).reduce((a, t) => a + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
   const invCount = tasks.filter(t => t && isInvitationTask(t) && !t.done).length;
 
   const summary = document.getElementById('summaryArea');
@@ -2404,46 +2445,67 @@ function render() {
     FEES: 'Fees & Receivables'
   };
 
+  const renderTaskCard = (t) => {
+    const due = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN') : '';
+    const balance = Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0));
+    return `<article class="task ${t.done ? 'done-task' : ''}">
+      <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark task complete" onchange="toggleTask('${escapeForHtml(t.id)}')">
+      <div class="task-body">
+        <div class="task-top"><span class="task-name">${escapeForHtml(t.name)}</span>${t.type === 'fee' ? `<span class="amt ${balance ? 'owed' : 'clear'}">${balance ? inr(balance) : 'Settled'}</span>` : ''}</div>
+        ${t.linked ? `<div class="task-sub">${escapeForHtml(t.linked)}</div>` : ''}
+        ${due ? `<div class="task-sub">Due: ${due}</div>` : ''}
+        ${t.remark ? `<div class="note">${escapeForHtml(t.remark)}</div>` : ''}
+        <div class="task-meta">
+          ${t.type === 'fee' ? `
+            <button class="act pay" onclick="recordPayment('${escapeForHtml(t.id)}')">Record payment</button>
+            ${balance > 0 ? `<button class="act wa" onclick="sendWhatsAppReminder('${escapeForHtml(t.id)}',${balance})">Send WhatsApp reminder</button>` : ''}
+            ${(Number(t.received) || 0) > 0 ? `<button class="act" onclick="offerReceipt('${escapeForHtml(t.id)}')">Receipt</button>` : ''}
+            <button class="act" onclick="generateOrOpenInvoice('${escapeForHtml(t.id)}')">${t.invoice ? 'View Invoice' : 'Invoice'}</button>
+          ` : ''}
+          <button class="act" onclick="setRemark('${escapeForHtml(t.id)}')">Note</button>
+          ${isInvitationTask(t) ? '' : `<button class="act" onclick="moveToInvitation('${escapeForHtml(t.id)}')">💌 Invitation</button>`}
+          <button class="act del" onclick="deleteTask('${escapeForHtml(t.id)}')">Delete</button>
+        </div>
+      </div>
+    </article>`;
+  };
+
   app.innerHTML = `
     <div class="filters seg">
       <button class="filter-btn ${filter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All</button>
       <button class="filter-btn ${filter === 'invitation' ? 'active' : ''}" onclick="setFilter('invitation')">💌 Invitations</button>
       <button class="filter-btn ${filter === 'pending' ? 'active' : ''}" onclick="setFilter('pending')">Pending</button>
-      <button class="filter-btn ${filter === 'done' ? 'active' : ''}" onclick="setFilter('done')">Completed</button>
+      <button class="filter-btn ${filter === 'done' ? 'active' : ''}" onclick="setFilter('done')">Completed (${completed})</button>
       <button class="filter-btn ${filter === 'fees' ? 'active' : ''}" onclick="setFilter('fees')">Fees</button>
     </div>
-    ${cats.size ? Array.from(cats.entries()).map(([cat, items]) => `
+    ${cats.size ? Array.from(cats.entries()).map(([cat, items]) => {
+      const pendingItems = items.filter(t => !t.done);
+      const doneItems = items.filter(t => t.done);
+      const showDone = !!doneOpen[cat] || (!!q && doneItems.length > 0);
+      const countText = (pendingItems.length > 0 && doneItems.length > 0)
+        ? `${pendingItems.length} pending • ${doneItems.length} done`
+        : `${items.length}`;
+
+      return `
       <section class="cat-section ${uiState.collapsed[cat] ? 'collapsed' : ''}">
         <div class="cat-heading" onclick="toggleGroup('${escapeForHtml(cat)}')">
+          ${ICON.chev}
           <span class="dot" style="background:${cat === 'FEES' ? 'var(--c-fees)' : cat === 'INVITATION' ? 'var(--c-personal)' : 'var(--accent)'}"></span>
           <span class="title">${escapeForHtml(labels[cat] || cat.replace(/_/g, ' '))}</span>
-          <span class="count">${items.length}</span>
+          <span class="count">${countText}</span>
         </div>
-        ${uiState.collapsed[cat] ? '' : `<div class="task-grid">${items.map(t => {
-          const due = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN') : '';
-          const balance = Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0));
-          return `<article class="task">
-            <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark task complete" onchange="toggleTask('${escapeForHtml(t.id)}')">
-            <div class="task-body">
-              <div class="task-top"><span class="task-name">${escapeForHtml(t.name)}</span>${t.type === 'fee' ? `<span class="amt ${balance ? 'owed' : 'clear'}">${balance ? inr(balance) : 'Settled'}</span>` : ''}</div>
-              ${t.linked ? `<div class="task-sub">${escapeForHtml(t.linked)}</div>` : ''}
-              ${due ? `<div class="task-sub">Due: ${due}</div>` : ''}
-              ${t.remark ? `<div class="note">${escapeForHtml(t.remark)}</div>` : ''}
-              <div class="task-meta">
-                ${t.type === 'fee' ? `
-                  <button class="act pay" onclick="recordPayment('${escapeForHtml(t.id)}')">Record payment</button>
-                  ${balance > 0 ? `<button class="act wa" onclick="sendWhatsAppReminder('${escapeForHtml(t.id)}',${balance})">Send WhatsApp reminder</button>` : ''}
-                  ${(Number(t.received) || 0) > 0 ? `<button class="act" onclick="offerReceipt('${escapeForHtml(t.id)}')">Receipt</button>` : ''}
-                  <button class="act" onclick="generateOrOpenInvoice('${escapeForHtml(t.id)}')">${t.invoice ? 'View Invoice' : 'Invoice'}</button>
-                ` : ''}
-                <button class="act" onclick="setRemark('${escapeForHtml(t.id)}')">Note</button>
-                ${isInvitationTask(t) ? '' : `<button class="act" onclick="moveToInvitation('${escapeForHtml(t.id)}')">💌 Invitation</button>`}
-                <button class="act del" onclick="deleteTask('${escapeForHtml(t.id)}')">Delete</button>
-              </div>
-            </div>
-          </article>`;
-        }).join('')}</div>`}
-      </section>`).join('') : '<div class="statement-sheet"><div class="statement-body">No matching tasks found.</div></div>'}`;
+        ${uiState.collapsed[cat] ? '' : `<div class="task-grid">
+          ${pendingItems.map(renderTaskCard).join('')}
+          ${doneItems.length > 0 ? `
+            <button type="button" class="done-toggle" onclick="toggleDone('${escapeForHtml(cat)}')">
+              <span>${showDone ? '▾' : '▸'} Completed tasks (${doneItems.length})</span>
+              <span style="font-size:10.5px; font-weight:700;">${showDone ? 'Fold' : 'Expand'}</span>
+            </button>
+            ${showDone ? doneItems.map(renderTaskCard).join('') : ''}
+          ` : ''}
+        </div>`}
+      </section>`;
+    }).join('') : '<div class="statement-sheet"><div class="statement-body">No matching tasks found.</div></div>'}`;
 }
 
 function checkAuth() {
@@ -2493,6 +2555,12 @@ function bootDashboard() {
   }
 }
 document.addEventListener('DOMContentLoaded', bootDashboard);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    syncCloudFinLedger();
+    pullFromCalendar();
+  }
+});
 </script>
 </body>
 </html>
