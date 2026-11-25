@@ -462,13 +462,14 @@ let searchQuery = '';
 var activePage = 'tasks';
 var finViewMode = 'all';
 var isFamilyPublicView = false;
-var uiState = { collapsed: {} };
+var uiState = { collapsed: {}, invitationIds: {} };
 var finCollapsed = { journal: true, trip: true, loans: true, expenses: true, pl: true, bs: true };
 var doneOpen = {};
 
 try {
   const savedUi = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
   if (savedUi && savedUi.collapsed && typeof savedUi.collapsed === 'object') uiState.collapsed = savedUi.collapsed;
+  if (savedUi && savedUi.invitationIds && typeof savedUi.invitationIds === 'object') uiState.invitationIds = savedUi.invitationIds;
 } catch (e) {}
 
 const ICON = {
@@ -555,9 +556,10 @@ function clearSearch() {
 function isInvitationTask(t) {
   if (!t) return false;
   if (t.cat === 'INVITATION' || t.type === 'invitation') return true;
+  if (uiState.invitationIds && uiState.invitationIds[t.id]) return true;
   if (t.type === 'fee' || t.cat === 'FEES') return false;
   const hay = (String(t.name || '') + ' ' + String(t.remark || '')).toLowerCase();
-  return /\b(invitation|invite|shadi|shaadi|marriage|wedding|walima|valima|nikah|nikaah|majlis|dawat|daawat|reception|niyaz|engagement|birthday|feast|dinner|lunch|jashn|dareesa)\b/.test(hay);
+  return /\b(invitation|invite|shadi|shaadi|marriage|wedding|walima|valima|nikah|nikaah|majlis|dawat|daawat|reception|niyaz|engagement|birthday|feast|dinner|lunch|jashn|darees|dareesa|waras|ziyafat|salgirah|urs|misaq|fateha|chehlum)\b/.test(hay);
 }
 
 function moveToInvitation(id) {
@@ -565,8 +567,25 @@ function moveToInvitation(id) {
   if (!t) return;
   t.cat = 'INVITATION';
   t.type = 'invitation';
+  if (!uiState.invitationIds) uiState.invitationIds = {};
+  uiState.invitationIds[id] = true;
+  saveUi();
   saveTasks();
   render();
+}
+
+function updateFinNavBadge() {
+  const finBadgeEl = document.getElementById('finBadge');
+  if (!finBadgeEl) return;
+  try {
+    const ledger = getFinLedger();
+    const juzerNet = Math.max(0, (Number(ledger.loansGiven?.juzer?.base) || 0) + (Number(ledger.loansGiven?.juzer?.adjustments) || 0));
+    const customLoansArr = Array.isArray(ledger.customLoans) ? ledger.customLoans : [];
+    const customGiven = customLoansArr
+      .filter(c => c && c.type === 'given')
+      .reduce((s, c) => s + Math.max(0, (Number(c.principal) || 0) - (Number(c.repaid) || 0)), 0);
+    finBadgeEl.textContent = inr(juzerNet + customGiven);
+  } catch (e) {}
 }
 
 function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
@@ -597,6 +616,7 @@ function getDefaultFinLedger() {
     journalExpenseAdj: 0,
     journalDrawingsAdj: 0,
     journalZiyaratAdj: 0,
+    journalCapitalAdj: 0,
     loansGiven: {
       juzer: {
         name: 'Juzer Presswala',
@@ -641,7 +661,7 @@ function getDefaultFinLedger() {
       ],
       payments: [
         { id: 'tp_1', date: '2026-11-10', family: 'Mustannsirr Family', desc: 'Ziyarat Travel / Stay Advance', mode: 'slice SFB', amount: 3000 },
-        { id: 'tp_2', date: '2026-11-11', family: 'Father-in-law Family', desc: 'Ziyarat Cash Advance Paid', mode: 'Cash', amount: 10000 }
+        { id: 'tp_2', date: '2026-11-11', family: 'Father-in-law Family', desc: 'Ziyarat Cash Advance Paid', mode: 'Paid Directly by Family', amount: 10000 }
       ],
       contributions: []
     },
@@ -661,7 +681,11 @@ function normalizeFinLedger(obj) {
   if (!Array.isArray(out.expenses)) out.expenses = [];
   if (!Array.isArray(out.customExpenseCategories)) out.customExpenseCategories = [];
   if (!Array.isArray(out.customLoans)) out.customLoans = [];
-  out.customLoans.forEach(cl => { if (cl && !Array.isArray(cl.entries)) cl.entries = []; });
+  out.customLoans = out.customLoans.map(cl => {
+    if (!cl || typeof cl !== 'object') return cl;
+    if (!Array.isArray(cl.entries)) cl.entries = [];
+    return cl;
+  }).filter(Boolean);
   if (!Array.isArray(out.journalEntries)) out.journalEntries = [];
   if (!Array.isArray(out.deletedIds)) out.deletedIds = [];
   if (!out.loansGiven || typeof out.loansGiven !== 'object') out.loansGiven = def.loansGiven;
@@ -702,16 +726,11 @@ async function pushFinLedgerToCloud(ledger) {
   const url = getWebhook();
   if (!url) return;
   try {
-    const res = await fetch(url, {
+    await fetch(url, {
       method: 'POST',
-      redirect: 'follow',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'savefinledger', ledger })
     });
-    if (res && res.ok) {
-      const el = document.getElementById('lastSync');
-      if (el) el.textContent = 'Cloud Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
   } catch (e) {}
 }
 
@@ -2399,6 +2418,7 @@ function renderFinancialsPage() {
 }
 
 function render() {
+  updateFinNavBadge();
   const app = document.getElementById('app');
   if (!app) return;
   const q = String(searchQuery || '').trim().toLowerCase();
