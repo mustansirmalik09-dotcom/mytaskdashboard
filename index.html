@@ -7,30 +7,38 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<meta name="theme-color" content="#1E3A8A">
+<meta name="theme-color" content="#5B54D6">
 <style>
   :root {
-    --bg: #F4F7FE;
+    --bg: #DCD8FF;
+    --shell: #FFFFFF;
+    --canvas: #F7F8FD;
+    --sidebar: #FFFFFF;
     --sheet: #FFFFFF;
-    --sheet-alt: #F1F5F9;
-    --ink: #0F172A;
-    --muted: #64748B;
-    --muted-light: #94A3B8;
-    --icon: #64748B;
-    --field: #CBD5E1;
-    --rule: #E2E8F0;
-    --rule-soft: #F1F5F9;
+    --sheet-alt: #F8F9FE;
+    --sheet-hover: #F1F3FC;
+    --ink: #1E1B4B;
+    --muted: #6B7280;
+    --muted-light: #9CA3AF;
+    --icon: #8B8FA8;
+    --field: #E2E5F3;
+    --rule: #ECEEF8;
+    --rule-soft: #F3F4FA;
 
-    --accent: #2563EB;
-    --accent-hover: #1D4ED8;
-    --accent-soft: #EFF6FF;
-    --accent-border: #BFDBFE;
+    --accent: #5B54D6;
+    --accent-hover: #4B44C4;
+    --accent-soft: #EEF0FF;
+    --accent-border: #C7C4F8;
+
+    --pink: #E67EC9;
+    --pink-soft: #FDF2FA;
+    --pink-border: #F5C2E7;
 
     --red: #E11D48;
     --red-soft: #FFF1F2;
     --red-border: #FECDD3;
 
-    --green: #059669;
+    --green: #10B981;
     --green-soft: #ECFDF5;
     --green-border: #A7F3D0;
 
@@ -41,195 +49,442 @@
     --violet: #7C3AED;
     --violet-soft: #F5F3FF;
 
-    --c-mhj: #2563EB;
+    --c-mhj: #4F46E5;
     --c-shk: #7C3AED;
     --c-own: #0D9488;
-    --c-personal: #DB2777;
+    --c-personal: #E67EC9;
     --c-fees: #F59E0B;
 
-    --serif: 'Newsreader', Georgia, serif;
+    --serif: 'Plus Jakarta Sans', system-ui, sans-serif;
     --sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --mono: 'IBM Plex Mono', monospace;
-    --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
-    --shadow-md: 0 8px 20px -4px rgba(37, 99, 235, 0.12);
+    --shadow-sm: 0 2px 10px rgba(91, 84, 214, 0.06);
+    --shadow-md: 0 20px 50px -12px rgba(79, 70, 229, 0.18);
   }
 
   * { box-sizing: border-box; }
   html, body {
-    background: linear-gradient(180deg, #EEF2FF 0%, #F8FAFC 35%, #F0FDF4 100%);
+    background: linear-gradient(135deg, #D5D0FF 0%, #E5E1FF 50%, #D9D5FF 100%);
+    background-attachment: fixed;
     color: var(--ink);
     font-family: var(--sans);
     font-size: 13.5px;
     line-height: 1.45;
-    margin: 0 auto;
-    max-width: 1120px;
-    padding: 12px 12px 64px;
+    margin: 0;
+    padding: 16px;
+    min-height: 100vh;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    color-scheme: light;
   }
 
-  button, input, select { font-family: var(--sans); }
+  button, input, select, textarea { font-family: var(--sans); }
   .ic { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* Vibrant Corporate Masthead */
-  .masthead {
-    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
-    gap: 8px 14px; margin-bottom: 10px; padding: 11px 16px;
-    background: linear-gradient(120deg, #1E3A8A 0%, #3B82F6 55%, #7C3AED 100%);
-    color: #FFFFFF; border-radius: 14px; box-shadow: var(--shadow-md);
+  /* App Shell: Dirga Space Crisp White Container */
+  .app-shell {
+    max-width: 1320px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    background: var(--shell);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
   }
-  .masthead-brand { display: flex; align-items: center; gap: 10px; }
-  .masthead-crest {
-    width: 36px; height: 36px; border-radius: 10px;
-    background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(6px);
-    color: #FFFFFF; display: grid; place-content: center;
-    font-family: var(--serif); font-weight: 700; font-size: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-  }
-  .masthead h1 { font-family: var(--serif); font-weight: 600; font-size: 20px; line-height: 1.1; margin: 0; color: #FFFFFF; }
-  .masthead .sub { color: #DBEAFE; font-size: 11.5px; font-weight: 500; margin-top: 1px; }
-  .masthead .status { display: flex; align-items: center; gap: 8px; }
-  .sync-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.28);
-    border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 600; color: #FFFFFF;
-  }
-  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #34D399; box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.35); }
-  #resetBtn {
-    background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px; padding: 4px 10px; font: 600 11px var(--sans); color: #FFFFFF; cursor: pointer;
-  }
-  #resetBtn:hover { background: rgba(255, 255, 255, 0.26); }
+  .app-sidebar, .app-main { position: relative; min-width: 0; }
 
-  /* Top Page Navigation Tabs */
+  /* Left White Sidebar */
+  .app-sidebar {
+    background: var(--sidebar);
+    border-right: 1px solid var(--rule);
+    padding: 20px 0 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 100%;
+  }
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 18px;
+  }
+  .brand-crest {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #5B54D6 0%, #7C74F0 100%);
+    color: #FFFFFF; display: grid; place-content: center;
+    font-weight: 800; font-size: 13px; letter-spacing: -0.02em;
+    box-shadow: 0 6px 14px rgba(91, 84, 214, 0.32);
+    flex: none;
+  }
+  .brand-title { font-weight: 800; font-size: 14.5px; color: var(--ink); line-height: 1.15; }
+  .brand-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .sidebar-section-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted-light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0 20px;
+    margin-bottom: 6px;
+  }
   .page-nav {
-    display: flex; gap: 6px; margin-bottom: 10px; padding: 4px;
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 12px;
-    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   .page-nav-btn {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 7px 10px; border-radius: 9px; border: 0; background: transparent;
-    color: var(--muted); font: 700 12.5px var(--sans); cursor: pointer; transition: all 0.15s ease;
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 18px 10px 20px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: 600 13px var(--sans);
+    cursor: pointer;
+    transition: all 0.16s ease;
+    text-align: left;
+  }
+  .page-nav-btn:hover {
+    background: var(--sheet-alt);
+    color: var(--ink);
   }
   .page-nav-btn.active {
-    background: linear-gradient(120deg, #2563EB 0%, #7C3AED 100%);
-    color: #FFFFFF; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    color: var(--ink);
+    font-weight: 700;
+    background: linear-gradient(90deg, rgba(91, 84, 214, 0.06) 0%, rgba(91, 84, 214, 0.01) 100%);
+  }
+  .page-nav-btn.active::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 3.5px;
+    border-radius: 4px 0 0 4px;
+    background: var(--accent);
+  }
+  .page-nav-btn .nav-left {
+    display: inline-flex; align-items: center; gap: 10px; min-width: 0;
+  }
+  .nav-icon-box {
+    width: 24px; height: 24px; border-radius: 7px;
+    background: var(--sheet-alt);
+    display: grid; place-content: center;
+    color: var(--muted); font-size: 12px; flex: none;
+  }
+  .page-nav-btn.active .nav-icon-box {
+    background: var(--accent-soft);
+    color: var(--accent);
   }
   .nav-badge {
-    background: #DBEAFE; color: #1E3A8A; padding: 1px 6px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+    background: #F43F5E;
+    color: #FFFFFF;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--mono);
   }
-  .page-nav-btn.active .nav-badge { background: rgba(255, 255, 255, 0.22); color: #FFFFFF; }
 
-  /* Compact Summary Sheet */
-  .summary-sheet {
-    background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px;
-    margin-bottom: 10px; overflow: hidden; box-shadow: var(--shadow-sm);
+  /* Sidebar Quick Workspaces */
+  .sidebar-links { display: flex; flex-direction: column; gap: 2px; padding: 0 10px; }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px; border-radius: 10px; border: 0;
+    background: transparent; color: var(--muted);
+    font: 600 12.5px var(--sans); cursor: pointer; text-align: left;
+    transition: all 0.14s ease;
   }
-  .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .hero-card { padding: 8px 12px; text-align: center; }
-  .hero-card + .hero-card { border-left: 1px solid var(--rule-soft); }
-  .hero-card .n { font-family: var(--serif); font-weight: 700; font-size: 20px; line-height: 1.1; color: var(--ink); }
-  .hero-card .l { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-top: 2px; }
-  .totals {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-    border-top: 1px solid var(--rule-soft); padding: 7px 12px; background: #F8FAFC;
-  }
-  .totals .tot { text-align: center; }
-  .totals .l { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
-  .totals .fig { font-family: var(--serif); font-weight: 700; font-size: 15px; color: var(--ink); }
-  .totals .fig.out { color: var(--red); }
+  .sidebar-link:hover { background: var(--sheet-alt); color: var(--accent); }
+  .sidebar-link .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 
-  /* Filters & Chips */
-  .filters { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+  /* Sidebar Bottom Pastel Geometric Sync Card (Dirga Space Style) */
+  .sidebar-ember-card {
+    margin: auto 16px 0;
+    padding: 16px 12px 14px;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 15% 15%, #5B54D6 0%, #5B54D6 34%, transparent 35%),
+      radial-gradient(circle at 88% 18%, #E67EC9 0%, #E67EC9 28%, transparent 29%),
+      radial-gradient(circle at 82% 72%, #FCE7F3 0%, #FCE7F3 34%, transparent 35%),
+      linear-gradient(145deg, #EAE8FF 0%, #E0DBFF 100%);
+    border: 1px solid #DFDCFA;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ember-orb { display: none; }
+  .sync-badge {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: #FFFFFF; border: 1px solid rgba(91, 84, 214, 0.14);
+    border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; color: var(--ink);
+    box-shadow: 0 4px 12px rgba(91, 84, 214, 0.12);
+  }
+  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22); }
+  #resetBtn {
+    width: 100%; margin-top: 10px;
+    background: rgba(255, 255, 255, 0.92); border: 1px solid rgba(91, 84, 214, 0.16);
+    border-radius: 999px; padding: 7px 12px; font: 700 11.5px var(--sans); color: var(--accent); cursor: pointer;
+    box-shadow: 0 3px 10px rgba(91, 84, 214, 0.10);
+    transition: all 0.15s ease;
+  }
+  #resetBtn:hover { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+
+  /* Main Workspace */
+  .app-main {
+    background: var(--canvas);
+    padding: 18px 20px 26px;
+  }
+
+  /* Top Greeting & Command Bar */
+  .top-command-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .greeting-block h2 {
+    margin: 0; font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em;
+  }
+  .greeting-block p {
+    margin: 2px 0 0; font-size: 12px; color: var(--muted);
+  }
+  .top-command-controls {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1 1 320px; justify-content: flex-end;
+  }
+  #searchRow { flex: 1 1 200px; max-width: 300px; min-width: 160px; margin: 0; }
+  #searchWrap { position: relative; }
+  #searchWrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; }
+  #searchBox {
+    width: 100%; height: 38px;
+    background: #FFFFFF;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 0 32px 0 36px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    outline: none;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease;
+  }
+  #searchBox:focus { border-color: var(--accent); }
+  #searchClear {
+    display: none; position: absolute; right: 6px; top: 5px; width: 28px; height: 28px;
+    border: 0; background: transparent; color: var(--muted); cursor: pointer;
+  }
+
+  /* Signature Dirga Space Indigo Hero Card */
+  .summary-sheet { margin-bottom: 16px; }
+  .dirga-hero-banner {
+    background: linear-gradient(135deg, #564FD1 0%, #6860E6 60%, #756DF0 100%);
+    border-radius: 20px;
+    padding: 18px;
+    color: #FFFFFF;
+    box-shadow: 0 14px 32px -8px rgba(91, 84, 214, 0.42);
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .hero-card {
+    background: rgba(255, 255, 255, 0.11);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    transition: background 0.16s ease, transform 0.16s ease;
+  }
+  .hero-card:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-1px); }
+  .hero-card-top {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .hero-card .l {
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.78);
+  }
+  .hero-arrow {
+    color: rgba(255, 255, 255, 0.75); font-size: 13px; font-weight: 700;
+  }
+  .hero-card-bottom {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 6px; flex-wrap: wrap;
+  }
+  .hero-card .n {
+    font-weight: 800; font-size: 21px; line-height: 1.1; letter-spacing: -0.02em; color: #FFFFFF;
+  }
+  .hero-pill {
+    font-size: 10px; font-weight: 700; font-family: var(--mono);
+    padding: 2px 7px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16); color: #E0E7FF;
+    white-space: nowrap;
+  }
+  .hero-pill.pink { background: rgba(230, 126, 201, 0.35); color: #FCE7F3; }
+  .hero-pill.mint { background: rgba(52, 211, 153, 0.25); color: #D1FAE5; }
+
+  /* Lower Analytics Grid Inside Indigo Banner */
+  .hero-analytics-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(220px, 1fr);
+    gap: 14px;
+    align-items: stretch;
+  }
+  .hero-chart-box {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .hero-chart-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin-bottom: 10px; font-size: 12.5px; font-weight: 700; color: #FFFFFF;
+  }
+  .hero-chart-legend {
+    display: flex; align-items: center; gap: 10px; font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,0.8);
+  }
+  .hero-bars {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    align-items: end;
+    height: 82px;
+    padding-top: 6px;
+  }
+  .hero-bar-col {
+    display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end;
+  }
+  .hero-bar-track {
+    width: 100%; max-width: 28px; height: 64px;
+    background: rgba(255, 255, 255, 0.10);
+    border-radius: 6px;
+    display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+  }
+  .hero-bar-top { background: #FCEBF6; width: 100%; }
+  .hero-bar-bot { background: #E67EC9; width: 100%; }
+  .hero-bar-lbl { font-size: 9.5px; font-weight: 700; color: rgba(255, 255, 255, 0.78); text-transform: uppercase; }
+
+  .hero-gauge-box {
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+  }
+
+  /* Quick Add Bar */
+  .add-box {
+    display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    background: #FFFFFF;
+    border: 1px solid var(--rule);
+    border-radius: 16px;
+    padding: 10px 12px;
+    box-shadow: var(--shadow-sm);
+  }
+  .add-box input, .add-box select {
+    height: 36px; background: var(--sheet-alt); border: 1px solid var(--field); color: var(--ink);
+    padding: 0 11px; border-radius: 10px; font-size: 13px; min-width: 0; outline: none;
+  }
+  .add-box input:focus, .add-box select:focus { border-color: var(--accent); background: #FFFFFF; }
+  #newCat { flex: 1 1 155px; font-weight: 600; }
+  #newTask { flex: 2 1 210px; }
+  .add-box button {
+    height: 36px; padding: 0 18px;
+    background: linear-gradient(135deg, #5B54D6 0%, #7C74F0 100%);
+    color: #FFFFFF; border: 0; border-radius: 10px; font: 700 13px var(--sans); cursor: pointer;
+    box-shadow: 0 4px 12px rgba(91, 84, 214, 0.28);
+  }
+  .add-box button:hover { filter: brightness(1.06); }
+
+  /* Filter Pills */
+  .filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
   .filters.seg {
-    flex-wrap: nowrap; padding: 3px; background: #FFFFFF; border: 1px solid var(--rule);
-    border-radius: 10px; overflow-x: auto; scrollbar-width: none;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 4px;
+    background: #FFFFFF;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    box-shadow: var(--shadow-sm);
   }
   .filters.seg::-webkit-scrollbar { display: none; }
   .filter-btn { cursor: pointer; font: 600 12px var(--sans); transition: all 0.14s ease; }
   .filters.seg .filter-btn {
-    flex: 1 1 auto; border: 0; background: transparent; color: var(--muted);
-    padding: 5px 10px; border-radius: 7px; white-space: nowrap;
+    flex: 1 0 auto; border: 0;
+    background: transparent; color: var(--muted);
+    padding: 7px 12px; border-radius: 9px; white-space: nowrap;
   }
+  .filters.seg .filter-btn:hover { color: var(--ink); background: var(--sheet-alt); }
   .filters.seg .filter-btn.active {
-    background: linear-gradient(120deg, #2563EB 0%, #4F46E5 100%);
-    color: #FFFFFF; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.22);
-  }
-  .filters.chips .filter-btn {
-    display: inline-flex; align-items: center; background: #FFFFFF; border: 1px solid var(--rule);
-    color: var(--ink); padding: 4px 10px; border-radius: 999px; font-size: 11.5px;
-  }
-  .filters.chips .filter-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 700; }
-  .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
-
-  /* Search & Quick Add Bar */
-  #searchRow { margin-bottom: 8px; }
-  #searchWrap { position: relative; }
-  #searchWrap .ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; }
-  #searchBox {
-    width: 100%; height: 36px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
-    padding: 0 34px; border-radius: 10px; font-size: 13px;
-  }
-  #searchClear {
-    display: none; position: absolute; right: 4px; top: 4px; width: 28px; height: 28px;
-    border: 0; background: transparent; color: var(--muted); cursor: pointer;
-  }
-  .add-box { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-  .add-box input, .add-box select {
-    height: 36px; background: #FFFFFF; border: 1px solid var(--field); color: var(--ink);
-    padding: 0 10px; border-radius: 9px; font-size: 13px; min-width: 0;
-  }
-  #newCat { flex: 1 1 145px; font-weight: 600; }
-  #newTask { flex: 2 1 190px; }
-  .add-box button {
-    height: 36px; padding: 0 16px;
-    background: linear-gradient(120deg, #2563EB 0%, #7C3AED 100%);
-    color: #FFFFFF; border: 0; border-radius: 9px; font: 700 13px var(--sans); cursor: pointer;
+    background: var(--accent);
+    color: #FFFFFF;
+    box-shadow: 0 3px 10px rgba(91, 84, 214, 0.25);
   }
 
   /* Task Category Sections & Cards */
   .cat-section { margin-bottom: 14px; }
   .cat-heading {
-    display: flex; align-items: center; gap: 8px; padding: 7px 12px;
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px;
-    margin-bottom: 8px; cursor: pointer; user-select: none; box-shadow: var(--shadow-sm);
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px;
+    margin-bottom: 8px; cursor: pointer; user-select: none;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease;
   }
+  .cat-heading:hover { border-color: var(--accent-border); }
   .cat-section.collapsed .cat-heading { margin-bottom: 0; }
   .cat-section.collapsed .chev { transform: rotate(-90deg); }
   .cat-heading .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-  .cat-heading .title { font-family: var(--serif); font-weight: 700; font-size: 15.5px; color: var(--ink); }
+  .cat-heading .title { font-weight: 700; font-size: 14px; color: var(--ink); }
   .cat-heading .count {
-    margin-left: auto; padding: 2px 8px; background: #F1F5F9; border-radius: 999px;
-    font-size: 11px; font-weight: 600; color: var(--muted);
+    margin-left: auto; padding: 2px 9px; background: var(--accent-soft);
+    border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--accent);
   }
-  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 8px; }
+  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 9px; }
   .task {
-    display: flex; align-items: flex-start; gap: 8px; padding: 9px 11px;
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px;
+    display: flex; align-items: flex-start; gap: 9px; padding: 11px 13px;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px;
     box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s ease, transform 0.15s ease;
   }
+  .task:hover { border-color: var(--accent-border); transform: translateY(-1px); }
   .task.done-task {
-    background: #F8FAFC; border-style: dashed; opacity: 0.84;
+    background: #FAFBFD; border-style: dashed; opacity: 0.78; box-shadow: none;
   }
-  .task.done-task .task-name {
-    text-decoration: line-through; color: var(--muted);
-  }
-  .task .num { font-size: 11px; color: var(--muted-light); font-weight: 600; padding-top: 2px; }
-  .task input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; accent-color: #2563EB; cursor: pointer; }
+  .task.done-task .task-name { text-decoration: line-through; color: var(--muted); }
+  .task input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; }
   .task-body { flex: 1; min-width: 0; }
   .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
   .task-name { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
-  .amt { font-family: var(--serif); font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .amt { font-family: var(--mono); font-weight: 700; font-size: 14px; white-space: nowrap; }
   .amt.owed { color: var(--red); }
-  .amt.clear { font-size: 11px; font-family: var(--sans); color: var(--green); background: var(--green-soft); padding: 1px 6px; border-radius: 5px; }
+  .amt.clear { font-size: 11px; font-family: var(--sans); color: var(--green); background: var(--green-soft); padding: 2px 8px; border-radius: 999px; }
   .task-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
   .note {
-    display: inline-flex; align-items: flex-start; gap: 5px; margin-top: 4px; padding: 3px 8px;
-    border-radius: 6px; background: var(--amber-soft); border: 1px solid var(--amber-border);
-    color: #92400E; font-size: 11px; font-weight: 500;
+    display: inline-flex; align-items: flex-start; gap: 5px; margin-top: 5px; padding: 4px 9px;
+    border-radius: 8px; background: var(--pink-soft); border: 1px solid var(--pink-border);
+    color: #9D174D; font-size: 11px; font-weight: 600;
   }
-  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 5px; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 7px; }
   .act {
     display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 0;
     font: 600 11.5px var(--sans); color: var(--accent); cursor: pointer;
@@ -237,124 +492,174 @@
   .act:hover { text-decoration: underline; }
   .act.wa { color: var(--green); }
   .act.pay {
-    padding: 2px 8px; border: 1px solid var(--accent-border); border-radius: 6px;
+    padding: 3px 9px; border: 1px solid var(--accent-border); border-radius: 999px;
     background: var(--accent-soft); color: var(--accent);
   }
   .act.del { color: var(--muted-light); padding: 2px; }
   .act.del:hover { color: var(--red); }
   .done-toggle {
     grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between;
-    padding: 7px 12px; background: #F8FAFC; border: 1px dashed var(--field);
-    border-radius: 8px; color: var(--muted); font: 600 11.5px var(--sans); cursor: pointer; text-align: left;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    padding: 8px 13px; background: #FFFFFF; border: 1px dashed var(--accent-border);
+    border-radius: 11px; color: var(--muted); font: 600 11.5px var(--sans); cursor: pointer; text-align: left;
+    transition: all 0.15s ease;
   }
-  .done-toggle:hover {
-    background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border);
-  }
+  .done-toggle:hover { background: var(--accent-soft); color: var(--accent); }
 
   /* Financials & Statements */
   #financialsView, #invoicesView { display: none; }
   .fin-mode-toggle {
-    display: inline-flex; gap: 3px; padding: 3px; background: #FFFFFF; border: 1px solid var(--rule);
-    border-radius: 10px; overflow-x: auto; max-width: 100%;
+    display: inline-flex; gap: 3px; padding: 4px; background: #FFFFFF; border: 1px solid var(--rule);
+    border-radius: 12px; overflow-x: auto; max-width: 100%; box-shadow: var(--shadow-sm);
   }
   .fin-mode-btn {
-    border: 0; background: transparent; padding: 5px 10px; border-radius: 7px;
+    border: 0; background: transparent; padding: 6px 11px; border-radius: 8px;
     font: 700 11.5px var(--sans); color: var(--muted); cursor: pointer; white-space: nowrap;
   }
-  .fin-mode-btn.active { background: linear-gradient(120deg, #2563EB 0%, #7C3AED 100%); color: #FFFFFF; }
+  .fin-mode-btn:hover { color: var(--ink); }
+  .fin-mode-btn.active { background: var(--accent); color: #FFFFFF; box-shadow: 0 3px 10px rgba(91, 84, 214, 0.28); }
   .fin-hero-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-bottom: 12px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px;
   }
   .fin-card {
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 11px; padding: 10px 12px; box-shadow: var(--shadow-sm);
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 16px; padding: 13px 15px;
+    box-shadow: var(--shadow-sm);
   }
-  .fin-card .f-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
-  .fin-card .f-val { font-family: var(--serif); font-size: 20px; font-weight: 700; margin: 2px 0; }
+  .fin-card .f-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .fin-card .f-val { font-size: 22px; font-weight: 800; margin: 4px 0 2px; letter-spacing: -0.02em; color: var(--ink); }
   .fin-card .f-sub { font-size: 11px; color: var(--muted); }
 
   .statement-sheet {
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 12px;
-    box-shadow: var(--shadow-sm); margin-bottom: 10px; overflow: hidden;
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 16px;
+    margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-sm);
   }
   .statement-header {
-    padding: 11px 14px; color: #FFFFFF; display: flex; justify-content: space-between;
+    padding: 12px 16px; color: #FFFFFF; display: flex; justify-content: space-between;
     align-items: center; flex-wrap: wrap; gap: 8px;
   }
-  .statement-header h3 { font-family: var(--serif); font-size: 16px; font-weight: 600; margin: 0; }
-  .statement-body { padding: 12px 14px; }
+  .statement-header h3 { font-size: 14.5px; font-weight: 700; margin: 0; }
+  .statement-body { padding: 14px 16px; }
   .table-responsive { width: 100%; overflow-x: auto; }
   .stmt-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   .stmt-table th {
-    background: #F8FAFC; border-bottom: 1px solid var(--rule); padding: 7px 10px;
+    background: var(--sheet-alt); border-bottom: 1px solid var(--rule); padding: 8px 10px;
     font-size: 10.5px; font-weight: 700; text-transform: uppercase; color: var(--muted); text-align: left;
   }
-  .stmt-table td { padding: 8px 10px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  .stmt-table td { padding: 9px 10px; border-bottom: 1px solid var(--rule-soft); vertical-align: top; color: var(--ink); }
   .stmt-table th.text-right, .stmt-table td.text-right { text-align: right; }
   .stmt-mono { font-family: var(--mono); font-weight: 600; font-size: 12.5px; }
 
-  .loan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }
+  .loan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(275px, 1fr)); gap: 10px; }
   .loan-card {
-    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 10px; padding: 11px 13px;
+    background: var(--sheet-alt); border: 1px solid var(--rule); border-radius: 14px; padding: 12px 14px;
     display: flex; flex-direction: column; justify-content: space-between;
   }
-  .loan-pill { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
-  .loan-pill.asset { background: var(--red-soft); color: var(--red); }
-  .loan-pill.liab { background: var(--amber-soft); color: var(--amber); }
-  .loan-pill.settled { background: var(--green-soft); color: var(--green); }
+  .loan-pill { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .loan-pill.asset { background: var(--pink-soft); color: #BE185D; }
+  .loan-pill.liab { background: var(--amber-soft); color: #B45309; }
+  .loan-pill.settled { background: var(--green-soft); color: #047857; }
 
   /* Buttons & Modal */
   .btn {
-    height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid transparent;
-    font: 700 12.5px var(--sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    height: 34px; padding: 0 13px; border-radius: 10px; border: 1px solid transparent;
+    font: 700 12px var(--sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    transition: all 0.14s ease;
   }
-  .btn-primary { background: linear-gradient(120deg, #2563EB 0%, #7C3AED 100%); color: #FFFFFF; }
-  .btn-wa { background: linear-gradient(120deg, #059669 0%, #047857 100%); color: #FFFFFF; }
+  .btn-primary { background: linear-gradient(135deg, #5B54D6 0%, #7C74F0 100%); color: #FFFFFF; box-shadow: 0 4px 12px rgba(91, 84, 214, 0.28); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-wa { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: #FFFFFF; }
   .btn-danger { background: var(--red); color: #FFFFFF; }
   .btn-quiet { background: #FFFFFF; color: var(--ink); border-color: var(--field); }
+  .btn-quiet:hover { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent); }
+  .statement-header .btn-quiet { background: rgba(255, 255, 255, 0.18); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.3); }
+  .statement-header .btn-quiet:hover { background: #FFFFFF; color: var(--accent); }
 
   #modalOverlay {
-    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px);
+    position: fixed; inset: 0; background: rgba(30, 27, 75, 0.45); backdrop-filter: blur(6px);
     z-index: 1000; align-items: center; justify-content: center; padding: 14px;
   }
   .modal {
-    background: #FFFFFF; border-radius: 16px; padding: 20px; width: 100%; max-width: 420px;
-    max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+    background: #FFFFFF; border: 1px solid var(--rule); border-radius: 20px;
+    padding: 22px; width: 100%; max-width: 430px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(30, 27, 75, 0.22); color: var(--ink);
   }
-  #modalTitle { font-family: var(--serif); font-weight: 700; font-size: 19px; margin-bottom: 10px; }
+  #modalTitle { font-weight: 800; font-size: 17px; margin-bottom: 12px; color: var(--ink); }
   #modalFields label { display: block; margin: 0 0 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
   #modalFields input:not([type=checkbox]), #modalFields select, #modalFields textarea {
-    display: block; width: 100%; height: 38px; margin-bottom: 10px; padding: 0 10px;
-    border: 1px solid var(--field); border-radius: 8px; font-size: 13.5px;
+    display: block; width: 100%; height: 38px; margin-bottom: 10px; padding: 0 11px;
+    background: var(--sheet-alt); color: var(--ink); border: 1px solid var(--field); border-radius: 10px; font-size: 13.5px; outline: none;
   }
+  #modalFields input:focus, #modalFields select:focus { border-color: var(--accent); background: #FFFFFF; }
   .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
   .hint { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
   .presets { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-  .preset { padding: 4px 9px; border: 1px solid var(--rule); border-radius: 999px; background: #F8FAFC; font-size: 11px; cursor: pointer; }
+  .preset { padding: 4px 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--sheet-alt); color: var(--ink); font-size: 11px; cursor: pointer; }
+  .preset:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
   .receipt-preview {
     white-space: pre-wrap; word-break: break-word; background: var(--green-soft);
-    border: 1px solid var(--green-border); border-radius: 8px; padding: 10px; font-size: 12px; max-height: 220px; overflow: auto;
+    border: 1px solid var(--green-border); border-radius: 10px; padding: 10px; font-size: 12px;
+    color: #065F46; max-height: 220px; overflow: auto;
   }
 
   /* Auth Gate */
   #authGate {
     position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 18px;
-    background: radial-gradient(circle at 50% 30%, #1E3A8A 0%, #0F172A 100%);
+    background: linear-gradient(135deg, #CFCBFF 0%, #5B54D6 100%);
   }
   .auth-card {
-    width: 100%; max-width: 340px; text-align: center; background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(16px); border-radius: 18px; padding: 28px 22px; color: #FFFFFF;
+    width: 100%; max-width: 350px; text-align: center; background: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 22px; padding: 28px 24px; color: var(--ink);
+    box-shadow: 0 24px 60px rgba(30, 27, 75, 0.25);
   }
   .auth-crest {
-    width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 12px;
-    background: linear-gradient(135deg, #2563EB, #7C3AED); display: grid; place-content: center;
-    font-family: var(--serif); font-size: 20px; font-weight: 700;
+    width: 50px; height: 50px; margin: 0 auto 12px; border-radius: 50%;
+    background: linear-gradient(135deg, #5B54D6, #E67EC9); color: #FFFFFF; display: grid; place-content: center;
+    font-size: 18px; font-weight: 800; box-shadow: 0 8px 20px rgba(91, 84, 214, 0.35);
   }
   #authInput {
-    width: 100%; height: 42px; margin: 14px 0 10px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(255, 255, 255, 0.12); color: #FFFFFF; text-align: center; font-size: 15px;
+    width: 100%; height: 42px; margin: 14px 0 10px; border-radius: 12px; border: 1px solid var(--field);
+    background: var(--sheet-alt); color: var(--ink); text-align: center; font-size: 15px; outline: none;
   }
-  #authError { display: none; color: #FDA4AF; font-size: 12px; margin-top: 8px; }
+  #authInput:focus { border-color: var(--accent); background: #FFFFFF; }
+  #authError { display: none; color: var(--red); font-size: 12px; margin-top: 8px; }
+
+  /* Responsive Adaptation for Tablets & Mobile */
+  @media (max-width: 920px) {
+    html, body { padding: 8px; }
+    .app-shell {
+      grid-template-columns: 1fr;
+      border-radius: 18px;
+    }
+    .app-sidebar {
+      border-right: 0;
+      border-bottom: 1px solid var(--rule);
+      padding: 12px;
+      gap: 10px;
+    }
+    .brand-row { padding: 0 4px; }
+    .page-nav {
+      flex-direction: row;
+      overflow-x: auto;
+      gap: 6px;
+    }
+    .page-nav-btn {
+      flex: 1 0 auto;
+      padding: 8px 12px;
+      font-size: 12px;
+      justify-content: center;
+      border-radius: 10px;
+    }
+    .page-nav-btn.active { background: var(--accent); color: #FFFFFF; }
+    .page-nav-btn.active::after { display: none; }
+    .nav-icon-box, .sidebar-section-lbl, .sidebar-workspaces, .sidebar-ember-card .ember-desc { display: none; }
+    .sidebar-ember-card {
+      margin: 0; padding: 8px 12px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    #resetBtn { width: auto; margin-top: 0; padding: 5px 12px; }
+    .app-main { padding: 12px; }
+    .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero-analytics-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -362,10 +667,10 @@
 <div id="authGate">
   <div class="auth-card">
     <div class="auth-crest">MM</div>
-    <div style="font-family:var(--serif); font-size:23px; font-weight:700;">Mustannsirr Mallik</div>
-    <div style="font-size:12px; color:#CBD5E1; margin-top:2px;">Tax &amp; Accounts Consultant &bull; Indore</div>
+    <div style="font-size:21px; font-weight:800; letter-spacing:-0.02em;">Mustannsirr Mallik</div>
+    <div style="font-size:12px; color:var(--muted); margin-top:2px;">Tax &amp; Accounts Consultant &bull; Indore</div>
     <input type="password" id="authInput" placeholder="Enter dashboard password" onkeydown="if(event.key==='Enter') checkAuth();">
-    <button type="button" class="btn btn-primary" style="width:100%; height:42px;" onclick="checkAuth()">Unlock Dashboard</button>
+    <button type="button" class="btn btn-primary" style="width:100%; height:42px; border-radius:12px;" onclick="checkAuth()">Unlock Workspace</button>
     <div id="authError">Incorrect password &mdash; please try again.</div>
   </div>
 </div>
@@ -381,72 +686,125 @@
   </div>
 </div>
 
-<header class="masthead">
-  <div class="masthead-brand">
-    <div class="masthead-crest">MM</div>
+<div class="app-shell">
+  <!-- Left Obsidian Sidebar -->
+  <aside class="app-sidebar">
+    <div class="brand-row">
+      <div class="brand-crest">MM</div>
+      <div>
+        <div class="brand-title">Mustannsirr Mallik</div>
+        <div class="brand-sub">Tax &amp; Accounts &bull; Indore</div>
+      </div>
+    </div>
+
     <div>
-      <h1>Mustannsirr Mallik</h1>
-      <div class="sub">Tax &amp; Accounts Consultant &bull; Indore</div>
+      <div class="sidebar-section-lbl">Navigation</div>
+      <nav class="page-nav" role="tablist">
+        <button type="button" id="tabTasks" class="page-nav-btn active" onclick="switchPage('tasks')">
+          <span class="nav-left">
+            <span class="nav-icon-box">✓</span>
+            <span>Tasks &amp; Invitations</span>
+          </span>
+        </button>
+        <button type="button" id="tabFinancials" class="page-nav-btn" onclick="switchPage('financials')">
+          <span class="nav-left">
+            <span class="nav-icon-box">₹</span>
+            <span>Financials</span>
+          </span>
+          <span class="nav-badge" id="finBadge">₹1,07,690</span>
+        </button>
+        <button type="button" id="tabInvoices" class="page-nav-btn" onclick="switchPage('invoices')">
+          <span class="nav-left">
+            <span class="nav-icon-box">📄</span>
+            <span>Invoices</span>
+          </span>
+        </button>
+      </nav>
     </div>
-  </div>
-  <div class="status">
-    <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Ready</span></span>
-    <button id="resetBtn" type="button" onclick="resetData()">Reset</button>
-  </div>
-</header>
 
-<nav class="page-nav" role="tablist">
-  <button type="button" id="tabTasks" class="page-nav-btn active" onclick="switchPage('tasks')">
-    <span>Tasks &amp; Invitations</span>
-  </button>
-  <button type="button" id="tabFinancials" class="page-nav-btn" onclick="switchPage('financials')">
-    <span>Financials &amp; Ziyarat</span>
-    <span class="nav-badge" id="finBadge">₹1,07,690</span>
-  </button>
-  <button type="button" id="tabInvoices" class="page-nav-btn" onclick="switchPage('invoices')">
-    <span>Invoices</span>
-  </button>
-</nav>
-
-<div id="tasksView">
-  <div id="summaryArea"></div>
-
-  <div id="searchRow">
-    <div id="searchWrap">
-      <svg class="ic ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="searchBox" placeholder="Search tasks, invitations, clients, amounts..." oninput="onSearch(this.value)">
-      <button type="button" id="searchClear" onclick="clearSearch()">✕</button>
+    <div class="sidebar-workspaces">
+      <div class="sidebar-section-lbl">Quick Views</div>
+      <div class="sidebar-links">
+        <button type="button" class="sidebar-link" onclick="switchPage('tasks'); setFilter('invitation');">
+          <span class="dot" style="background:var(--c-personal);"></span><span>💌 Invitations</span>
+        </button>
+        <button type="button" class="sidebar-link" onclick="switchPage('tasks'); setFilter('fees');">
+          <span class="dot" style="background:var(--c-fees);"></span><span>Pending Fees</span>
+        </button>
+        <button type="button" class="sidebar-link" onclick="switchPage('financials'); setFinViewMode('trip');">
+          <span class="dot" style="background:var(--green);"></span><span>🕌 Ziyarat Trip</span>
+        </button>
+        <button type="button" class="sidebar-link" onclick="switchPage('financials'); setFinViewMode('loans');">
+          <span class="dot" style="background:var(--amber);"></span><span>🤝 Loans &amp; Advances</span>
+        </button>
+        <button type="button" class="sidebar-link" onclick="switchPage('financials'); setFinViewMode('bs');">
+          <span class="dot" style="background:var(--c-mhj);"></span><span>⚖️ Balance Sheet</span>
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div class="add-box">
-    <select id="newCat" onchange="onCategoryChange()">
-      <option value="PERSONAL">Personal</option>
-      <option value="INVITATION">💌 Invitations</option>
-      <option value="OWN">Professional — OWN</option>
-      <option value="MHJ">Professional — MHJ</option>
-      <option value="SHK">Professional — SHK Husain Arif</option>
-      <option value="FEES">Fees</option>
-      <option value="__NEW__">+ New category…</option>
-    </select>
-    <input type="text" id="newTask" placeholder="New task, invitation, or client…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
-    <input type="date" id="newDueDate" style="flex:1; min-width:115px;">
-    <button type="button" onclick="addTask()">+ Add</button>
-  </div>
-  <div class="add-box" id="feeFields" style="display:none;">
-    <input type="number" id="feePayable" placeholder="₹ Payable" style="flex:1; min-width:95px;">
-    <input type="number" id="feeReceived" placeholder="₹ Received" style="flex:1; min-width:95px;">
-    <input type="text" id="feeLinked" placeholder="Client name (optional)" style="flex:2; min-width:130px;">
-    <input type="tel" id="feePhone" placeholder="Phone (for WhatsApp)" style="flex:2; min-width:130px;">
-  </div>
+    <div class="sidebar-ember-card">
+      <div class="ember-orb">⚡</div>
+      <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Ready</span></span>
+      <div class="ember-desc" style="font-size:11px; color:var(--muted); margin-top:6px;">Live Google Calendar &amp; Cloud Ledger Sync</div>
+      <button id="resetBtn" type="button" onclick="resetData()">Reset Local Cache</button>
+    </div>
+  </aside>
 
-  <div id="app">
-    <div style="text-align:center; padding:24px; color:var(--muted);">Loading tasks...</div>
-  </div>
+  <!-- Main Workspace -->
+  <main class="app-main">
+    <div id="tasksView">
+      <div class="top-command-bar">
+        <div class="greeting-block">
+          <h2>Welcome, Mustannsirr!</h2>
+          <p>Today is a great day to manage your practice, clients &amp; finances.</p>
+        </div>
+        <div class="top-command-controls">
+          <div id="searchRow">
+            <div id="searchWrap">
+              <svg class="ic ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="text" id="searchBox" placeholder="Search tasks, clients, amounts..." oninput="onSearch(this.value)">
+              <button type="button" id="searchClear" onclick="clearSearch()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-quiet" onclick="toggleAllGroups(true)">Fold</button>
+          <button type="button" class="btn btn-quiet" onclick="toggleAllGroups(false)">Expand</button>
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('newTask').focus();">+ New Task</button>
+        </div>
+      </div>
+
+      <div id="summaryArea"></div>
+
+      <div class="add-box">
+        <select id="newCat" onchange="onCategoryChange()">
+          <option value="PERSONAL">Personal</option>
+          <option value="INVITATION">💌 Invitations</option>
+          <option value="OWN">Professional — OWN</option>
+          <option value="MHJ">Professional — MHJ</option>
+          <option value="SHK">Professional — SHK Husain Arif</option>
+          <option value="FEES">Fees</option>
+          <option value="__NEW__">+ New category…</option>
+        </select>
+        <input type="text" id="newTask" placeholder="New task, invitation, or client…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+        <input type="date" id="newDueDate" style="flex:1; min-width:115px;">
+        <button type="button" onclick="addTask()">+ Add</button>
+      </div>
+      <div class="add-box" id="feeFields" style="display:none;">
+        <input type="number" id="feePayable" placeholder="₹ Payable" style="flex:1; min-width:95px;">
+        <input type="number" id="feeReceived" placeholder="₹ Received" style="flex:1; min-width:95px;">
+        <input type="text" id="feeLinked" placeholder="Client name (optional)" style="flex:2; min-width:130px;">
+        <input type="tel" id="feePhone" placeholder="Phone (for WhatsApp)" style="flex:2; min-width:130px;">
+      </div>
+
+      <div id="app">
+        <div style="text-align:center; padding:24px; color:var(--muted);">Loading tasks...</div>
+      </div>
+    </div>
+
+    <div id="financialsView"></div>
+    <div id="invoicesView"></div>
+  </main>
 </div>
-
-<div id="financialsView"></div>
-<div id="invoicesView"></div>
 
 <script>
 const STORAGE_KEY = 'tasks-v2';
@@ -1952,9 +2310,9 @@ function renderInvoicesPage() {
       <div class="fin-card"><div class="f-lbl">Pending Balance</div><div class="f-val" style="color:var(--red);">${inr(totalDue)}</div></div>
     </div>
     <div class="statement-sheet">
-      <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #7C3AED 100%);">
+      <div class="statement-header" style="background:linear-gradient(120deg, #564FD1 0%, #7C74F0 100%);">
         <h3>📄 Client Invoices &amp; Billing Register</h3>
-        <span style="font-size:11px;">${feeTasks.length} Billable Entries</span>
+        <span style="font-size:11px; opacity:0.9;">${feeTasks.length} Billable Entries</span>
       </div>
       <div class="statement-body">
         <div class="table-responsive">
@@ -2062,7 +2420,7 @@ function renderFinancialsPage() {
             <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
             <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openEditBalancesModal()">✏️ Balances</button>
             <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px;" onclick="openAddLoanModal()">+ Loan</button>
-            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px; border-color:#FDE68A; background:#FFFBEB; color:#B45309;" onclick="openReconcileLedgerModal()">🛠️ Fix / Sync</button>
+            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px; border-color:var(--amber-border); background:var(--amber-soft); color:#B45309;" onclick="openReconcileLedgerModal()">🛠️ Fix / Sync</button>
           </div>
         </div>
 
@@ -2074,12 +2432,12 @@ function renderFinancialsPage() {
           </div>
           <div class="fin-card">
             <div class="f-lbl">slice SFB Bank</div>
-            <div class="f-val" style="color:#1E3A8A;">${inr(bankSlice)}</div>
+            <div class="f-val" style="color:var(--accent);">${inr(bankSlice)}</div>
             <div class="f-sub">Liquid Total: ${inr(totalLiquidCashBank)}</div>
           </div>
           <div class="fin-card">
             <div class="f-lbl">Debtors &amp; Loans Given</div>
-            <div class="f-val" style="color:var(--red);">${inr(totalLoansGiven + sundryDebtorsReceivable)}</div>
+            <div class="f-val" style="color:#BE185D;">${inr(totalLoansGiven + sundryDebtorsReceivable)}</div>
             <div class="f-sub">Loans: ${inr(totalLoansGiven)} &bull; Debtors: ${inr(sundryDebtorsReceivable)}</div>
           </div>
           <div class="fin-card">
@@ -2097,7 +2455,7 @@ function renderFinancialsPage() {
       const openJv = isSecOpen('journal');
       html += `
         <div class="statement-sheet">
-          <div class="statement-header" style="background:linear-gradient(120deg, #1E3A8A 0%, #4F46E5 100%); cursor:pointer;" onclick="toggleFinSection('journal')">
+          <div class="statement-header" style="background:linear-gradient(120deg, #564FD1 0%, #7C74F0 100%); cursor:pointer;" onclick="toggleFinSection('journal')">
             <h3>${openJv ? '▾' : '▸'} 📒 Double-Entry Journal Register</h3>
             <div style="display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
               <span style="font-size:11px; opacity:0.9;">${jvList.length} Voucher(s)</span>
@@ -2141,7 +2499,7 @@ function renderFinancialsPage() {
 
       html += `
         <div class="statement-sheet">
-          <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #059669 100%); cursor:pointer;" onclick="toggleFinSection('trip')">
+          <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #10B981 100%); cursor:pointer;" onclick="toggleFinSection('trip')">
             <h3>${openTrip ? '▾' : '▸'} 🕌 Kathiyawad Ziyarat Trip &mdash; 3 Families Split</h3>
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;" onclick="event.stopPropagation()">
               <span style="font-size:11px; font-weight:700;">Outlay: ${inr(totalTripOutlay)} &bull; Share: ${inr(equalFamilyShare)}/family</span>
@@ -2221,7 +2579,7 @@ function renderFinancialsPage() {
 
       html += `
         <div class="statement-sheet">
-          <div class="statement-header" style="background:linear-gradient(120deg, #B45309 0%, #D97706 100%); cursor:pointer;" onclick="toggleFinSection('loans')">
+          <div class="statement-header" style="background:linear-gradient(120deg, #D97706 0%, #F59E0B 100%); cursor:pointer;" onclick="toggleFinSection('loans')">
             <h3>${openLoans ? '▾' : '▸'} 🤝 Loans &amp; Advances Manager</h3>
             <div style="display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
               <span style="font-size:11px; font-weight:700;">Given: ${inr(totalLoansGiven)} &bull; Taken: ${inr(totalLoansTaken)}</span>
@@ -2237,7 +2595,7 @@ function renderFinancialsPage() {
                     <span class="loan-pill ${juzerNet > 0 ? 'asset' : 'settled'}">${juzerNet > 0 ? 'Given (Asset)' : 'Settled'}</span>
                   </div>
                   <div style="font-size:11px; color:var(--muted); margin:3px 0;">${escapeForHtml(ledger.loansGiven.juzer.note)}</div>
-                  <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--red); margin:4px 0;">${inr(juzerNet)}</div>
+                  <div style="font-size:20px; font-weight:800; color:#BE185D; margin:4px 0;">${inr(juzerNet)}</div>
                   ${renderSubEntries('juzer', ledger.loansGiven.juzer.entries, true)}
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
@@ -2254,7 +2612,7 @@ function renderFinancialsPage() {
                     <span class="loan-pill ${mhjNet > 0 ? 'liab' : 'settled'}">${mhjNet > 0 ? 'Taken (Liability)' : 'Settled'}</span>
                   </div>
                   <div style="font-size:11px; color:var(--muted); margin:3px 0;">${escapeForHtml(ledger.loansTaken.mhj.note)}</div>
-                  <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--amber); margin:4px 0;">${inr(mhjNet)}</div>
+                  <div style="font-size:20px; font-weight:800; color:var(--amber); margin:4px 0;">${inr(mhjNet)}</div>
                   ${renderSubEntries('mhj', ledger.loansTaken.mhj.entries, true)}
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
@@ -2270,7 +2628,7 @@ function renderFinancialsPage() {
                     <span class="loan-pill ${hatimNet > 0 ? 'liab' : 'settled'}">${hatimNet > 0 ? 'Taken (Liability)' : 'Settled'}</span>
                   </div>
                   <div style="font-size:11px; color:var(--muted); margin:3px 0;">${escapeForHtml(ledger.loansTaken.hatim.note)}</div>
-                  <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:var(--amber); margin:4px 0;">${inr(hatimNet)}</div>
+                  <div style="font-size:20px; font-weight:800; color:var(--amber); margin:4px 0;">${inr(hatimNet)}</div>
                   ${renderSubEntries('hatim', ledger.loansTaken.hatim.entries, true)}
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
@@ -2290,7 +2648,7 @@ function renderFinancialsPage() {
                         <span class="loan-pill ${rem > 0 ? (isG ? 'asset' : 'liab') : 'settled'}">${rem > 0 ? (isG ? 'Given (Asset)' : 'Taken (Liability)') : 'Settled'}</span>
                       </div>
                       <div style="font-size:11px; color:var(--muted); margin:3px 0;">${escapeForHtml(cl.note || cl.mode)}</div>
-                      <div style="font-family:var(--serif); font-size:20px; font-weight:700; color:${isG ? 'var(--red)' : 'var(--amber)'}; margin:4px 0;">${inr(rem)}</div>
+                      <div style="font-size:20px; font-weight:800; color:${isG ? '#BE185D' : 'var(--amber)'}; margin:4px 0;">${inr(rem)}</div>
                       ${renderSubEntries(cl.id, cl.entries, false)}
                     </div>
                     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; align-items:center;">
@@ -2313,7 +2671,7 @@ function renderFinancialsPage() {
       const openExp = isSecOpen('expenses');
       html += `
         <div class="statement-sheet">
-          <div class="statement-header" style="background:linear-gradient(120deg, #BE123C 0%, #E11D48 100%); cursor:pointer;" onclick="toggleFinSection('expenses')">
+          <div class="statement-header" style="background:linear-gradient(120deg, #DB2777 0%, #E67EC9 100%); cursor:pointer;" onclick="toggleFinSection('expenses')">
             <h3>${openExp ? '▾' : '▸'} 💸 Expenses &amp; Personal Drawings</h3>
             <div style="display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
               <span style="font-size:11px; font-weight:700;">OpEx: ${inr(totalOperatingExpenses)} &bull; Drawings: ${inr(totalPersonalDrawings)}</span>
@@ -2350,7 +2708,7 @@ function renderFinancialsPage() {
       const openPl = isSecOpen('pl');
       html += `
         <div class="statement-sheet">
-          <div class="statement-header" style="background:linear-gradient(120deg, #065F46 0%, #059669 100%); cursor:pointer;" onclick="toggleFinSection('pl')">
+          <div class="statement-header" style="background:linear-gradient(120deg, #059669 0%, #10B981 100%); cursor:pointer;" onclick="toggleFinSection('pl')">
             <h3>${openPl ? '▾' : '▸'} 📈 Profit &amp; Loss Statement (Accrual Basis)</h3>
             <span style="font-size:11.5px; font-weight:700;">Net Profit: ${inr(netProfit)}</span>
           </div>
@@ -2360,7 +2718,7 @@ function renderFinancialsPage() {
               <tbody>
                 <tr><td><strong>Gross Professional Fees Billed (Accrual Income)</strong></td><td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td></tr>
                 <tr><td>Less: Operating Business Expenses</td><td class="text-right stmt-mono" style="color:var(--red);">-${inr(totalOperatingExpenses)}</td></tr>
-                <tr style="background:#ECFDF5; font-weight:700;"><td>Net Business Profit (Transferred to Capital)</td><td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td></tr>
+                <tr style="background:var(--green-soft); font-weight:700;"><td>Net Business Profit (Transferred to Capital)</td><td class="text-right stmt-mono" style="color:var(--green);">${inr(netProfit)}</td></tr>
               </tbody>
             </table></div>
           </div>` : ''}
@@ -2373,27 +2731,27 @@ function renderFinancialsPage() {
       const openBs = isSecOpen('bs');
       html += `
         <div class="statement-sheet">
-          <div class="statement-header" style="background:linear-gradient(120deg, #0F172A 0%, #1E3A8A 100%); cursor:pointer;" onclick="toggleFinSection('bs')">
+          <div class="statement-header" style="background:linear-gradient(120deg, #312E81 0%, #5B54D6 100%); cursor:pointer;" onclick="toggleFinSection('bs')">
             <h3>${openBs ? '▾' : '▸'} ⚖️ Balance Sheet Statement</h3>
             <span style="font-size:11.5px; font-weight:700;">Total Assets = Liabilities + Equity: ${inr(totalAssets)}</span>
           </div>
           ${openBs ? `<div class="statement-body">
             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); gap:12px;">
               <div>
-                <h4 style="margin:0 0 6px; color:#1E3A8A;">Liabilities &amp; Owner's Equity</h4>
+                <h4 style="margin:0 0 6px; color:var(--accent);">Liabilities &amp; Owner's Equity</h4>
                 <table class="stmt-table">
                   <tbody>
                     <tr><td>Opening Capital / Prior Reserves</td><td class="text-right stmt-mono">${inr(openingCapitalReserves)}</td></tr>
                     <tr><td style="color:var(--green);">Add: Net Profit from P&amp;L</td><td class="text-right stmt-mono" style="color:var(--green);">+${inr(netProfit)}</td></tr>
                     <tr><td style="color:var(--red);">Less: Personal Drawings</td><td class="text-right stmt-mono" style="color:var(--red);">-${inr(totalPersonalDrawings)}</td></tr>
-                    <tr style="background:#F8FAFC; font-weight:700;"><td>Closing Net Owner's Capital Account</td><td class="text-right stmt-mono">${inr(effectiveCapital)}</td></tr>
+                    <tr style="background:var(--sheet-alt); font-weight:700;"><td>Closing Net Owner's Capital Account</td><td class="text-right stmt-mono">${inr(effectiveCapital)}</td></tr>
                     <tr><td>Loans &amp; Advances Taken (MHJ, Hatim &amp; Others)</td><td class="text-right stmt-mono">${inr(totalLoansTaken)}</td></tr>
-                    <tr style="background:#EFF6FF; font-weight:700;"><td>Total Liabilities &amp; Equity</td><td class="text-right stmt-mono">${inr(effectiveCapital + totalLoansTaken)}</td></tr>
+                    <tr style="background:var(--accent-soft); font-weight:700;"><td>Total Liabilities &amp; Equity</td><td class="text-right stmt-mono">${inr(effectiveCapital + totalLoansTaken)}</td></tr>
                   </tbody>
                 </table>
               </div>
               <div>
-                <h4 style="margin:0 0 6px; color:#065F46;">Assets</h4>
+                <h4 style="margin:0 0 6px; color:var(--green);">Assets</h4>
                 <table class="stmt-table">
                   <tbody>
                     <tr><td>Cash in Hand</td><td class="text-right stmt-mono" style="color:${cashInHand < 0 ? 'var(--red)' : 'inherit'};">${inr(cashInHand)}</td></tr>
@@ -2401,7 +2759,7 @@ function renderFinancialsPage() {
                     <tr><td>Sundry Debtors (Pending Fees Receivable)</td><td class="text-right stmt-mono">${inr(sundryDebtorsReceivable)}</td></tr>
                     <tr><td>Loans &amp; Advances Given (Juzer &amp; Others)</td><td class="text-right stmt-mono">${inr(totalLoansGiven)}</td></tr>
                     <tr><td>Kathiyawad Ziyarat Net Advance<br><small style="color:var(--muted);">Outlay ${inr(totalTripOutlay)} &minus; Contrib ${inr(totalTripContrib)} (Your 1/3 share: ${inr(equalFamilyShare)})</small></td><td class="text-right stmt-mono">${inr(netTripOutflow)}</td></tr>
-                    <tr style="background:#ECFDF5; font-weight:700;"><td>Total Assets</td><td class="text-right stmt-mono">${inr(totalAssets)}</td></tr>
+                    <tr style="background:var(--green-soft); font-weight:700;"><td>Total Assets</td><td class="text-right stmt-mono">${inr(totalAssets)}</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2435,17 +2793,109 @@ function render() {
 
   const pending = tasks.filter(t => t && !t.done).length;
   const completed = tasks.filter(t => t && t.done).length;
+  const completionPct = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
   const feeDue = tasks.filter(t => t && t.type === 'fee' && !isLoanFeeTask(t)).reduce((a, t) => a + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
   const invCount = tasks.filter(t => t && isInvitationTask(t) && !t.done).length;
+
+  // Build live category bar distribution for the Indigo Analytics Banner
+  const barBuckets = [
+    { lbl: 'OWN', list: tasks.filter(t => t && t.cat === 'OWN') },
+    { lbl: 'MHJ', list: tasks.filter(t => t && t.cat === 'MHJ') },
+    { lbl: 'SHK', list: tasks.filter(t => t && t.cat === 'SHK') },
+    { lbl: 'FEES', list: tasks.filter(t => t && t.type === 'fee') },
+    { lbl: 'INV', list: tasks.filter(t => t && isInvitationTask(t)) },
+    { lbl: 'PER', list: tasks.filter(t => t && !t.cat && t.type === 'personal' && !isInvitationTask(t)) }
+  ];
+  const maxBar = Math.max(1, ...barBuckets.map(b => b.list.length));
+  const arcLen = 157;
+  const doneArc = Math.round((completionPct / 100) * arcLen);
 
   const summary = document.getElementById('summaryArea');
   if (summary) summary.innerHTML = `
     <div class="summary-sheet">
-      <div class="hero-stats">
-        <div class="hero-card"><div class="n">${tasks.length}</div><div class="l">Total Items</div></div>
-        <div class="hero-card"><div class="n" style="color:var(--amber);">${pending}</div><div class="l">Pending</div></div>
-        <div class="hero-card"><div class="n" style="color:var(--c-personal);">${invCount}</div><div class="l">Invitations</div></div>
-        <div class="hero-card"><div class="n" style="color:var(--red);">${inr(feeDue)}</div><div class="l">Fees Due</div></div>
+      <div class="dirga-hero-banner">
+        <div class="hero-stats">
+          <div class="hero-card" style="cursor:pointer;" onclick="setFilter('all')">
+            <div class="hero-card-top"><span class="l">Total Items</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-bottom">
+              <div class="n">${tasks.length}</div>
+              <span class="hero-pill mint">${completionPct}% done</span>
+            </div>
+          </div>
+          <div class="hero-card" style="cursor:pointer;" onclick="setFilter('pending')">
+            <div class="hero-card-top"><span class="l">Pending Tasks</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-bottom">
+              <div class="n">${pending}</div>
+              <span class="hero-pill pink">Active</span>
+            </div>
+          </div>
+          <div class="hero-card" style="cursor:pointer;" onclick="setFilter('invitation')">
+            <div class="hero-card-top"><span class="l">Invitations</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-bottom">
+              <div class="n">${invCount}</div>
+              <span class="hero-pill">Events</span>
+            </div>
+          </div>
+          <div class="hero-card" style="cursor:pointer;" onclick="setFilter('fees')">
+            <div class="hero-card-top"><span class="l">Fees Due</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-bottom">
+              <div class="n">${inr(feeDue)}</div>
+              <span class="hero-pill pink">Receivable</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-analytics-grid">
+          <div class="hero-chart-box">
+            <div class="hero-chart-head">
+              <span>Practice Workload Analytics</span>
+              <div class="hero-chart-legend">
+                <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#E67EC9;margin-right:4px;"></span>Done</span>
+                <span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#FCEBF6;margin-right:4px;"></span>Pending</span>
+              </div>
+            </div>
+            <div class="hero-bars">
+              ${barBuckets.map(b => {
+                const totalH = Math.max(8, Math.round((b.list.length / maxBar) * 100));
+                const doneCnt = b.list.filter(x => x.done).length;
+                const donePct = b.list.length ? Math.round((doneCnt / b.list.length) * 100) : 0;
+                const doneH = Math.round((totalH * donePct) / 100);
+                const pendH = Math.max(0, totalH - doneH);
+                return `
+                  <div class="hero-bar-col" title="${b.lbl}: ${b.list.length} total (${doneCnt} done)">
+                    <div class="hero-bar-track">
+                      <div class="hero-bar-top" style="height:${pendH}%;"></div>
+                      <div class="hero-bar-bot" style="height:${doneH}%;"></div>
+                    </div>
+                    <span class="hero-bar-lbl">${b.lbl}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="hero-gauge-box">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:700;">
+              <span>Activity Completion</span>
+              <span style="opacity:0.7;">•••</span>
+            </div>
+            <div style="position:relative; width:146px; height:84px; margin:2px auto 0;">
+              <svg viewBox="0 0 140 80" width="146" height="84">
+                <path d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="14" stroke-linecap="round"/>
+                <path d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#E67EC9" stroke-width="14" stroke-linecap="round" stroke-dasharray="${doneArc} ${arcLen}"/>
+                <path d="M 20 70 A 50 50 0 0 1 120 70" fill="none" stroke="#FCD34D" stroke-width="14" stroke-linecap="round" stroke-dasharray="${Math.min(18, Math.max(0, arcLen - doneArc))} ${arcLen}" stroke-dashoffset="-${doneArc}"/>
+              </svg>
+              <div style="position:absolute; left:0; right:0; bottom:4px; text-align:center;">
+                <div style="font-size:20px; font-weight:800; line-height:1;">${completionPct}%</div>
+                <div style="font-size:10px; opacity:0.8; margin-top:2px;">${completed} / ${tasks.length} Tasks</div>
+              </div>
+            </div>
+            <div style="width:100%; display:flex; justify-content:space-around; font-size:10.5px; opacity:0.88; padding-top:4px;">
+              <span>Done: <strong>${completed}</strong></span>
+              <span>Pending: <strong>${pending}</strong></span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>`;
 
