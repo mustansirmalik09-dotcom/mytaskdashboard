@@ -79,19 +79,24 @@
   }
 
   button, input, select, textarea { font-family: var(--sans); }
-  .ic { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .ic { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: inline-block; vertical-align: -2px; }
+  .ic-sm { width: 12px; height: 12px; vertical-align: -1.5px; }
 
-  /* App Shell: Dirga Space Crisp White Container */
+  /* App Shell */
   .app-shell {
     max-width: 1320px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-columns: 242px minmax(0, 1fr);
     background: var(--shell);
     border: 1px solid rgba(255, 255, 255, 0.85);
     border-radius: 24px;
     box-shadow: var(--shadow-md);
     overflow: hidden;
+  }
+  .app-shell.public-family-mode {
+    grid-template-columns: 1fr;
+    max-width: 1080px;
   }
   .app-sidebar, .app-main { position: relative; min-width: 0; }
 
@@ -102,7 +107,7 @@
     padding: 20px 0 18px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
     min-height: 100%;
   }
   .brand-row {
@@ -152,10 +157,7 @@
     transition: all 0.16s ease;
     text-align: left;
   }
-  .page-nav-btn:hover {
-    background: var(--sheet-alt);
-    color: var(--ink);
-  }
+  .page-nav-btn:hover { background: var(--sheet-alt); color: var(--ink); }
   .page-nav-btn.active {
     color: var(--ink);
     font-weight: 700;
@@ -164,9 +166,7 @@
   .page-nav-btn.active::after {
     content: "";
     position: absolute;
-    right: 0;
-    top: 7px;
-    bottom: 7px;
+    right: 0; top: 7px; bottom: 7px;
     width: 3.5px;
     border-radius: 4px 0 0 4px;
     background: var(--accent);
@@ -178,7 +178,7 @@
     width: 24px; height: 24px; border-radius: 7px;
     background: var(--sheet-alt);
     display: grid; place-content: center;
-    color: var(--muted); font-size: 12px; flex: none;
+    color: var(--muted); font-size: 12px; font-weight: 700; flex: none;
   }
   .page-nav-btn.active .nav-icon-box {
     background: var(--accent-soft);
@@ -206,42 +206,59 @@
   .sidebar-link:hover { background: var(--sheet-alt); color: var(--accent); }
   .sidebar-link .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
 
-  /* Sidebar Bottom Pastel Geometric Sync Card (Dirga Space Style) */
+  /* Sidebar Bottom Card */
   .sidebar-ember-card {
     margin: auto 16px 0;
-    padding: 16px 12px 14px;
+    padding: 14px 12px 12px;
     border-radius: 18px;
     background:
-      radial-gradient(circle at 15% 15%, #5B54D6 0%, #5B54D6 34%, transparent 35%),
-      radial-gradient(circle at 88% 18%, #E67EC9 0%, #E67EC9 28%, transparent 29%),
-      radial-gradient(circle at 82% 72%, #FCE7F3 0%, #FCE7F3 34%, transparent 35%),
+      radial-gradient(circle at 15% 15%, #5B54D6 0%, #5B54D6 30%, transparent 31%),
+      radial-gradient(circle at 88% 18%, #E67EC9 0%, #E67EC9 24%, transparent 25%),
+      radial-gradient(circle at 82% 72%, #FCE7F3 0%, #FCE7F3 30%, transparent 31%),
       linear-gradient(145deg, #EAE8FF 0%, #E0DBFF 100%);
     border: 1px solid #DFDCFA;
     text-align: center;
     position: relative;
     overflow: hidden;
   }
-  .ember-orb { display: none; }
   .sync-badge {
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     background: #FFFFFF; border: 1px solid rgba(91, 84, 214, 0.14);
-    border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700; color: var(--ink);
+    border-radius: 999px; padding: 5px 11px; font-size: 11px; font-weight: 700; color: var(--ink);
     box-shadow: 0 4px 12px rgba(91, 84, 214, 0.12);
+    max-width: 100%;
   }
-  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22); }
-  #resetBtn {
-    width: 100%; margin-top: 10px;
-    background: rgba(255, 255, 255, 0.92); border: 1px solid rgba(91, 84, 214, 0.16);
-    border-radius: 999px; padding: 7px 12px; font: 700 11.5px var(--sans); color: var(--accent); cursor: pointer;
-    box-shadow: 0 3px 10px rgba(91, 84, 214, 0.10);
+  .ember-desc {
+    font-size: 10.5px; font-weight: 600; color: var(--ink);
+    margin: 7px auto 0; padding: 3px 8px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78); display: inline-block;
+  }
+  .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22); flex: none; }
+  .pulse-dot.syncing { background: var(--amber); animation: pulseAnim 1s infinite; }
+  @keyframes pulseAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .sidebar-mini-actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px;
+  }
+  .sidebar-mini-btn {
+    background: rgba(255, 255, 255, 0.94); border: 1px solid rgba(91, 84, 214, 0.16);
+    border-radius: 999px; padding: 6px 8px; font: 700 11px var(--sans); color: var(--accent); cursor: pointer;
+    box-shadow: 0 2px 8px rgba(91, 84, 214, 0.08);
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
     transition: all 0.15s ease;
   }
-  #resetBtn:hover { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+  .sidebar-mini-btn:hover { background: var(--accent); color: #FFFFFF; border-color: var(--accent); }
+  #resetBtn {
+    width: 100%; margin-top: 6px;
+    background: rgba(255, 255, 255, 0.88); border: 1px solid rgba(225, 29, 72, 0.18);
+    border-radius: 999px; padding: 6px 10px; font: 700 11px var(--sans); color: var(--red); cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  #resetBtn:hover { background: var(--red); color: #FFFFFF; border-color: var(--red); }
 
   /* Main Workspace */
   .app-main {
     background: var(--canvas);
-    padding: 18px 20px 26px;
+    padding: 18px 20px 28px;
   }
 
   /* Top Greeting & Command Bar */
@@ -260,17 +277,17 @@
     margin: 2px 0 0; font-size: 12px; color: var(--muted);
   }
   .top-command-controls {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1 1 320px; justify-content: flex-end;
+    display: flex; align-items: center; gap: 7px; flex-wrap: wrap; flex: 1 1 320px; justify-content: flex-end;
   }
-  #searchRow { flex: 1 1 200px; max-width: 300px; min-width: 160px; margin: 0; }
+  #searchRow { flex: 1 1 200px; max-width: 280px; min-width: 160px; margin: 0; }
   #searchWrap { position: relative; }
   #searchWrap .ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--icon); pointer-events: none; }
   #searchBox {
-    width: 100%; height: 38px;
+    width: 100%; height: 36px;
     background: #FFFFFF;
     border: 1px solid var(--rule);
     color: var(--ink);
-    padding: 0 32px 0 36px;
+    padding: 0 32px 0 35px;
     border-radius: 999px;
     font-size: 12.5px;
     outline: none;
@@ -279,11 +296,11 @@
   }
   #searchBox:focus { border-color: var(--accent); }
   #searchClear {
-    display: none; position: absolute; right: 6px; top: 5px; width: 28px; height: 28px;
-    border: 0; background: transparent; color: var(--muted); cursor: pointer;
+    display: none; position: absolute; right: 5px; top: 4px; width: 28px; height: 28px;
+    border: 0; background: transparent; color: var(--muted); cursor: pointer; font-weight: 700;
   }
 
-  /* Signature Dirga Space Indigo Hero Card */
+  /* Signature Indigo Hero Card */
   .summary-sheet { margin-bottom: 16px; }
   .dirga-hero-banner {
     background: linear-gradient(135deg, #564FD1 0%, #6860E6 60%, #756DF0 100%);
@@ -310,15 +327,11 @@
     transition: background 0.16s ease, transform 0.16s ease;
   }
   .hero-card:hover { background: rgba(255, 255, 255, 0.18); transform: translateY(-1px); }
-  .hero-card-top {
-    display: flex; align-items: center; justify-content: space-between;
-  }
+  .hero-card-top { display: flex; align-items: center; justify-content: space-between; }
   .hero-card .l {
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.78);
   }
-  .hero-arrow {
-    color: rgba(255, 255, 255, 0.75); font-size: 13px; font-weight: 700;
-  }
+  .hero-arrow { color: rgba(255, 255, 255, 0.78); font-size: 15px; font-weight: 700; line-height: 1; }
   .hero-card-bottom {
     display: flex; align-items: baseline; justify-content: space-between; gap: 6px; flex-wrap: wrap;
   }
@@ -367,7 +380,9 @@
   }
   .hero-bar-col {
     display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end;
+    cursor: pointer; transition: transform 0.14s ease;
   }
+  .hero-bar-col:hover { transform: translateY(-2px); }
   .hero-bar-track {
     width: 100%; max-width: 28px; height: 64px;
     background: rgba(255, 255, 255, 0.10);
@@ -376,7 +391,7 @@
   }
   .hero-bar-top { background: #FCEBF6; width: 100%; }
   .hero-bar-bot { background: #E67EC9; width: 100%; }
-  .hero-bar-lbl { font-size: 9.5px; font-weight: 700; color: rgba(255, 255, 255, 0.78); text-transform: uppercase; }
+  .hero-bar-lbl { font-size: 9.5px; font-weight: 700; color: rgba(255, 255, 255, 0.82); text-transform: uppercase; }
 
   .hero-gauge-box {
     background: rgba(255, 255, 255, 0.09);
@@ -392,7 +407,7 @@
 
   /* Quick Add Bar */
   .add-box {
-    display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
     background: #FFFFFF;
     border: 1px solid var(--rule);
     border-radius: 16px;
@@ -414,11 +429,15 @@
   }
   .add-box button:hover { filter: brightness(1.06); }
 
-  /* Filter Pills */
-  .filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  /* Filter & Sort Toolbar */
+  .filter-toolbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .filters.seg {
+    flex: 1 1 auto;
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 5px;
     padding: 4px;
     background: #FFFFFF;
     border: 1px solid var(--rule);
@@ -428,17 +447,22 @@
     box-shadow: var(--shadow-sm);
   }
   .filters.seg::-webkit-scrollbar { display: none; }
-  .filter-btn { cursor: pointer; font: 600 12px var(--sans); transition: all 0.14s ease; }
+  .filter-btn { cursor: pointer; font: 600 12px var(--sans); transition: all 0.14s ease; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
   .filters.seg .filter-btn {
     flex: 1 0 auto; border: 0;
     background: transparent; color: var(--muted);
-    padding: 7px 12px; border-radius: 9px; white-space: nowrap;
+    padding: 7px 11px; border-radius: 9px; white-space: nowrap;
   }
   .filters.seg .filter-btn:hover { color: var(--ink); background: var(--sheet-alt); }
   .filters.seg .filter-btn.active {
     background: var(--accent);
     color: #FFFFFF;
     box-shadow: 0 3px 10px rgba(91, 84, 214, 0.25);
+  }
+  .sort-select {
+    height: 36px; padding: 0 11px; border-radius: 11px; border: 1px solid var(--rule);
+    background: #FFFFFF; color: var(--ink); font: 600 12px var(--sans); outline: none;
+    box-shadow: var(--shadow-sm); cursor: pointer;
   }
 
   /* Task Category Sections & Cards */
@@ -454,12 +478,12 @@
   .cat-section.collapsed .cat-heading { margin-bottom: 0; }
   .cat-section.collapsed .chev { transform: rotate(-90deg); }
   .cat-heading .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-  .cat-heading .title { font-weight: 700; font-size: 14px; color: var(--ink); }
+  .cat-heading .title { font-weight: 700; font-size: 14px; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
   .cat-heading .count {
     margin-left: auto; padding: 2px 9px; background: var(--accent-soft);
     border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--accent);
   }
-  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 9px; }
+  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 9px; }
   .task {
     display: flex; align-items: flex-start; gap: 9px; padding: 11px 13px;
     background: #FFFFFF; border: 1px solid var(--rule); border-radius: 14px;
@@ -467,24 +491,33 @@
     transition: border-color 0.15s ease, transform 0.15s ease;
   }
   .task:hover { border-color: var(--accent-border); transform: translateY(-1px); }
+  .task.urgent-task { border-left: 3.5px solid var(--red); }
   .task.done-task {
     background: #FAFBFD; border-style: dashed; opacity: 0.78; box-shadow: none;
   }
   .task.done-task .task-name { text-decoration: line-through; color: var(--muted); }
-  .task input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; }
+  .task input[type=checkbox] { width: 17px; height: 17px; margin-top: 2px; accent-color: var(--accent); cursor: pointer; flex: none; }
   .task-body { flex: 1; min-width: 0; }
   .task-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
   .task-name { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
   .amt { font-family: var(--mono); font-weight: 700; font-size: 14px; white-space: nowrap; }
   .amt.owed { color: var(--red); }
   .amt.clear { font-size: 11px; font-family: var(--sans); color: var(--green); background: var(--green-soft); padding: 2px 8px; border-radius: 999px; }
-  .task-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .task-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .pill-tag {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700;
+  }
+  .pill-tag.urgent { background: var(--red-soft); color: var(--red); border: 1px solid var(--red-border); }
+  .pill-tag.overdue { background: var(--red-soft); color: var(--red); }
+  .pill-tag.today { background: var(--amber-soft); color: var(--amber); }
+  .pill-tag.upcoming { background: var(--accent-soft); color: var(--accent); }
   .note {
     display: inline-flex; align-items: flex-start; gap: 5px; margin-top: 5px; padding: 4px 9px;
     border-radius: 8px; background: var(--pink-soft); border: 1px solid var(--pink-border);
     color: #9D174D; font-size: 11px; font-weight: 600;
   }
-  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 7px; }
+  .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 7px; }
   .act {
     display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 0;
     font: 600 11.5px var(--sans); color: var(--accent); cursor: pointer;
@@ -495,7 +528,7 @@
     padding: 3px 9px; border: 1px solid var(--accent-border); border-radius: 999px;
     background: var(--accent-soft); color: var(--accent);
   }
-  .act.del { color: var(--muted-light); padding: 2px; }
+  .act.del { color: var(--muted-light); padding: 2px; margin-left: auto; }
   .act.del:hover { color: var(--red); }
   .done-toggle {
     grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between;
@@ -514,6 +547,7 @@
   .fin-mode-btn {
     border: 0; background: transparent; padding: 6px 11px; border-radius: 8px;
     font: 700 11.5px var(--sans); color: var(--muted); cursor: pointer; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
   }
   .fin-mode-btn:hover { color: var(--ink); }
   .fin-mode-btn.active { background: var(--accent); color: #FFFFFF; box-shadow: 0 3px 10px rgba(91, 84, 214, 0.28); }
@@ -536,7 +570,7 @@
     padding: 12px 16px; color: #FFFFFF; display: flex; justify-content: space-between;
     align-items: center; flex-wrap: wrap; gap: 8px;
   }
-  .statement-header h3 { font-size: 14.5px; font-weight: 700; margin: 0; }
+  .statement-header h3 { font-size: 14.5px; font-weight: 700; margin: 0; display: inline-flex; align-items: center; gap: 7px; }
   .statement-body { padding: 14px 16px; }
   .table-responsive { width: 100%; overflow-x: auto; }
   .stmt-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
@@ -579,7 +613,7 @@
   }
   .modal {
     background: #FFFFFF; border: 1px solid var(--rule); border-radius: 20px;
-    padding: 22px; width: 100%; max-width: 430px; max-height: 90vh; overflow-y: auto;
+    padding: 22px; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
     box-shadow: 0 24px 60px rgba(30, 27, 75, 0.22); color: var(--ink);
   }
   #modalTitle { font-weight: 800; font-size: 17px; margin-bottom: 12px; color: var(--ink); }
@@ -598,6 +632,25 @@
     white-space: pre-wrap; word-break: break-word; background: var(--green-soft);
     border: 1px solid var(--green-border); border-radius: 10px; padding: 10px; font-size: 12px;
     color: #065F46; max-height: 220px; overflow: auto;
+  }
+
+  /* Toast Notification */
+  #toastContainer {
+    position: fixed; bottom: 20px; right: 20px; z-index: 3000;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  }
+  .toast-msg {
+    background: #1E1B4B; color: #FFFFFF; padding: 10px 16px; border-radius: 12px;
+    font-size: 12.5px; font-weight: 600; box-shadow: 0 10px 25px rgba(30, 27, 75, 0.25);
+    display: flex; align-items: center; gap: 8px;
+    animation: toastSlide 0.22s ease forwards;
+  }
+  .toast-msg.success { background: #065F46; }
+  .toast-msg.warn { background: #92400E; }
+  .toast-msg.error { background: #9F1239; }
+  @keyframes toastSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Auth Gate */
@@ -622,43 +675,46 @@
   #authInput:focus { border-color: var(--accent); background: #FFFFFF; }
   #authError { display: none; color: var(--red); font-size: 12px; margin-top: 8px; }
 
-  /* Responsive Adaptation for Tablets & Mobile */
+  /* Public Ziyarat Header */
+  .public-family-banner {
+    background: linear-gradient(135deg, #0D9488 0%, #10B981 100%);
+    color: #FFFFFF; padding: 16px 20px; border-radius: 16px; margin-bottom: 14px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+
+  /* Responsive Adaptation */
   @media (max-width: 920px) {
     html, body { padding: 8px; }
-    .app-shell {
-      grid-template-columns: 1fr;
-      border-radius: 18px;
-    }
+    .app-shell { grid-template-columns: 1fr; border-radius: 18px; }
     .app-sidebar {
-      border-right: 0;
-      border-bottom: 1px solid var(--rule);
-      padding: 12px;
-      gap: 10px;
+      border-right: 0; border-bottom: 1px solid var(--rule); padding: 12px; gap: 10px;
     }
     .brand-row { padding: 0 4px; }
-    .page-nav {
-      flex-direction: row;
-      overflow-x: auto;
-      gap: 6px;
-    }
+    .page-nav { flex-direction: row; overflow-x: auto; gap: 6px; }
     .page-nav-btn {
-      flex: 1 0 auto;
-      padding: 8px 12px;
-      font-size: 12px;
-      justify-content: center;
-      border-radius: 10px;
+      flex: 1 0 auto; padding: 8px 12px; font-size: 12px; justify-content: center; border-radius: 10px;
     }
     .page-nav-btn.active { background: var(--accent); color: #FFFFFF; }
     .page-nav-btn.active::after { display: none; }
     .nav-icon-box, .sidebar-section-lbl, .sidebar-workspaces, .sidebar-ember-card .ember-desc { display: none; }
     .sidebar-ember-card {
       margin: 0; padding: 8px 12px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
     }
+    .sidebar-mini-actions { margin-top: 0; display: flex; }
     #resetBtn { width: auto; margin-top: 0; padding: 5px 12px; }
     .app-main { padding: 12px; }
     .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero-analytics-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Print Stylesheet */
+  @media print {
+    html, body { background: #FFFFFF !important; padding: 0 !important; }
+    .app-shell { box-shadow: none !important; border: 0 !important; grid-template-columns: 1fr !important; max-width: 100% !important; }
+    .app-sidebar, .top-command-controls, .add-box, .filter-toolbar, .fin-mode-toggle, #toastContainer, #modalOverlay, #authGate, .btn, .act { display: none !important; }
+    .statement-sheet, .fin-card { box-shadow: none !important; break-inside: avoid; }
+    .statement-header { color: #1E1B4B !important; background: #EEF0FF !important; border-bottom: 1px solid #C7C4F8; }
   }
 </style>
 </head>
@@ -672,10 +728,11 @@
     <input type="password" id="authInput" placeholder="Enter dashboard password" onkeydown="if(event.key==='Enter') checkAuth();">
     <button type="button" class="btn btn-primary" style="width:100%; height:42px; border-radius:12px;" onclick="checkAuth()">Unlock Workspace</button>
     <div id="authError">Incorrect password &mdash; please try again.</div>
+    <div id="authHintNoPass" style="display:none; font-size:11px; color:var(--muted); margin-top:10px;">No password set yet &mdash; click Unlock to enter and configure one in Backup / Settings.</div>
   </div>
 </div>
 
-<div id="modalOverlay" style="display:none;">
+<div id="modalOverlay" style="display:none;" onclick="if(event.target===this) closeModal();">
   <div class="modal" role="dialog" aria-labelledby="modalTitle">
     <div id="modalTitle"></div>
     <div id="modalFields"></div>
@@ -686,9 +743,11 @@
   </div>
 </div>
 
-<div class="app-shell">
-  <!-- Left Obsidian Sidebar -->
-  <aside class="app-sidebar">
+<div id="toastContainer"></div>
+
+<div class="app-shell" id="appShell">
+  <!-- Left Sidebar -->
+  <aside class="app-sidebar" id="appSidebar">
     <div class="brand-row">
       <div class="brand-crest">MM</div>
       <div>
@@ -702,20 +761,24 @@
       <nav class="page-nav" role="tablist">
         <button type="button" id="tabTasks" class="page-nav-btn active" onclick="switchPage('tasks')">
           <span class="nav-left">
-            <span class="nav-icon-box">✓</span>
+            <span class="nav-icon-box">
+              <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
             <span>Tasks &amp; Invitations</span>
           </span>
         </button>
         <button type="button" id="tabFinancials" class="page-nav-btn" onclick="switchPage('financials')">
           <span class="nav-left">
-            <span class="nav-icon-box">₹</span>
+            <span class="nav-icon-box">&#8377;</span>
             <span>Financials</span>
           </span>
-          <span class="nav-badge" id="finBadge">₹1,07,690</span>
+          <span class="nav-badge" id="finBadge">&#8377;1,07,690</span>
         </button>
         <button type="button" id="tabInvoices" class="page-nav-btn" onclick="switchPage('invoices')">
           <span class="nav-left">
-            <span class="nav-icon-box">📄</span>
+            <span class="nav-icon-box">
+              <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+            </span>
             <span>Invoices</span>
           </span>
         </button>
@@ -726,27 +789,59 @@
       <div class="sidebar-section-lbl">Quick Views</div>
       <div class="sidebar-links">
         <button type="button" class="sidebar-link" onclick="switchPage('tasks'); setFilter('invitation');">
-          <span class="dot" style="background:var(--c-personal);"></span><span>💌 Invitations</span>
+          <span class="dot" style="background:var(--c-personal);"></span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <span>Invitations</span>
+        </button>
+        <button type="button" class="sidebar-link" onclick="switchPage('tasks'); setFilter('urgent');">
+          <span class="dot" style="background:var(--red);"></span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          <span>Urgent Items</span>
         </button>
         <button type="button" class="sidebar-link" onclick="switchPage('tasks'); setFilter('fees');">
-          <span class="dot" style="background:var(--c-fees);"></span><span>Pending Fees</span>
+          <span class="dot" style="background:var(--c-fees);"></span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8h6M9 12h6M12 8c1.5 0 2.5 1 2.5 2.5S13.5 13 12 13l3 5"/></svg>
+          <span>Pending Fees</span>
         </button>
         <button type="button" class="sidebar-link" onclick="switchPage('financials'); setFinViewMode('trip');">
-          <span class="dot" style="background:var(--green);"></span><span>🕌 Ziyarat Trip</span>
+          <span class="dot" style="background:var(--green);"></span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg>
+          <span>Ziyarat Trip</span>
         </button>
         <button type="button" class="sidebar-link" onclick="switchPage('financials'); setFinViewMode('loans');">
-          <span class="dot" style="background:var(--amber);"></span><span>🤝 Loans &amp; Advances</span>
+          <span class="dot" style="background:var(--amber);"></span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Loans &amp; Advances</span>
         </button>
         <button type="button" class="sidebar-link" onclick="switchPage('financials'); setFinViewMode('bs');">
-          <span class="dot" style="background:var(--c-mhj);"></span><span>⚖️ Balance Sheet</span>
+          <span class="dot" style="background:var(--c-mhj);"></span>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+          <span>Balance Sheet</span>
         </button>
       </div>
     </div>
 
     <div class="sidebar-ember-card">
-      <div class="ember-orb">⚡</div>
-      <span class="sync-badge"><span class="pulse-dot"></span><span id="lastSync">Ready</span></span>
-      <div class="ember-desc" style="font-size:11px; color:var(--muted); margin-top:6px;">Live Google Calendar &amp; Cloud Ledger Sync</div>
+      <span class="sync-badge"><span class="pulse-dot" id="syncDot"></span><span id="lastSync">Ready</span></span>
+      <div class="ember-desc">Google Calendar &amp; Cloud Ledger</div>
+      <div class="sidebar-mini-actions">
+        <button type="button" class="sidebar-mini-btn" onclick="manualSyncNow()">
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          Sync
+        </button>
+        <button type="button" class="sidebar-mini-btn" onclick="openSettingsBackupModal()">
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Backup
+        </button>
+        <button type="button" class="sidebar-mini-btn" onclick="lockWorkspace()" title="Lock screen">
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Lock
+        </button>
+        <button type="button" class="sidebar-mini-btn" onclick="window.print()" title="Print current view">
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print
+        </button>
+      </div>
       <button id="resetBtn" type="button" onclick="resetData()">Reset Local Cache</button>
     </div>
   </aside>
@@ -756,15 +851,15 @@
     <div id="tasksView">
       <div class="top-command-bar">
         <div class="greeting-block">
-          <h2>Welcome, Mustannsirr!</h2>
-          <p>Today is a great day to manage your practice, clients &amp; finances.</p>
+          <h2 id="greetingTitle">Welcome, Mustannsirr!</h2>
+          <p id="greetingSub">Today is a great day to manage your practice, clients &amp; finances.</p>
         </div>
         <div class="top-command-controls">
           <div id="searchRow">
             <div id="searchWrap">
               <svg class="ic ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-              <input type="text" id="searchBox" placeholder="Search tasks, clients, amounts..." oninput="onSearch(this.value)">
-              <button type="button" id="searchClear" onclick="clearSearch()">✕</button>
+              <input type="text" id="searchBox" placeholder="Search tasks, clients... (/)" oninput="onSearch(this.value)">
+              <button type="button" id="searchClear" onclick="clearSearch()">&times;</button>
             </div>
           </div>
           <button type="button" class="btn btn-quiet" onclick="toggleAllGroups(true)">Fold</button>
@@ -778,20 +873,23 @@
       <div class="add-box">
         <select id="newCat" onchange="onCategoryChange()">
           <option value="PERSONAL">Personal</option>
-          <option value="INVITATION">💌 Invitations</option>
-          <option value="OWN">Professional — OWN</option>
-          <option value="MHJ">Professional — MHJ</option>
-          <option value="SHK">Professional — SHK Husain Arif</option>
+          <option value="INVITATION">Invitations &amp; Events</option>
+          <option value="OWN">Professional &mdash; OWN</option>
+          <option value="MHJ">Professional &mdash; MHJ</option>
+          <option value="SHK">Professional &mdash; SHK Husain Arif</option>
           <option value="FEES">Fees</option>
-          <option value="__NEW__">+ New category…</option>
+          <option value="__NEW__">+ New category&hellip;</option>
         </select>
-        <input type="text" id="newTask" placeholder="New task, invitation, or client…" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
-        <input type="date" id="newDueDate" style="flex:1; min-width:115px;">
+        <input type="text" id="newTask" placeholder="New task, invitation, or client&hellip;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addTask(); }">
+        <input type="date" id="newDueDate" style="flex:1; min-width:125px;" title="Due date">
+        <label style="display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; padding:0 4px;">
+          <input type="checkbox" id="newUrgent" style="width:15px; height:15px; accent-color:var(--red); margin:0;"> Urgent
+        </label>
         <button type="button" onclick="addTask()">+ Add</button>
       </div>
       <div class="add-box" id="feeFields" style="display:none;">
-        <input type="number" id="feePayable" placeholder="₹ Payable" style="flex:1; min-width:95px;">
-        <input type="number" id="feeReceived" placeholder="₹ Received" style="flex:1; min-width:95px;">
+        <input type="number" id="feePayable" placeholder="&#8377; Payable" style="flex:1; min-width:95px;">
+        <input type="number" id="feeReceived" placeholder="&#8377; Received" style="flex:1; min-width:95px;">
         <input type="text" id="feeLinked" placeholder="Client name (optional)" style="flex:2; min-width:130px;">
         <input type="tel" id="feePhone" placeholder="Phone (for WhatsApp)" style="flex:2; min-width:130px;">
       </div>
@@ -813,14 +911,19 @@ const DEFAULT_WEBHOOK = 'https://script.google.com/macros/s/AKfycbwbXqpF6ok4OLyd
 const FIN_LEDGER_KEY = 'mm_fin_ledger_v3';
 const UI_KEY = 'dash-ui-v1';
 const INVOICE_PAGE_BASE = 'https://mustansirrmalikworkdashboard.netlify.app/invoice.html?inv=';
+const RS = '\u20B9';
+const CHK = '\u2713';
 
 let tasks = [];
 let filter = 'all';
+let taskSort = 'default';
 let searchQuery = '';
+let invFilter = 'all';
+let invSearch = '';
 var activePage = 'tasks';
 var finViewMode = 'all';
 var isFamilyPublicView = false;
-var uiState = { collapsed: {}, invitationIds: {} };
+var uiState = { collapsed: {}, invitationIds: {}, customCategories: [] };
 var finCollapsed = { journal: true, trip: true, loans: true, expenses: true, pl: true, bs: true };
 var doneOpen = {};
 
@@ -828,6 +931,7 @@ try {
   const savedUi = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
   if (savedUi && savedUi.collapsed && typeof savedUi.collapsed === 'object') uiState.collapsed = savedUi.collapsed;
   if (savedUi && savedUi.invitationIds && typeof savedUi.invitationIds === 'object') uiState.invitationIds = savedUi.invitationIds;
+  if (savedUi && Array.isArray(savedUi.customCategories)) uiState.customCategories = savedUi.customCategories;
 } catch (e) {}
 
 const ICON = {
@@ -835,13 +939,39 @@ const ICON = {
   doc: '<svg class="ic" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>',
   note: '<svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   x: '<svg class="ic" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
-  chev: '<svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>'
+  chev: '<svg class="ic chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>',
+  flame: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  mail: '<svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>',
+  alert: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  clock: '<svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  book: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  home: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M9 21v-6h6v6"/></svg>',
+  users: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  wallet: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>',
+  chart: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>',
+  scale: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>',
+  edit: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+  download: '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  print: '<svg class="ic ic-sm" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>'
 };
-const EXTRA_COLORS = ['#2563EB', '#7C3AED', '#0D9488', '#DB2777', '#D97706'];
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = 'toast-msg ' + type;
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.25s ease';
+    setTimeout(() => el.remove(), 260);
+  }, 2600);
+}
 
 function inr(n) {
   const v = Math.round((Number(n) || 0) * 100) / 100;
-  return (v < 0 ? '-' : '') + '₹' + Math.abs(v).toLocaleString('en-IN');
+  return (v < 0 ? '-' : '') + RS + Math.abs(v).toLocaleString('en-IN');
 }
 
 function moneyText(n) {
@@ -852,12 +982,32 @@ function escapeForHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function escapeJsStr(s) {
+  return escapeForHtml(String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+}
+
 function getWebhook() {
   return localStorage.getItem(WEBHOOK_KEY) || DEFAULT_WEBHOOK;
 }
 
 function saveUi() {
   try { localStorage.setItem(UI_KEY, JSON.stringify(uiState)); } catch (e) {}
+}
+
+function populateCustomCategories() {
+  const select = document.getElementById('newCat');
+  if (!select || !Array.isArray(uiState.customCategories)) return;
+  const newOpt = select.querySelector('option[value="__NEW__"]');
+  uiState.customCategories.forEach(c => {
+    if (!c || !c.tag) return;
+    const exists = Array.from(select.options).some(o => o.value === c.tag);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = c.tag;
+      opt.textContent = 'Professional \u2014 ' + c.label;
+      select.insertBefore(opt, newOpt);
+    }
+  });
 }
 
 function toggleGroup(key) {
@@ -868,7 +1018,10 @@ function toggleGroup(key) {
 }
 
 function toggleAllGroups(collapse) {
-  ['MHJ', 'SHK', 'OWN', 'personal', 'INVITATION', 'FEES'].forEach(k => {
+  const keys = ['MHJ', 'SHK', 'OWN', 'PERSONAL', 'INVITATION', 'FEES'];
+  (uiState.customCategories || []).forEach(c => { if (c && c.tag) keys.push(c.tag); });
+  tasks.forEach(t => { if (t && t.cat && !keys.includes(t.cat)) keys.push(t.cat); });
+  keys.forEach(k => {
     if (collapse) uiState.collapsed[k] = true;
     else delete uiState.collapsed[k];
   });
@@ -898,11 +1051,16 @@ function setFilter(f) {
   render();
 }
 
+function setTaskSort(s) {
+  taskSort = s || 'default';
+  render();
+}
+
 function onSearch(val) {
   searchQuery = val || '';
   const clr = document.getElementById('searchClear');
   if (clr) clr.style.display = searchQuery ? 'block' : 'none';
-  render(true);
+  render();
 }
 
 function clearSearch() {
@@ -930,6 +1088,23 @@ function moveToInvitation(id) {
   saveUi();
   saveTasks();
   render();
+  showToast('Moved to Invitations ' + CHK, 'success');
+}
+
+function getDueBadge(dueDate, done) {
+  if (!dueDate) return '';
+  const d = new Date(dueDate);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dueStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((dueStart - todayStart) / 86400000);
+  const formatted = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  if (done) return `<span class="pill-tag upcoming">Due ${formatted}</span>`;
+  if (diffDays < 0) return `<span class="pill-tag overdue">${ICON.alert} Overdue (${formatted})</span>`;
+  if (diffDays === 0) return `<span class="pill-tag today">${ICON.clock} Due Today</span>`;
+  if (diffDays === 1) return `<span class="pill-tag upcoming">Tomorrow (${formatted})</span>`;
+  return `<span class="pill-tag upcoming">Due ${formatted}</span>`;
 }
 
 function updateFinNavBadge() {
@@ -955,13 +1130,33 @@ function showModal(title, fieldsHtml, onConfirm, confirmLabel, skipLabel) {
   btn.parentNode.replaceChild(newBtn, btn);
   newBtn.textContent = confirmLabel || 'Save';
   newBtn.className = 'btn ' + (confirmLabel === 'Delete' ? 'btn-danger' : (/whatsapp/i.test(confirmLabel || '') ? 'btn-wa' : 'btn-primary'));
-  newBtn.onclick = () => { if (onConfirm) onConfirm(); closeModal(); };
+  newBtn.onclick = () => {
+    if (onConfirm) {
+      const keepOpen = onConfirm() === false;
+      if (keepOpen) return;
+    }
+    closeModal();
+  };
   const skipBtn = document.getElementById('modalSkipBtn');
   if (skipBtn) skipBtn.textContent = skipLabel || 'Cancel';
 }
 
 function closeModal() {
   document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function setSyncState(syncing, text) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('lastSync');
+  if (dot) dot.classList.toggle('syncing', !!syncing);
+  if (lbl && text) lbl.textContent = text;
+}
+
+async function manualSyncNow() {
+  setSyncState(true, 'Syncing...');
+  await Promise.all([syncCloudFinLedger(), pullFromCalendar()]);
+  setSyncState(false, 'Synced ' + CHK + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  showToast('Cloud ledger & Google Calendar synced ' + CHK, 'success');
 }
 
 // ---- Financial Ledger & Accounting Engine ----
@@ -983,7 +1178,7 @@ function getDefaultFinLedger() {
         base: 107690,
         adjustments: 0,
         entries: [],
-        note: 'Opening ₹1,00,000 + X-Ray ₹700 + Plaster ₹1,800 + Advance ₹5,000 + Medicine ₹190',
+        note: `Opening ${RS}1,00,000 + X-Ray ${RS}700 + Plaster ${RS}1,800 + Advance ${RS}5,000 + Medicine ${RS}190`,
         sheetUrl: 'https://docs.google.com/spreadsheets/d/122rmY3KXjDTu-ZoyAjtJjzTXH9izDaT_S17YzWVlTaM/edit'
       }
     },
@@ -1158,10 +1353,12 @@ async function syncCloudFinLedger(forceCloud) {
       localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(finalLedger));
       render();
       if (activePage === 'financials') renderFinancialsPage();
-      const el = document.getElementById('lastSync');
-      if (el) el.textContent = 'Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setSyncState(false, 'Synced ' + CHK + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      if (forceCloud) showToast('Pulled latest ledger from Cloud ' + CHK, 'success');
     }
-  } catch (e) {}
+  } catch (e) {
+    setSyncState(false, 'Offline mode');
+  }
 }
 
 // ---- Tasks & Google Calendar Two-Way Sync ----
@@ -1183,40 +1380,40 @@ function loadTasks() {
       linked: 'Juzer Presswala (Loan & Advances)',
       phone: '7869282535',
       invoice: '',
-      remark: 'Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues ₹1,07,690'
+      remark: `Opening 1,00,000 + X-Ray 700 + Plaster 1,800 + Advance 5,000 + Medicine 190. Net dues ${RS}1,07,690`
     },
     {
       id: 'cal_ed85ko32qqb708i2pvumghm51c',
-      name: 'Loan & Advance Taken - MHJ (₹86,000)',
+      name: `Loan & Advance Taken - MHJ (${RS}86,000)`,
       type: 'personal',
       cat: 'MHJ',
       due: '',
       dueDate: '2026-11-05T10:00:00.000Z',
       done: false,
       urgent: true,
-      remark: 'Payable to MHJ (Mob: 9425054543). Pending ₹86,000.'
+      remark: `Payable to MHJ (Mob: 9425054543). Pending ${RS}86,000.`
     },
     {
       id: 'cal_lnlsp24mf0ismnsd9qt95eo7pc',
-      name: 'Loan & Advance Taken - Hatim Bhai (₹5,000)',
+      name: `Loan & Advance Taken - Hatim Bhai (${RS}5,000)`,
       type: 'personal',
       cat: 'PERSONAL',
       due: '',
       dueDate: '2026-11-05T09:15:00.000Z',
       done: false,
       urgent: false,
-      remark: 'Payable to Hatim Bhai (Mob: 9826768052). Pending ₹5,000.'
+      remark: `Payable to Hatim Bhai (Mob: 9826768052). Pending ${RS}5,000.`
     },
     {
       id: 'cal_trip_kz_2026',
-      name: 'Kathiyawad Ziyarat Trip (₹13,000 Total Advance Paid across 3 Families)',
+      name: `Kathiyawad Ziyarat Trip (${RS}13,000 Total Advance Paid across 3 Families)`,
       type: 'personal',
       cat: 'PERSONAL',
       due: '',
       dueDate: '2026-11-15T09:00:00.000Z',
       done: false,
       urgent: false,
-      remark: 'Mustannsirr Family ₹3,000 + Father-in-law Family ₹10,000 cash + Sister-in-law Family.'
+      remark: `Mustannsirr Family ${RS}3,000 + Father-in-law Family ${RS}10,000 cash + Sister-in-law Family.`
     },
     {
       id: 'cal_fee_gumasta_royal',
@@ -1234,7 +1431,7 @@ function loadTasks() {
       linked: 'Royal Consultancy Services',
       phone: '',
       invoice: 'INV-2026-11-001',
-      remark: 'Gross ₹700 received via Razorpay. Net credited ₹681.82. Gateway fee ₹18.18. Portal challan ₹224.'
+      remark: `Gross ${RS}700 received via Razorpay. Net credited ${RS}681.82. Gateway fee ${RS}18.18. Portal challan ${RS}224.`
     }
   ];
 
@@ -1258,8 +1455,7 @@ function loadTasks() {
 function saveTasks() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    const el = document.getElementById('lastSync');
-    if (el) el.textContent = 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setSyncState(false, 'Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   } catch (e) {}
 }
 
@@ -1357,7 +1553,6 @@ async function pullFromCalendar() {
     tasks = tasks.filter(t => !t.id.startsWith('cal_') || calIds.has(t.id));
     if (tasks.length !== beforeLen) changedAny = true;
 
-    // Deduplicate any seed/local duplicate whose title matches a synced Calendar event
     const seenTaskKeys = new Set();
     const deduped = [];
     tasks.forEach(t => {
@@ -1375,8 +1570,7 @@ async function pullFromCalendar() {
       if (activePage === 'financials') renderFinancialsPage();
       if (activePage === 'invoices') renderInvoicesPage();
     }
-    const el = document.getElementById('lastSync');
-    if (el) el.textContent = 'Synced ✓ ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setSyncState(false, 'Synced ' + CHK + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   } catch (e) {}
 }
 
@@ -1396,14 +1590,12 @@ function onCategoryChange() {
       if (!raw) { select.value = 'PERSONAL'; return; }
       const tag = raw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
       if (!tag) { select.value = 'PERSONAL'; return; }
-      let exists = false;
-      for (const opt of select.options) { if (opt.value === tag) exists = true; }
-      if (!exists) {
-        const opt = document.createElement('option');
-        opt.value = tag;
-        opt.textContent = 'Professional — ' + raw;
-        select.insertBefore(opt, select.querySelector('option[value="__NEW__"]'));
+      if (!Array.isArray(uiState.customCategories)) uiState.customCategories = [];
+      if (!uiState.customCategories.some(c => c.tag === tag)) {
+        uiState.customCategories.push({ tag, label: raw });
+        saveUi();
       }
+      populateCustomCategories();
       select.value = tag;
       toggleFeeFields();
     }, 'Create', 'Cancel');
@@ -1418,6 +1610,8 @@ function addTask() {
   const catVal = document.getElementById('newCat').value;
   const name = input.value.trim();
   if (!name) return;
+  const urgent = !!(document.getElementById('newUrgent') && document.getElementById('newUrgent').checked);
+  const dueVal = document.getElementById('newDueDate').value;
 
   if (catVal === 'FEES') {
     const payable = parseFloat(document.getElementById('feePayable').value) || 0;
@@ -1426,7 +1620,8 @@ function addTask() {
     const phone = document.getElementById('feePhone').value.trim();
     const task = {
       id: 'u' + Date.now(), name, type: 'fee', cat: 'FEES', feeCat: 'OWN', due: '',
-      done: received >= payable && payable > 0, payable, received, discount: 0, linked, phone, invoice: '', remark: ''
+      dueDate: dueVal ? new Date(dueVal + 'T09:00:00').toISOString() : null,
+      done: received >= payable && payable > 0, urgent, payable, received, discount: 0, linked, phone, invoice: '', remark: ''
     };
     tasks.push(task);
     input.value = '';
@@ -1434,15 +1629,17 @@ function addTask() {
     document.getElementById('feeReceived').value = '';
     document.getElementById('feeLinked').value = '';
     document.getElementById('feePhone').value = '';
+    document.getElementById('newDueDate').value = '';
+    if (document.getElementById('newUrgent')) document.getElementById('newUrgent').checked = false;
     saveTasks();
     render();
+    showToast('Fee entry added ' + CHK, 'success');
     pushFeeToCalendar(name, payable, received, linked, phone, 'OWN').then(calId => {
       if (calId) { task.id = calId; saveTasks(); }
     });
     return;
   }
 
-  const dueVal = document.getElementById('newDueDate').value;
   const isInv = catVal === 'INVITATION';
   const newTask = {
     id: 'u' + Date.now(),
@@ -1450,17 +1647,92 @@ function addTask() {
     type: isInv ? 'invitation' : (catVal === 'PERSONAL' ? 'personal' : 'professional'),
     cat: catVal === 'PERSONAL' ? null : catVal,
     done: false,
+    urgent,
     dueDate: dueVal ? new Date(dueVal + 'T09:00:00').toISOString() : null,
     remark: ''
   };
   tasks.push(newTask);
   input.value = '';
   document.getElementById('newDueDate').value = '';
+  if (document.getElementById('newUrgent')) document.getElementById('newUrgent').checked = false;
   saveTasks();
   render();
+  showToast('Task added ' + CHK, 'success');
   pushToCalendar(name, catVal, dueVal).then(calId => {
     if (calId) { newTask.id = calId; saveTasks(); }
   });
+}
+
+function editTask(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  const dueStr = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : '';
+  const curCat = isInvitationTask(t) ? 'INVITATION' : (t.cat || (t.type === 'fee' ? 'FEES' : 'PERSONAL'));
+  const customOpts = (uiState.customCategories || []).map(c => `<option value="${escapeForHtml(c.tag)}" ${curCat === c.tag ? 'selected' : ''}>Professional &mdash; ${escapeForHtml(c.label)}</option>`).join('');
+  showModal('Edit Task / Fee', `
+    <label>Title / Particular</label>
+    <input type="text" id="edTaskName" value="${escapeForHtml(t.name)}">
+    <label>Category</label>
+    <select id="edTaskCat">
+      <option value="PERSONAL" ${curCat === 'PERSONAL' ? 'selected' : ''}>Personal</option>
+      <option value="INVITATION" ${curCat === 'INVITATION' ? 'selected' : ''}>Invitations</option>
+      <option value="OWN" ${curCat === 'OWN' ? 'selected' : ''}>Professional &mdash; OWN</option>
+      <option value="MHJ" ${curCat === 'MHJ' ? 'selected' : ''}>Professional &mdash; MHJ</option>
+      <option value="SHK" ${curCat === 'SHK' ? 'selected' : ''}>Professional &mdash; SHK Husain Arif</option>
+      <option value="FEES" ${curCat === 'FEES' ? 'selected' : ''}>Fees</option>
+      ${customOpts}
+    </select>
+    <label>Due Date</label>
+    <input type="date" id="edTaskDue" value="${dueStr}">
+    ${t.type === 'fee' || curCat === 'FEES' ? `
+      <label>Client Name</label>
+      <input type="text" id="edTaskLinked" value="${escapeForHtml(t.linked || '')}">
+      <label>Phone (WhatsApp)</label>
+      <input type="tel" id="edTaskPhone" value="${escapeForHtml(t.phone || '')}">
+      <label>Payable Amount (&#8377;)</label>
+      <input type="number" id="edTaskPayable" value="${Number(t.payable) || 0}">
+    ` : ''}
+    <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-size:12.5px; color:var(--ink); margin-top:4px;">
+      <input type="checkbox" id="edTaskUrgent" ${t.urgent ? 'checked' : ''} style="width:16px; height:16px; margin:0; accent-color:var(--red);">
+      Mark as Urgent
+    </label>
+  `, () => {
+    const newName = document.getElementById('edTaskName').value.trim();
+    if (!newName) return;
+    const newCat = document.getElementById('edTaskCat').value;
+    const newDue = document.getElementById('edTaskDue').value;
+    t.name = newName;
+    t.urgent = !!document.getElementById('edTaskUrgent').checked;
+    t.dueDate = newDue ? new Date(newDue + 'T09:00:00').toISOString() : null;
+    if (newCat === 'FEES') {
+      t.type = 'fee';
+      t.cat = 'FEES';
+      const lEl = document.getElementById('edTaskLinked');
+      const pEl = document.getElementById('edTaskPhone');
+      const payEl = document.getElementById('edTaskPayable');
+      if (lEl) t.linked = lEl.value.trim();
+      if (pEl) t.phone = pEl.value.trim();
+      if (payEl) t.payable = parseFloat(payEl.value) || 0;
+    } else if (newCat === 'INVITATION') {
+      t.type = 'invitation';
+      t.cat = 'INVITATION';
+      uiState.invitationIds[t.id] = true;
+      saveUi();
+    } else if (newCat === 'PERSONAL') {
+      t.type = 'personal';
+      t.cat = null;
+      if (uiState.invitationIds) { delete uiState.invitationIds[t.id]; saveUi(); }
+    } else {
+      t.type = 'professional';
+      t.cat = newCat;
+      if (uiState.invitationIds) { delete uiState.invitationIds[t.id]; saveUi(); }
+    }
+    saveTasks();
+    render();
+    if (activePage === 'invoices') renderInvoicesPage();
+    if (activePage === 'financials') renderFinancialsPage();
+    showToast('Updated ' + CHK, 'success');
+  }, 'Update', 'Cancel');
 }
 
 function toggleTask(id) {
@@ -1473,9 +1745,9 @@ function toggleTask(id) {
 
   if (t.done && t.type === 'professional') {
     showModal('Fee for "' + t.name + '"?', `
-      <label>Payable Amount (₹)</label>
-      <input type="number" id="modalPayable" placeholder="₹ Payable">
-      <label>Received Now (₹)</label>
+      <label>Payable Amount (&#8377;)</label>
+      <input type="number" id="modalPayable" placeholder="&#8377; Payable">
+      <label>Received Now (&#8377;)</label>
       <input type="number" id="modalReceived" value="0">
       <label>Client Phone (for WhatsApp)</label>
       <input type="tel" id="modalPhone" placeholder="e.g. 9876543210">
@@ -1503,6 +1775,7 @@ function deleteTask(id) {
     saveTasks();
     render();
     deleteFromCalendar(id);
+    showToast('Task removed', 'warn');
   }, 'Delete', 'Cancel');
 }
 
@@ -1510,7 +1783,7 @@ function setRemark(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
   const presets = ['Waiting for documents', 'In progress', 'Waiting for portal', 'Awaiting payment'];
-  showModal('Remark — ' + t.name, `
+  showModal('Remark \u2014 ' + t.name, `
     <div class="presets">${presets.map(p => `<button type="button" class="preset" onclick="document.getElementById('modalRemarkText').value='${p}'">${p}</button>`).join('')}</div>
     <input type="text" id="modalRemarkText" value="${escapeForHtml(t.remark || '')}" placeholder="Type remark...">
   `, async () => {
@@ -1526,11 +1799,11 @@ function setRemark(id) {
 function recordPayment(id) {
   const t = tasks.find(x => x.id === id);
   if (!t) return;
-  showModal('Record Payment — ' + t.name, `
+  showModal('Record Payment \u2014 ' + t.name, `
     <div class="hint">Currently ${inr(t.received)} of ${inr(t.payable)} received</div>
-    <label>Total Received So Far (₹)</label>
+    <label>Total Received So Far (&#8377;)</label>
     <input type="number" id="modalReceivedAmt" value="${t.received || 0}">
-    <label>Discount Allowed (₹)</label>
+    <label>Discount Allowed (&#8377;)</label>
     <input type="number" id="modalDiscountAmt" value="${t.discount || 0}">
   `, () => {
     const amount = parseFloat(document.getElementById('modalReceivedAmt').value);
@@ -1550,10 +1823,31 @@ function recordPayment(id) {
     if (activePage === 'financials') renderFinancialsPage();
     if (activePage === 'invoices') renderInvoicesPage();
     updateFeeOnCalendar(t.id, amount, discount);
+    showToast('Payment updated ' + CHK, 'success');
   });
 }
 
-// ---- WhatsApp Reminders (Autofilled Razorpay Amount) & Receipts ----
+// ---- WhatsApp Reminders & Payment Links ----
+const EMO = {
+  receipt: String.fromCodePoint(0x1F9FE),
+  money: String.fromCodePoint(0x1F4B0),
+  point: String.fromCodePoint(0x1F449),
+  doc: String.fromCodePoint(0x1F4C4),
+  mosque: String.fromCodePoint(0x1F54C)
+};
+
+function copyPayLink(amount) {
+  const cleanAmt = Math.round((Number(amount) || 0) * 100) / 100;
+  const url = 'https://razorpay.me/@mustansirmalik/' + cleanAmt;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('Copied Razorpay link for ' + inr(cleanAmt) + ' ' + CHK, 'success');
+    }).catch(() => showToast(url));
+  } else {
+    showToast(url);
+  }
+}
+
 async function sendWhatsAppReminder(taskId, balance) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
@@ -1561,12 +1855,12 @@ async function sendWhatsAppReminder(taskId, balance) {
   const clientName = t.linked || t.name;
   const fallbackAutofillUrl = 'https://razorpay.me/@mustansirmalik/' + cleanAmt;
 
-  const buildMsg = (payUrl) => `🧾 *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is pending.\n\n💰 *Amount Due:* ₹${cleanAmt}\n\n👉 *Pay securely here (Amount ₹${cleanAmt} pre-filled):*\n${payUrl}\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax and Accounts Consultant, Indore_`;
+  const buildMsg = (payUrl) => `${EMO.receipt} *Fee Reminder*\n\nDear Sir/Madam,\n\nA gentle reminder that your fee for *"${clientName}"* is pending.\n\n${EMO.money} *Amount Due:* ${RS}${cleanAmt}\n\n${EMO.point} *Pay securely here (Amount ${RS}${cleanAmt} pre-filled):*\n${payUrl}\n\nWarm regards,\n*Mustannsirr Mallik*\n_Tax and Accounts Consultant, Indore_`;
 
-  showModal('WhatsApp Payment Reminder — ' + clientName, `
-    <label>Client WhatsApp Number (optional — leave blank to pick in WhatsApp)</label>
+  showModal('WhatsApp Payment Reminder \u2014 ' + clientName, `
+    <label>Client WhatsApp Number (optional &mdash; leave blank to pick in WhatsApp)</label>
     <input type="tel" id="remPhoneInput" value="${escapeForHtml(t.phone || '')}" placeholder="e.g. 9876543210">
-    <div id="remLinkStatus" class="hint" style="color:var(--green); font-weight:600;">✓ Autofilled payment link ready for ₹${cleanAmt}</div>
+    <div id="remLinkStatus" class="hint" style="color:var(--green); font-weight:600;">${CHK} Autofilled payment link ready for &#8377;${cleanAmt}</div>
     <div class="receipt-preview" id="remPreviewBox">${escapeForHtml(buildMsg(fallbackAutofillUrl))}</div>
   `, () => {
     let rawPhone = (document.getElementById('remPhoneInput').value || '').replace(/[^0-9]/g, '');
@@ -1587,7 +1881,7 @@ async function sendWhatsAppReminder(taskId, balance) {
       const box = document.getElementById('remPreviewBox');
       const st = document.getElementById('remLinkStatus');
       if (box) box.textContent = buildMsg(data.shortUrl);
-      if (st) st.textContent = '✓ Dedicated Razorpay link generated for ₹' + cleanAmt;
+      if (st) st.textContent = CHK + ' Dedicated Razorpay link generated for ' + RS + cleanAmt;
     }
   } catch (e) {}
 }
@@ -1595,8 +1889,8 @@ async function sendWhatsAppReminder(taskId, balance) {
 function sendCustomLoanReminder(partyName, phone, balance) {
   const cleanAmt = Math.round(Number(balance) * 100) / 100;
   const payUrl = 'https://razorpay.me/@mustansirmalik/' + cleanAmt;
-  const msg = `🧾 *Loan / Advance Repayment Reminder*\n\nDear *${partyName}*,\n\nA gentle reminder regarding your pending advance balance of *₹${cleanAmt}*.\n\n👉 *Pay securely here (Amount ₹${cleanAmt} pre-filled):*\n${payUrl}\n\nWarm regards,\n*Mustannsirr Mallik*`;
-  showModal('WhatsApp Reminder — ' + partyName, `
+  const msg = `${EMO.receipt} *Loan / Advance Repayment Reminder*\n\nDear *${partyName}*,\n\nA gentle reminder regarding your pending advance balance of *${RS}${cleanAmt}*.\n\n${EMO.point} *Pay securely here (Amount ${RS}${cleanAmt} pre-filled):*\n${payUrl}\n\nWarm regards,\n*Mustannsirr Mallik*`;
+  showModal('WhatsApp Reminder \u2014 ' + partyName, `
     <label>WhatsApp Number</label>
     <input type="tel" id="loanRemPhone" value="${escapeForHtml(phone || '')}" placeholder="e.g. 9876543210">
     <div class="receipt-preview">${escapeForHtml(msg)}</div>
@@ -1612,7 +1906,7 @@ function offerReceipt(taskId) {
   if (!t) return;
   const bal = Math.max(0, (t.payable || 0) - (t.received || 0) - (t.discount || 0));
   const invNo = String(t.invoice || '').split('|')[0].trim();
-  const msg = `🧾 *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received *₹${moneyText(t.received)}* for *"${t.linked || t.name}"*.\n💰 *Balance Due:* ₹${moneyText(bal)}${invNo ? '\n📄 *Invoice:* ' + INVOICE_PAGE_BASE + encodeURIComponent(invNo) : ''}\n\nWarm regards,\n*Mustannsirr Mallik*`;
+  const msg = `${EMO.receipt} *Payment Receipt*\n\nDear Sir/Madam,\n\nWe have received *${RS}${moneyText(t.received)}* for *"${t.linked || t.name}"*.\n${EMO.money} *Balance Due:* ${RS}${moneyText(bal)}${invNo ? '\n' + EMO.doc + ' *Invoice:* ' + INVOICE_PAGE_BASE + encodeURIComponent(invNo) : ''}\n\nWarm regards,\n*Mustannsirr Mallik*`;
   showModal('Send Payment Receipt', `
     <div class="receipt-preview">${escapeForHtml(msg)}</div>
   `, () => {
@@ -1653,7 +1947,7 @@ async function generateOrOpenInvoice(taskId) {
   window.open(INVOICE_PAGE_BASE + encodeURIComponent(t.invoice), '_blank');
 }
 
-// ---- Financials Modals (Journal, Loans, Sub-Ledger, Expenses, Ziyarat Trip) ----
+// ---- Financials Modals ----
 function getJournalAccountLabel(code) {
   const map = {
     CASH: 'Cash in Hand',
@@ -1697,15 +1991,15 @@ function openJournalEntryModal() {
     <option value="CAPITAL">Owner's Capital Account</option>
     <option value="ZIYARAT">Kathiyawad Ziyarat Advance</option>
   `;
-  showModal('📒 Pass Double-Entry Journal Voucher', `
+  showModal('Pass Double-Entry Journal Voucher', `
     <label>Voucher Date</label>
     <input type="date" id="jvDate" value="${new Date().toISOString().slice(0, 10)}">
     <label>Debit Account (Dr)</label>
     <select id="jvDr">${opts}</select>
     <label>Credit Account (Cr)</label>
     <select id="jvCr">${opts}</select>
-    <label>Amount (₹)</label>
-    <input type="number" id="jvAmt" placeholder="₹ Amount">
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="jvAmt" placeholder="&#8377; Amount">
     <label>Narration</label>
     <input type="text" id="jvNarr" placeholder="e.g. Adjustment / Settlement entry">
   `, () => {
@@ -1714,7 +2008,10 @@ function openJournalEntryModal() {
     const cr = document.getElementById('jvCr').value;
     const amount = parseFloat(document.getElementById('jvAmt').value) || 0;
     const narration = document.getElementById('jvNarr').value.trim() || 'Journal Voucher';
-    if (amount <= 0 || dr === cr) return;
+    if (amount <= 0 || dr === cr) {
+      showToast('Select two different accounts and a positive amount', 'warn');
+      return false;
+    }
 
     const ledger = getFinLedger();
     applyJournalEffect(ledger, dr, 'dr', amount);
@@ -1727,6 +2024,7 @@ function openJournalEntryModal() {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Journal voucher posted ' + CHK, 'success');
   }, 'Post Voucher', 'Cancel');
 }
 
@@ -1743,14 +2041,15 @@ function deleteJournalEntry(id) {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Voucher reversed & deleted', 'warn');
   }, 'Delete', 'Cancel');
 }
 
 function openAtmCashWithdrawalModal() {
-  showModal('🏧 ATM Cash Withdrawal (Contra)', `
+  showModal('ATM Cash Withdrawal (Contra)', `
     <div class="hint">Deducts from slice SFB Bank and adds to Cash in Hand.</div>
-    <label>Withdrawal Amount (₹)</label>
-    <input type="number" id="atmAmt" placeholder="₹ Amount">
+    <label>Withdrawal Amount (&#8377;)</label>
+    <input type="number" id="atmAmt" placeholder="&#8377; Amount">
   `, () => {
     const amt = parseFloat(document.getElementById('atmAmt').value) || 0;
     if (amt <= 0) return;
@@ -1760,15 +2059,16 @@ function openAtmCashWithdrawalModal() {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('ATM withdrawal recorded ' + CHK, 'success');
   }, 'Record Withdrawal', 'Cancel');
 }
 
 function openEditBalancesModal() {
   const ledger = getFinLedger();
-  showModal('✏️ Update Cash & Bank Balances', `
-    <label>Cash in Hand (₹)</label>
+  showModal('Update Cash & Bank Balances', `
+    <label>Cash in Hand (&#8377;)</label>
     <input type="number" id="editCash" value="${ledger.cashInHand}">
-    <label>slice SFB Bank Balance (₹)</label>
+    <label>slice SFB Bank Balance (&#8377;)</label>
     <input type="number" id="editBank" value="${ledger.bankSlice}">
   `, () => {
     ledger.cashInHand = parseFloat(document.getElementById('editCash').value) || 0;
@@ -1776,6 +2076,7 @@ function openEditBalancesModal() {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Balances updated ' + CHK, 'success');
   }, 'Update Balances', 'Cancel');
 }
 
@@ -1788,45 +2089,36 @@ function openReconcileLedgerModal() {
     ? `<div style="background:var(--red-soft); border:1px solid var(--red-border); color:var(--red); padding:7px 10px; border-radius:8px; font-size:11.5px; margin-bottom:10px;"><strong>Discrepancy Alert:</strong> Cash in Hand is negative (${inr(ledger.cashInHand)}). Enter your actual physical cash below to correct it.</div>`
     : '';
 
-  showModal('🛠️ Reconcile & Fix Financial Entries', `
+  showModal('Reconcile & Fix Financial Entries', `
     ${negCashWarn}
     <div style="display:flex; gap:6px; margin-bottom:10px;">
-      <button type="button" class="btn btn-quiet" style="flex:1; height:32px; font-size:11.5px; border-color:var(--accent-border); background:var(--accent-soft); color:var(--accent);" onclick="closeModal(); syncCloudFinLedger(true);">☁️ Pull Latest from Cloud</button>
+      <button type="button" class="btn btn-quiet" style="flex:1; height:32px; font-size:11.5px; border-color:var(--accent-border); background:var(--accent-soft); color:var(--accent);" onclick="closeModal(); syncCloudFinLedger(true);">Pull Latest from Cloud</button>
     </div>
     <div class="hint">Verify or directly correct your exact ledger balances below. Saving overwrites disturbed numbers, cleans duplicate entries, and syncs to Google Cloud immediately.</div>
-    <label>Cash in Hand (₹)</label>
+    <label>Cash in Hand (&#8377;)</label>
     <input type="number" id="recCash" value="${ledger.cashInHand}">
-    <label>slice SFB Bank Balance (₹)</label>
+    <label>slice SFB Bank Balance (&#8377;)</label>
     <input type="number" id="recBank" value="${ledger.bankSlice}">
-    <label>Juzer Presswala — Loan Given Net Due (₹)</label>
+    <label>Juzer Presswala &mdash; Loan Given Net Due (&#8377;)</label>
     <input type="number" id="recJuzer" value="${juzerCur}">
-    <label>MHJ — Loan Taken Net Payable (₹)</label>
+    <label>MHJ &mdash; Loan Taken Net Payable (&#8377;)</label>
     <input type="number" id="recMhj" value="${mhjCur}">
-    <label>Hatim Bhai — Loan Taken Net Payable (₹)</label>
+    <label>Hatim Bhai &mdash; Loan Taken Net Payable (&#8377;)</label>
     <input type="number" id="recHatim" value="${hatimCur}">
     <label style="display:flex; align-items:center; gap:8px; text-transform:none; font-size:12.5px; color:var(--ink); margin-top:6px;">
       <input type="checkbox" id="recResetAdjs" style="width:16px; height:16px; margin:0;">
-      Reset stray journal/P&amp;L adjustment counters to ₹0
+      Reset stray journal/P&amp;L adjustment counters to &#8377;0
     </label>
   `, () => {
     ledger.cashInHand = parseFloat(document.getElementById('recCash').value) || 0;
     ledger.bankSlice = parseFloat(document.getElementById('recBank').value) || 0;
 
     const newJuzer = parseFloat(document.getElementById('recJuzer').value);
-    if (!isNaN(newJuzer)) {
-      ledger.loansGiven.juzer.base = newJuzer;
-      ledger.loansGiven.juzer.adjustments = 0;
-    }
+    if (!isNaN(newJuzer)) { ledger.loansGiven.juzer.base = newJuzer; ledger.loansGiven.juzer.adjustments = 0; }
     const newMhj = parseFloat(document.getElementById('recMhj').value);
-    if (!isNaN(newMhj)) {
-      ledger.loansTaken.mhj.base = newMhj;
-      ledger.loansTaken.mhj.adjustments = 0;
-    }
+    if (!isNaN(newMhj)) { ledger.loansTaken.mhj.base = newMhj; ledger.loansTaken.mhj.adjustments = 0; }
     const newHatim = parseFloat(document.getElementById('recHatim').value);
-    if (!isNaN(newHatim)) {
-      ledger.loansTaken.hatim.base = newHatim;
-      ledger.loansTaken.hatim.adjustments = 0;
-    }
+    if (!isNaN(newHatim)) { ledger.loansTaken.hatim.base = newHatim; ledger.loansTaken.hatim.adjustments = 0; }
     if (document.getElementById('recResetAdjs').checked) {
       ledger.journalIncomeAdj = 0;
       ledger.journalExpenseAdj = 0;
@@ -1849,6 +2141,7 @@ function openReconcileLedgerModal() {
     render();
     renderFinancialsPage();
     if (activePage === 'invoices') renderInvoicesPage();
+    showToast('Ledger reconciled & synced ' + CHK, 'success');
   }, 'Save & Sync Cloud', 'Cancel');
 }
 
@@ -1863,8 +2156,8 @@ function openAddLoanModal() {
     <input type="text" id="nlName" placeholder="Person or Party Name">
     <label>Mobile Number (optional)</label>
     <input type="tel" id="nlPhone" placeholder="e.g. 9876543210">
-    <label>Amount (₹)</label>
-    <input type="number" id="nlAmt" placeholder="₹ Amount">
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="nlAmt" placeholder="&#8377; Amount">
     <label>Payment Mode</label>
     <select id="nlMode">
       <option value="slice SFB">slice Small Finance Bank</option>
@@ -1889,6 +2182,7 @@ function openAddLoanModal() {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Loan recorded ' + CHK, 'success');
   }, 'Save Loan', 'Cancel');
 }
 
@@ -1907,6 +2201,7 @@ function deleteCustomLoan(id) {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Loan deleted', 'warn');
   }, 'Delete', 'Cancel');
 }
 
@@ -1934,10 +2229,10 @@ function recordLoanRepayment(id, isBuiltIn) {
     currentBalance = Math.max(0, (Number(cl.principal) || 0) - (Number(cl.repaid) || 0));
     isGiven = cl.type === 'given';
   }
-  showModal('Record Repayment — ' + title, `
+  showModal('Record Repayment \u2014 ' + title, `
     <div class="hint">Pending Balance: <strong>${inr(currentBalance)}</strong></div>
-    <label>Repayment Amount (₹)</label>
-    <input type="number" id="repayAmt" placeholder="₹ Amount">
+    <label>Repayment Amount (&#8377;)</label>
+    <input type="number" id="repayAmt" placeholder="&#8377; Amount">
     <label>Account / Mode</label>
     <select id="repayMode">
       <option value="slice SFB">slice Small Finance Bank</option>
@@ -1962,6 +2257,7 @@ function recordLoanRepayment(id, isBuiltIn) {
     saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
+    showToast('Repayment recorded ' + CHK, 'success');
   }, 'Save Repayment', 'Cancel');
 }
 
@@ -1978,13 +2274,13 @@ function openAddLoanEntryModal(id, isBuiltIn) {
     title = cl.name;
     isGiven = cl.type === 'given';
   }
-  showModal((isGiven ? '➕ Add Disbursement — ' : '➕ Add Borrowing — ') + title, `
+  showModal((isGiven ? '+ Add Disbursement \u2014 ' : '+ Add Borrowing \u2014 ') + title, `
     <label>Date</label>
     <input type="date" id="leDate" value="${new Date().toISOString().slice(0, 10)}">
     <label>Particulars / Description</label>
     <input type="text" id="leDesc" placeholder="e.g. Additional cash advance / Medical">
-    <label>Amount (₹)</label>
-    <input type="number" id="leAmount" placeholder="₹ Amount">
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="leAmount" placeholder="&#8377; Amount">
     <label>Account / Mode</label>
     <select id="leMode">
       <option value="slice SFB">slice Small Finance Bank</option>
@@ -2026,6 +2322,7 @@ function openAddLoanEntryModal(id, isBuiltIn) {
     saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
+    showToast('Sub-entry saved ' + CHK, 'success');
   }, 'Save Entry', 'Cancel');
 }
 
@@ -2071,6 +2368,7 @@ function deleteLoanSubEntry(parentId, entryId, isBuiltIn) {
     saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
+    showToast('Sub-entry reversed & deleted', 'warn');
   }, 'Delete', 'Cancel');
 }
 
@@ -2091,7 +2389,7 @@ function openAddExpenseModal() {
     <label>Category</label>
     <select id="expCat" onchange="onExpenseCategorySelect(this.value)">
       ${allCats.map(c => `<option value="${escapeForHtml(c)}">${escapeForHtml(c)}${/drawing|personal/i.test(c) ? ' (Capital Account)' : ' (P&L)'}</option>`).join('')}
-      <option value="__NEW_EXP_CAT__">+ Add new category…</option>
+      <option value="__NEW_EXP_CAT__">+ Add new category&hellip;</option>
     </select>
     <div id="customExpCatWrap" style="display:none;">
       <label>New Category Name</label>
@@ -2102,8 +2400,8 @@ function openAddExpenseModal() {
       <option value="slice SFB">slice Small Finance Bank</option>
       <option value="Cash">Cash in Hand</option>
     </select>
-    <label>Amount (₹)</label>
-    <input type="number" id="expAmt" placeholder="₹ Amount">
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="expAmt" placeholder="&#8377; Amount">
     <label>Note (optional)</label>
     <input type="text" id="expNote" placeholder="Optional note">
   `, () => {
@@ -2128,6 +2426,7 @@ function openAddExpenseModal() {
     saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
+    showToast('Expense recorded ' + CHK, 'success');
   }, 'Save Entry', 'Cancel');
 }
 
@@ -2148,6 +2447,7 @@ function deleteExpenseEntry(id) {
     saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
+    showToast('Expense deleted & refunded', 'warn');
   }, 'Delete', 'Cancel');
 }
 
@@ -2179,8 +2479,8 @@ function openAddTripPaymentModal() {
       <option value="Cash">Cash in Hand</option>
       <option value="Paid Directly by Family">Paid Directly by Family (No Cash/Bank Impact)</option>
     </select>
-    <label>Amount (₹)</label>
-    <input type="number" id="tpAmt" placeholder="₹ Amount">
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="tpAmt" placeholder="&#8377; Amount">
   `, () => {
     const date = document.getElementById('tpDate').value;
     const family = document.getElementById('tpFamily').value;
@@ -2195,6 +2495,7 @@ function openAddTripPaymentModal() {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Trip payment added ' + CHK, 'success');
   });
 }
 
@@ -2215,8 +2516,8 @@ function openAddTripContributionModal() {
       <option value="slice SFB">slice SFB Bank</option>
       <option value="Cash">Cash in Hand</option>
     </select>
-    <label>Amount (₹)</label>
-    <input type="number" id="tcAmt" placeholder="₹ Amount">
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="tcAmt" placeholder="&#8377; Amount">
   `, () => {
     const date = document.getElementById('tcDate').value;
     const family = document.getElementById('tcFamily').value;
@@ -2231,6 +2532,7 @@ function openAddTripContributionModal() {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Contribution added ' + CHK, 'success');
   });
 }
 
@@ -2249,6 +2551,7 @@ function deleteTripEntry(kind, id) {
     saveFinLedger(ledger);
     render();
     renderFinancialsPage();
+    showToast('Trip entry deleted', 'warn');
   }, 'Delete', 'Cancel');
 }
 
@@ -2257,13 +2560,135 @@ function shareZiyaratWithFamilies() {
   const totalOutlay = ledger.kathiyawadTrip.payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
   const share = totalOutlay / 3;
   const familyPortalUrl = window.location.origin + window.location.pathname + '?view=ziyarat';
-  const msg = `🕌 *Kathiyawad Ziyarat Trip — Family Account*\n\nTotal Trip Outlay: *${inr(totalOutlay)}*\nEqual Share (1/3 per Family): *${inr(share)}*\n\nView live itemized account & family split here:\n${familyPortalUrl}`;
-  showModal('📲 Share Ziyarat Account with Families', `
-    <div class="hint">Read-only family link (hides your private tax &amp; loan ledgers):</div>
+  const msg = `${EMO.mosque} *Kathiyawad Ziyarat Trip \u2014 Family Account*\n\nTotal Trip Outlay: *${inr(totalOutlay)}*\nEqual Share (1/3 per Family): *${inr(share)}*\n\nView live itemized account & family split here:\n${familyPortalUrl}`;
+  showModal('Share Ziyarat Account with Families', `
+    <div class="hint">Read-only family link (hides your private tax &amp; loan ledgers and bypasses password prompt):</div>
     <div class="receipt-preview">${escapeForHtml(msg)}</div>
   `, () => {
     window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
   }, 'Share on WhatsApp', 'Close');
+}
+
+// ---- Backup, CSV Export & Security Settings ----
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvCell(v) {
+  const s = String(v == null ? '' : v).replace(/"/g, '""');
+  return `"${s}"`;
+}
+
+function exportAllBackupJson() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    tasks,
+    finLedger: getFinLedger(),
+    uiState
+  };
+  const dateStr = new Date().toISOString().slice(0, 10);
+  downloadFile(`mm-dashboard-backup-${dateStr}.json`, JSON.stringify(payload, null, 2), 'application/json');
+  showToast('Full JSON backup downloaded ' + CHK, 'success');
+}
+
+function exportExpensesCsv() {
+  const ledger = getFinLedger();
+  const rows = [['Date', 'Payee', 'Category', 'Head', 'Source', 'Amount', 'Note']];
+  (ledger.expenses || []).forEach(e => {
+    const isDraw = /drawing|personal/i.test(String(e.category || ''));
+    rows.push([e.date, e.payee, e.category, isDraw ? 'Capital Drawings' : 'P&L Expense', e.source, e.amount, e.note || '']);
+  });
+  const csv = rows.map(r => r.map(csvCell).join(',')).join('\n');
+  downloadFile(`mm-expenses-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+  showToast('Expenses CSV exported ' + CHK, 'success');
+}
+
+function exportInvoicesCsv() {
+  const feeTasks = tasks.filter(t => t && t.type === 'fee' && !isLoanFeeTask(t));
+  const rows = [['Invoice #', 'Client', 'Particular', 'Payable', 'Received', 'Discount', 'Balance', 'Phone', 'Status']];
+  feeTasks.forEach(t => {
+    const bal = Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0));
+    rows.push([t.invoice || 'Draft', t.linked || '', t.name, t.payable || 0, t.received || 0, t.discount || 0, bal, t.phone || '', bal > 0 ? 'Pending' : 'Settled']);
+  });
+  const csv = rows.map(r => r.map(csvCell).join(',')).join('\n');
+  downloadFile(`mm-invoices-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+  showToast('Invoices CSV exported ' + CHK, 'success');
+}
+
+function importBackupJson(fileInput) {
+  const file = fileInput && fileInput.files && fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (Array.isArray(data.tasks)) {
+        tasks = data.tasks;
+        saveTasks();
+      }
+      if (data.finLedger && typeof data.finLedger === 'object') {
+        saveFinLedger(data.finLedger);
+      }
+      if (data.uiState && typeof data.uiState === 'object') {
+        uiState = Object.assign({ collapsed: {}, invitationIds: {}, customCategories: [] }, data.uiState);
+        saveUi();
+        populateCustomCategories();
+      }
+      render();
+      if (activePage === 'financials') renderFinancialsPage();
+      if (activePage === 'invoices') renderInvoicesPage();
+      closeModal();
+      showToast('Backup restored successfully ' + CHK, 'success');
+    } catch (err) {
+      showToast('Invalid JSON backup file', 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function openSettingsBackupModal() {
+  const hasPass = !!localStorage.getItem('dashboardPassword');
+  showModal('Settings, Password & Backups', `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+      <button type="button" class="btn btn-quiet" onclick="exportAllBackupJson()">${ICON.download} Full JSON Backup</button>
+      <button type="button" class="btn btn-quiet" onclick="exportInvoicesCsv()">${ICON.doc} Invoices CSV</button>
+      <button type="button" class="btn btn-quiet" onclick="exportExpensesCsv()">${ICON.wallet} Expenses CSV</button>
+      <button type="button" class="btn btn-quiet" onclick="window.print()">${ICON.print} Print / Save PDF</button>
+    </div>
+    <label>Restore From JSON Backup</label>
+    <input type="file" accept=".json" onchange="importBackupJson(this)" style="padding:7px; height:auto;">
+    <hr style="border:0; border-top:1px solid var(--rule); margin:12px 0;">
+    <label>Dashboard Lock Password (${hasPass ? 'Currently Set ' + CHK : 'Not Set'})</label>
+    <input type="password" id="setDashPass" placeholder="${hasPass ? 'Enter new password (leave blank to keep)' : 'Set a workspace password'}">
+    <label>Webhook URL (Google Apps Script)</label>
+    <input type="text" id="setWebhookUrl" value="${escapeForHtml(getWebhook())}">
+  `, () => {
+    const newPass = document.getElementById('setDashPass').value;
+    const newHook = document.getElementById('setWebhookUrl').value.trim();
+    if (newPass) {
+      localStorage.setItem('dashboardPassword', newPass);
+    }
+    if (newHook) localStorage.setItem(WEBHOOK_KEY, newHook);
+    showToast('Settings saved ' + CHK, 'success');
+  }, 'Save Settings', 'Close');
+}
+
+function lockWorkspace() {
+  sessionStorage.removeItem('dashboardUnlocked');
+  const gate = document.getElementById('authGate');
+  const inp = document.getElementById('authInput');
+  const err = document.getElementById('authError');
+  if (inp) inp.value = '';
+  if (err) err.style.display = 'none';
+  if (gate) gate.style.display = 'flex';
 }
 
 // ---- Page Navigation & Views ----
@@ -2295,6 +2720,16 @@ function isLoanFeeTask(t) {
   return /juzer presswala|loan\s*&?\s*advance/i.test(txt);
 }
 
+function setInvFilter(f) {
+  invFilter = f;
+  renderInvoicesPage();
+}
+
+function onInvSearch(v) {
+  invSearch = v || '';
+  renderInvoicesPage();
+}
+
 function renderInvoicesPage() {
   const invEl = document.getElementById('invoicesView');
   if (!invEl) return;
@@ -2303,16 +2738,39 @@ function renderInvoicesPage() {
   const totalCollected = feeTasks.reduce((s, t) => s + (Number(t.received) || 0), 0);
   const totalDue = feeTasks.reduce((s, t) => s + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
 
+  const q = invSearch.trim().toLowerCase();
+  const filteredFees = feeTasks.filter(t => {
+    const bal = Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0));
+    if (invFilter === 'pending' && bal <= 0) return false;
+    if (invFilter === 'settled' && bal > 0) return false;
+    if (q) {
+      const hay = [t.invoice, t.linked, t.name, t.phone].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
   invEl.innerHTML = `
     <div class="fin-hero-grid">
       <div class="fin-card"><div class="f-lbl">Total Billed</div><div class="f-val">${inr(totalBilled)}</div></div>
       <div class="fin-card"><div class="f-lbl">Collected</div><div class="f-val" style="color:var(--green);">${inr(totalCollected)}</div></div>
       <div class="fin-card"><div class="f-lbl">Pending Balance</div><div class="f-val" style="color:var(--red);">${inr(totalDue)}</div></div>
     </div>
+    <div class="filter-toolbar">
+      <div class="filters seg" style="max-width:340px;">
+        <button class="filter-btn ${invFilter === 'all' ? 'active' : ''}" onclick="setInvFilter('all')">All (${feeTasks.length})</button>
+        <button class="filter-btn ${invFilter === 'pending' ? 'active' : ''}" onclick="setInvFilter('pending')">Pending</button>
+        <button class="filter-btn ${invFilter === 'settled' ? 'active' : ''}" onclick="setInvFilter('settled')">Settled</button>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input type="text" value="${escapeForHtml(invSearch)}" placeholder="Search client or invoice #..." oninput="onInvSearch(this.value)" style="height:36px; border:1px solid var(--rule); border-radius:999px; padding:0 14px; font-size:12.5px; outline:none; background:#fff;">
+        <button type="button" class="btn btn-quiet" onclick="exportInvoicesCsv()">${ICON.download} Export CSV</button>
+      </div>
+    </div>
     <div class="statement-sheet">
       <div class="statement-header" style="background:linear-gradient(120deg, #564FD1 0%, #7C74F0 100%);">
-        <h3>📄 Client Invoices &amp; Billing Register</h3>
-        <span style="font-size:11px; opacity:0.9;">${feeTasks.length} Billable Entries</span>
+        <h3>${ICON.doc} Client Invoices &amp; Billing Register</h3>
+        <span style="font-size:11px; opacity:0.9;">${filteredFees.length} of ${feeTasks.length} Entries</span>
       </div>
       <div class="statement-body">
         <div class="table-responsive">
@@ -2321,29 +2779,31 @@ function renderInvoicesPage() {
               <tr>
                 <th>Invoice #</th>
                 <th>Client / Service</th>
-                <th class="text-right">Billed (₹)</th>
-                <th class="text-right">Received (₹)</th>
-                <th class="text-right">Balance (₹)</th>
+                <th class="text-right">Billed (&#8377;)</th>
+                <th class="text-right">Received (&#8377;)</th>
+                <th class="text-right">Balance (&#8377;)</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              ${feeTasks.map(t => {
+              ${filteredFees.length ? filteredFees.map(t => {
                 const bal = Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0));
+                const idJs = escapeJsStr(t.id);
                 return `
                   <tr>
                     <td style="font-weight:700; color:var(--accent); white-space:nowrap;">${escapeForHtml(t.invoice || 'Draft')}</td>
                     <td><strong>${escapeForHtml(t.linked || t.name)}</strong><br><small style="color:var(--muted);">${escapeForHtml(t.name)}</small></td>
                     <td class="text-right stmt-mono">${inr(t.payable)}</td>
                     <td class="text-right stmt-mono" style="color:var(--green);">${inr(t.received)}</td>
-                    <td class="text-right stmt-mono" style="color:${bal > 0 ? 'var(--red)' : 'var(--green)'};">${bal > 0 ? inr(bal) : 'Settled ✓'}</td>
-                    <td style="white-space:nowrap;">
-                      <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="generateOrOpenInvoice('${escapeForHtml(t.id)}')">${t.invoice ? 'View Invoice' : 'Issue Invoice'}</button>
-                      ${bal > 0 ? `<button type="button" class="btn btn-wa" style="height:26px; font-size:11px; padding:0 8px;" onclick="sendWhatsAppReminder('${escapeForHtml(t.id)}', ${bal})">Remind</button>` : ''}
+                    <td class="text-right stmt-mono" style="color:${bal > 0 ? 'var(--red)' : 'var(--green)'};">${bal > 0 ? inr(bal) : 'Settled ' + CHK}</td>
+                    <td style="white-space:nowrap; display:flex; gap:4px; flex-wrap:wrap;">
+                      <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="generateOrOpenInvoice('${idJs}')">${t.invoice ? 'View Invoice' : 'Issue Invoice'}</button>
+                      ${bal > 0 ? `<button type="button" class="btn btn-wa" style="height:26px; font-size:11px; padding:0 8px;" onclick="sendWhatsAppReminder('${idJs}', ${bal})">Remind</button>` : ''}
+                      ${bal > 0 ? `<button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="copyPayLink(${bal})">Copy Link</button>` : ''}
                     </td>
                   </tr>
                 `;
-              }).join('')}
+              }).join('') : `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:20px;">No invoices match your filter.</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -2402,25 +2862,35 @@ function renderFinancialsPage() {
 
     let html = '';
 
-    if (!isFamilyPublicView) {
+    if (isFamilyPublicView) {
+      html += `
+        <div class="public-family-banner">
+          <div>
+            <div style="font-size:18px; font-weight:800;">Kathiyawad Ziyarat Trip &mdash; Live Family Account</div>
+            <div style="font-size:12px; opacity:0.9;">Read-only shared ledger &bull; Managed by Mustannsirr Mallik</div>
+          </div>
+          <button type="button" class="btn btn-quiet" onclick="window.print()">${ICON.print} Print Summary</button>
+        </div>
+      `;
+    } else {
       html += `
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
           <div class="fin-mode-toggle" role="tablist">
             <button type="button" class="fin-mode-btn ${finViewMode === 'all' ? 'active' : ''}" onclick="setFinViewMode('all')">All Ledgers</button>
-            <button type="button" class="fin-mode-btn ${finViewMode === 'journal' ? 'active' : ''}" onclick="setFinViewMode('journal')">📒 Journal (${(ledger.journalEntries || []).length})</button>
-            <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')">🕌 Ziyarat Trip</button>
-            <button type="button" class="fin-mode-btn ${finViewMode === 'loans' ? 'active' : ''}" onclick="setFinViewMode('loans')">🤝 Loans</button>
-            <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">💸 Expenses</button>
+            <button type="button" class="fin-mode-btn ${finViewMode === 'journal' ? 'active' : ''}" onclick="setFinViewMode('journal')">${ICON.book} Journal (${(ledger.journalEntries || []).length})</button>
+            <button type="button" class="fin-mode-btn ${finViewMode === 'trip' ? 'active' : ''}" onclick="setFinViewMode('trip')">${ICON.home} Ziyarat Trip</button>
+            <button type="button" class="fin-mode-btn ${finViewMode === 'loans' ? 'active' : ''}" onclick="setFinViewMode('loans')">${ICON.users} Loans</button>
+            <button type="button" class="fin-mode-btn ${finViewMode === 'expenses' ? 'active' : ''}" onclick="setFinViewMode('expenses')">${ICON.wallet} Expenses</button>
             <button type="button" class="fin-mode-btn ${finViewMode === 'pl' ? 'active' : ''}" onclick="setFinViewMode('pl')">P&amp;L</button>
             <button type="button" class="fin-mode-btn ${finViewMode === 'bs' ? 'active' : ''}" onclick="setFinViewMode('bs')">Balance Sheet</button>
           </div>
           <div style="display:flex; gap:5px; flex-wrap:wrap;">
-            ${finViewMode === 'all' ? `<button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="toggleAllFinSections(${!allFinFolded})">${allFinFolded ? '⊞ Expand All' : '⊟ Fold All'}</button>` : ''}
-            <button type="button" class="btn btn-primary" style="height:30px; padding:0 11px; font-size:11px;" onclick="openJournalEntryModal()">📒 + Journal</button>
-            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">🏧 + ATM Cash</button>
-            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openEditBalancesModal()">✏️ Balances</button>
+            ${finViewMode === 'all' ? `<button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="toggleAllFinSections(${!allFinFolded})">${allFinFolded ? '[+] Expand All' : '[-] Fold All'}</button>` : ''}
+            <button type="button" class="btn btn-primary" style="height:30px; padding:0 11px; font-size:11px;" onclick="openJournalEntryModal()">+ Journal</button>
+            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openAtmCashWithdrawalModal()">+ ATM Cash</button>
+            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 9px; font-size:11px;" onclick="openEditBalancesModal()">${ICON.edit} Balances</button>
             <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px;" onclick="openAddLoanModal()">+ Loan</button>
-            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px; border-color:var(--amber-border); background:var(--amber-soft); color:#B45309;" onclick="openReconcileLedgerModal()">🛠️ Fix / Sync</button>
+            <button type="button" class="btn btn-quiet" style="height:30px; padding:0 10px; font-size:11px; border-color:var(--amber-border); background:var(--amber-soft); color:#B45309;" onclick="openReconcileLedgerModal()">Fix / Sync</button>
           </div>
         </div>
 
@@ -2456,7 +2926,7 @@ function renderFinancialsPage() {
       html += `
         <div class="statement-sheet">
           <div class="statement-header" style="background:linear-gradient(120deg, #564FD1 0%, #7C74F0 100%); cursor:pointer;" onclick="toggleFinSection('journal')">
-            <h3>${openJv ? '▾' : '▸'} 📒 Double-Entry Journal Register</h3>
+            <h3><span>${openJv ? '&#9662;' : '&#9656;'}</span> ${ICON.book} Double-Entry Journal Register</h3>
             <div style="display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
               <span style="font-size:11px; opacity:0.9;">${jvList.length} Voucher(s)</span>
               <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 9px;" onclick="openJournalEntryModal()">+ Pass Voucher</button>
@@ -2475,7 +2945,7 @@ function renderFinancialsPage() {
                       <td>${escapeForHtml(getJournalAccountLabel(jv.creditAccount))}</td>
                       <td>${escapeForHtml(jv.narration)}</td>
                       <td class="text-right stmt-mono">${inr(jv.amount)}</td>
-                      <td><button type="button" class="act del" onclick="deleteJournalEntry('${jv.id}')">${ICON.x}</button></td>
+                      <td><button type="button" class="act del" onclick="deleteJournalEntry('${escapeJsStr(jv.id)}')">${ICON.x}</button></td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -2486,8 +2956,8 @@ function renderFinancialsPage() {
       `;
     }
 
-    // 2. Kathiyawad Ziyarat Trip — 3 Families Split
-    if (finViewMode === 'all' || finViewMode === 'trip') {
+    // 2. Kathiyawad Ziyarat Trip
+    if (isFamilyPublicView || finViewMode === 'all' || finViewMode === 'trip') {
       const openTrip = isSecOpen('trip');
       const familyStats = (ledger.kathiyawadTrip.families || []).map(f => {
         const paidDirect = tripPayments.filter(p => p.family === f.name).reduce((s, p) => s + (p.amount || 0), 0);
@@ -2500,13 +2970,13 @@ function renderFinancialsPage() {
       html += `
         <div class="statement-sheet">
           <div class="statement-header" style="background:linear-gradient(120deg, #0D9488 0%, #10B981 100%); cursor:pointer;" onclick="toggleFinSection('trip')">
-            <h3>${openTrip ? '▾' : '▸'} 🕌 Kathiyawad Ziyarat Trip &mdash; 3 Families Split</h3>
+            <h3><span>${openTrip ? '&#9662;' : '&#9656;'}</span> ${ICON.home} Kathiyawad Ziyarat Trip &mdash; 3 Families Split</h3>
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;" onclick="event.stopPropagation()">
               <span style="font-size:11px; font-weight:700;">Outlay: ${inr(totalTripOutlay)} &bull; Share: ${inr(equalFamilyShare)}/family</span>
               ${!isFamilyPublicView ? `
                 <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openAddTripPaymentModal()">+ Expense</button>
                 <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openAddTripContributionModal()">+ Contribution</button>
-                <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="shareZiyaratWithFamilies()">📲 Share Link</button>
+                <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="shareZiyaratWithFamilies()">Share Link</button>
               ` : ''}
             </div>
           </div>
@@ -2536,7 +3006,7 @@ function renderFinancialsPage() {
                     <td>${escapeForHtml(p.desc)}</td>
                     <td>${escapeForHtml(p.mode)}</td>
                     <td class="text-right stmt-mono">${inr(p.amount)}</td>
-                    <td>${!isFamilyPublicView ? `<button type="button" class="act del" onclick="deleteTripEntry('payment','${p.id}')">${ICON.x}</button>` : ''}</td>
+                    <td>${!isFamilyPublicView ? `<button type="button" class="act del" onclick="deleteTripEntry('payment','${escapeJsStr(p.id)}')">${ICON.x}</button>` : ''}</td>
                   </tr>
                 `).join('')}
                 ${tripContributions.map(c => `
@@ -2546,7 +3016,7 @@ function renderFinancialsPage() {
                     <td>Contribution (${escapeForHtml(c.member)})</td>
                     <td>${escapeForHtml(c.mode)}</td>
                     <td class="text-right stmt-mono" style="color:var(--green);">+${inr(c.amount)}</td>
-                    <td>${!isFamilyPublicView ? `<button type="button" class="act del" onclick="deleteTripEntry('contribution','${c.id}')">${ICON.x}</button>` : ''}</td>
+                    <td>${!isFamilyPublicView ? `<button type="button" class="act del" onclick="deleteTripEntry('contribution','${escapeJsStr(c.id)}')">${ICON.x}</button>` : ''}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -2556,7 +3026,7 @@ function renderFinancialsPage() {
       `;
     }
 
-    // 3. Loans & Advances Manager (with Itemized Sub-Ledger & + Add Entry)
+    // 3. Loans & Advances Manager
     if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'loans')) {
       const openLoans = isSecOpen('loans');
       const renderSubEntries = (parentId, entries, isBuiltIn) => {
@@ -2569,7 +3039,7 @@ function renderFinancialsPage() {
                 <span><strong>${escapeForHtml(en.date)}</strong> &bull; ${escapeForHtml(en.desc)} <span style="color:var(--muted);">(${escapeForHtml(en.mode)})</span></span>
                 <span style="display:inline-flex; align-items:center; gap:6px;">
                   <strong class="stmt-mono">${inr(en.amount)}</strong>
-                  <button type="button" class="act del" onclick="deleteLoanSubEntry('${parentId}','${en.id}',${isBuiltIn})">${ICON.x}</button>
+                  <button type="button" class="act del" onclick="deleteLoanSubEntry('${escapeJsStr(parentId)}','${escapeJsStr(en.id)}',${isBuiltIn})">${ICON.x}</button>
                 </span>
               </div>
             `).join('')}
@@ -2580,7 +3050,7 @@ function renderFinancialsPage() {
       html += `
         <div class="statement-sheet">
           <div class="statement-header" style="background:linear-gradient(120deg, #D97706 0%, #F59E0B 100%); cursor:pointer;" onclick="toggleFinSection('loans')">
-            <h3>${openLoans ? '▾' : '▸'} 🤝 Loans &amp; Advances Manager</h3>
+            <h3><span>${openLoans ? '&#9662;' : '&#9656;'}</span> ${ICON.users} Loans &amp; Advances Manager</h3>
             <div style="display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
               <span style="font-size:11px; font-weight:700;">Given: ${inr(totalLoansGiven)} &bull; Taken: ${inr(totalLoansTaken)}</span>
               <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 9px;" onclick="openAddLoanModal()">+ New Loan</button>
@@ -2601,7 +3071,7 @@ function renderFinancialsPage() {
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
                   <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('juzer', true)">+ Add Entry</button>
                   <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('juzer', true)">+ Repay</button>
-                  ${juzerNet > 0 ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(ledger.loansGiven.juzer.name)}','${escapeForHtml(ledger.loansGiven.juzer.phone)}',${juzerNet})">📲 Remind</button>` : ''}
+                  ${juzerNet > 0 ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeJsStr(ledger.loansGiven.juzer.name)}','${escapeJsStr(ledger.loansGiven.juzer.phone)}',${juzerNet})">Remind</button>` : ''}
                 </div>
               </div>
 
@@ -2640,6 +3110,7 @@ function renderFinancialsPage() {
               ${customLoansArr.map(cl => {
                 const rem = Math.max(0, (Number(cl.principal) || 0) - (Number(cl.repaid) || 0));
                 const isG = cl.type === 'given';
+                const idJs = escapeJsStr(cl.id);
                 return `
                   <div class="loan-card">
                     <div>
@@ -2652,10 +3123,10 @@ function renderFinancialsPage() {
                       ${renderSubEntries(cl.id, cl.entries, false)}
                     </div>
                     <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; align-items:center;">
-                      <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('${escapeForHtml(cl.id)}', false)">+ Add Entry</button>
-                      <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${escapeForHtml(cl.id)}', false)">+ Repay</button>
-                      ${isG && rem > 0 ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeForHtml(cl.name)}','${escapeForHtml(cl.phone || '')}',${rem})">📲 Remind</button>` : ''}
-                      <button type="button" class="act del" style="margin-left:auto;" onclick="deleteCustomLoan('${escapeForHtml(cl.id)}')">${ICON.x}</button>
+                      <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="openAddLoanEntryModal('${idJs}', false)">+ Add Entry</button>
+                      <button type="button" class="btn btn-primary" style="height:28px; font-size:11px; padding:0 9px;" onclick="recordLoanRepayment('${idJs}', false)">+ Repay</button>
+                      ${isG && rem > 0 ? `<button type="button" class="btn btn-wa" style="height:28px; font-size:11px; padding:0 9px;" onclick="sendCustomLoanReminder('${escapeJsStr(cl.name)}','${escapeJsStr(cl.phone || '')}',${rem})">Remind</button>` : ''}
+                      <button type="button" class="act del" style="margin-left:auto;" onclick="deleteCustomLoan('${idJs}')">${ICON.x}</button>
                     </div>
                   </div>
                 `;
@@ -2672,9 +3143,10 @@ function renderFinancialsPage() {
       html += `
         <div class="statement-sheet">
           <div class="statement-header" style="background:linear-gradient(120deg, #DB2777 0%, #E67EC9 100%); cursor:pointer;" onclick="toggleFinSection('expenses')">
-            <h3>${openExp ? '▾' : '▸'} 💸 Expenses &amp; Personal Drawings</h3>
+            <h3><span>${openExp ? '&#9662;' : '&#9656;'}</span> ${ICON.wallet} Expenses &amp; Personal Drawings</h3>
             <div style="display:flex; align-items:center; gap:8px;" onclick="event.stopPropagation()">
               <span style="font-size:11px; font-weight:700;">OpEx: ${inr(totalOperatingExpenses)} &bull; Drawings: ${inr(totalPersonalDrawings)}</span>
+              <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 9px;" onclick="exportExpensesCsv()">${ICON.download} CSV</button>
               <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 9px;" onclick="openAddExpenseModal()">+ Record Entry</button>
             </div>
           </div>
@@ -2692,7 +3164,7 @@ function renderFinancialsPage() {
                       <td><span class="loan-pill ${isDraw ? 'liab' : 'asset'}">${isDraw ? 'Capital Drawings' : 'P&L Expense'}</span></td>
                       <td>${escapeForHtml(e.source)}</td>
                       <td class="text-right stmt-mono">${inr(e.amount)}</td>
-                      <td><button type="button" class="act del" onclick="deleteExpenseEntry('${e.id}')">${ICON.x}</button></td>
+                      <td><button type="button" class="act del" onclick="deleteExpenseEntry('${escapeJsStr(e.id)}')">${ICON.x}</button></td>
                     </tr>
                   `;
                 }).join('')}
@@ -2709,12 +3181,12 @@ function renderFinancialsPage() {
       html += `
         <div class="statement-sheet">
           <div class="statement-header" style="background:linear-gradient(120deg, #059669 0%, #10B981 100%); cursor:pointer;" onclick="toggleFinSection('pl')">
-            <h3>${openPl ? '▾' : '▸'} 📈 Profit &amp; Loss Statement (Accrual Basis)</h3>
+            <h3><span>${openPl ? '&#9662;' : '&#9656;'}</span> ${ICON.chart} Profit &amp; Loss Statement (Accrual Basis)</h3>
             <span style="font-size:11.5px; font-weight:700;">Net Profit: ${inr(netProfit)}</span>
           </div>
           ${openPl ? `<div class="statement-body">
             <div class="table-responsive"><table class="stmt-table">
-              <thead><tr><th>Particulars</th><th class="text-right">Amount (₹)</th></tr></thead>
+              <thead><tr><th>Particulars</th><th class="text-right">Amount (&#8377;)</th></tr></thead>
               <tbody>
                 <tr><td><strong>Gross Professional Fees Billed (Accrual Income)</strong></td><td class="text-right stmt-mono" style="color:var(--green);">${inr(grossFeeIncome)}</td></tr>
                 <tr><td>Less: Operating Business Expenses</td><td class="text-right stmt-mono" style="color:var(--red);">-${inr(totalOperatingExpenses)}</td></tr>
@@ -2726,13 +3198,13 @@ function renderFinancialsPage() {
       `;
     }
 
-    // 6. Double-Entry Balance Sheet (with Sundry Debtors & Capital Drawings Deduction)
+    // 6. Double-Entry Balance Sheet
     if (!isFamilyPublicView && (finViewMode === 'all' || finViewMode === 'bs')) {
       const openBs = isSecOpen('bs');
       html += `
         <div class="statement-sheet">
           <div class="statement-header" style="background:linear-gradient(120deg, #312E81 0%, #5B54D6 100%); cursor:pointer;" onclick="toggleFinSection('bs')">
-            <h3>${openBs ? '▾' : '▸'} ⚖️ Balance Sheet Statement</h3>
+            <h3><span>${openBs ? '&#9662;' : '&#9656;'}</span> ${ICON.scale} Balance Sheet Statement</h3>
             <span style="font-size:11.5px; font-weight:700;">Total Assets = Liabilities + Equity: ${inr(totalAssets)}</span>
           </div>
           ${openBs ? `<div class="statement-body">
@@ -2775,36 +3247,62 @@ function renderFinancialsPage() {
   }
 }
 
+function focusCategorySection(catKey) {
+  if (catKey === 'FEES') { setFilter('fees'); return; }
+  if (catKey === 'INVITATION') { setFilter('invitation'); return; }
+  setFilter('all');
+  if (uiState.collapsed && uiState.collapsed[catKey]) {
+    delete uiState.collapsed[catKey];
+    saveUi();
+    render();
+  }
+  const el = document.querySelector(`[data-cat="${catKey}"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function render() {
   updateFinNavBadge();
   const app = document.getElementById('app');
   if (!app) return;
   const q = String(searchQuery || '').trim().toLowerCase();
-  const visible = tasks.filter(t => {
+  let visible = tasks.filter(t => {
     if (!t) return false;
     const text = [t.name, t.remark, t.linked, t.invoice, t.cat, t.phone].join(' ').toLowerCase();
     if (q && !text.includes(q)) return false;
     if (filter === 'pending' && t.done) return false;
     if (filter === 'done' && !t.done) return false;
+    if (filter === 'urgent' && (!t.urgent || t.done)) return false;
     if (filter === 'fees' && t.type !== 'fee') return false;
     if (filter === 'invitation' && !isInvitationTask(t)) return false;
     return true;
   });
 
+  if (taskSort === 'due') {
+    visible = visible.slice().sort((a, b) => {
+      const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+      const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+      return da - db;
+    });
+  } else if (taskSort === 'urgent') {
+    visible = visible.slice().sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0));
+  } else if (taskSort === 'amount') {
+    visible = visible.slice().sort((a, b) => (Number(b.payable) || 0) - (Number(a.payable) || 0));
+  }
+
   const pending = tasks.filter(t => t && !t.done).length;
   const completed = tasks.filter(t => t && t.done).length;
+  const urgentPending = tasks.filter(t => t && t.urgent && !t.done).length;
   const completionPct = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
   const feeDue = tasks.filter(t => t && t.type === 'fee' && !isLoanFeeTask(t)).reduce((a, t) => a + Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0)), 0);
   const invCount = tasks.filter(t => t && isInvitationTask(t) && !t.done).length;
 
-  // Build live category bar distribution for the Indigo Analytics Banner
   const barBuckets = [
-    { lbl: 'OWN', list: tasks.filter(t => t && t.cat === 'OWN') },
-    { lbl: 'MHJ', list: tasks.filter(t => t && t.cat === 'MHJ') },
-    { lbl: 'SHK', list: tasks.filter(t => t && t.cat === 'SHK') },
-    { lbl: 'FEES', list: tasks.filter(t => t && t.type === 'fee') },
-    { lbl: 'INV', list: tasks.filter(t => t && isInvitationTask(t)) },
-    { lbl: 'PER', list: tasks.filter(t => t && !t.cat && t.type === 'personal' && !isInvitationTask(t)) }
+    { lbl: 'OWN', catKey: 'OWN', list: tasks.filter(t => t && t.cat === 'OWN') },
+    { lbl: 'MHJ', catKey: 'MHJ', list: tasks.filter(t => t && t.cat === 'MHJ') },
+    { lbl: 'SHK', catKey: 'SHK', list: tasks.filter(t => t && t.cat === 'SHK') },
+    { lbl: 'FEES', catKey: 'FEES', list: tasks.filter(t => t && t.type === 'fee') },
+    { lbl: 'INV', catKey: 'INVITATION', list: tasks.filter(t => t && isInvitationTask(t)) },
+    { lbl: 'PER', catKey: 'PERSONAL', list: tasks.filter(t => t && !t.cat && t.type === 'personal' && !isInvitationTask(t)) }
   ];
   const maxBar = Math.max(1, ...barBuckets.map(b => b.list.length));
   const arcLen = 157;
@@ -2816,28 +3314,28 @@ function render() {
       <div class="dirga-hero-banner">
         <div class="hero-stats">
           <div class="hero-card" style="cursor:pointer;" onclick="setFilter('all')">
-            <div class="hero-card-top"><span class="l">Total Items</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-top"><span class="l">Total Items</span><span class="hero-arrow">&rsaquo;</span></div>
             <div class="hero-card-bottom">
               <div class="n">${tasks.length}</div>
               <span class="hero-pill mint">${completionPct}% done</span>
             </div>
           </div>
           <div class="hero-card" style="cursor:pointer;" onclick="setFilter('pending')">
-            <div class="hero-card-top"><span class="l">Pending Tasks</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-top"><span class="l">Pending Tasks</span><span class="hero-arrow">&rsaquo;</span></div>
             <div class="hero-card-bottom">
               <div class="n">${pending}</div>
-              <span class="hero-pill pink">Active</span>
+              <span class="hero-pill pink">${urgentPending ? urgentPending + ' urgent' : 'Active'}</span>
             </div>
           </div>
           <div class="hero-card" style="cursor:pointer;" onclick="setFilter('invitation')">
-            <div class="hero-card-top"><span class="l">Invitations</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-top"><span class="l">Invitations</span><span class="hero-arrow">&rsaquo;</span></div>
             <div class="hero-card-bottom">
               <div class="n">${invCount}</div>
               <span class="hero-pill">Events</span>
             </div>
           </div>
           <div class="hero-card" style="cursor:pointer;" onclick="setFilter('fees')">
-            <div class="hero-card-top"><span class="l">Fees Due</span><span class="hero-arrow">›</span></div>
+            <div class="hero-card-top"><span class="l">Fees Due</span><span class="hero-arrow">&rsaquo;</span></div>
             <div class="hero-card-bottom">
               <div class="n">${inr(feeDue)}</div>
               <span class="hero-pill pink">Receivable</span>
@@ -2862,7 +3360,7 @@ function render() {
                 const doneH = Math.round((totalH * donePct) / 100);
                 const pendH = Math.max(0, totalH - doneH);
                 return `
-                  <div class="hero-bar-col" title="${b.lbl}: ${b.list.length} total (${doneCnt} done)">
+                  <div class="hero-bar-col" onclick="focusCategorySection('${b.catKey}')" title="${b.lbl}: ${b.list.length} total (${doneCnt} done) &mdash; click to jump">
                     <div class="hero-bar-track">
                       <div class="hero-bar-top" style="height:${pendH}%;"></div>
                       <div class="hero-bar-bot" style="height:${doneH}%;"></div>
@@ -2877,7 +3375,7 @@ function render() {
           <div class="hero-gauge-box">
             <div style="width:100%; display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:700;">
               <span>Activity Completion</span>
-              <span style="opacity:0.7;">•••</span>
+              <span style="opacity:0.75; letter-spacing:1px;">&bull;&bull;&bull;</span>
             </div>
             <div style="position:relative; width:146px; height:84px; margin:2px auto 0;">
               <svg viewBox="0 0 140 80" width="146" height="84">
@@ -2908,74 +3406,90 @@ function render() {
 
   const labels = {
     PERSONAL: 'Personal',
-    INVITATION: '💌 Invitations & Events',
-    OWN: 'Professional — OWN',
-    MHJ: 'Professional — MHJ',
-    SHK: 'Professional — SHK Husain Arif',
+    INVITATION: 'Invitations & Events',
+    OWN: 'Professional \u2014 OWN',
+    MHJ: 'Professional \u2014 MHJ',
+    SHK: 'Professional \u2014 SHK Husain Arif',
     FEES: 'Fees & Receivables'
   };
+  (uiState.customCategories || []).forEach(c => { if (c && c.tag) labels[c.tag] = 'Professional \u2014 ' + c.label; });
 
   const renderTaskCard = (t) => {
-    const due = t.dueDate ? new Date(t.dueDate).toLocaleDateString('en-IN') : '';
+    const dueBadge = getDueBadge(t.dueDate, t.done);
     const balance = Math.max(0, (Number(t.payable) || 0) - (Number(t.received) || 0) - (Number(t.discount) || 0));
-    return `<article class="task ${t.done ? 'done-task' : ''}">
-      <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark task complete" onchange="toggleTask('${escapeForHtml(t.id)}')">
+    const idJs = escapeJsStr(t.id);
+    return `<article class="task ${t.done ? 'done-task' : ''} ${t.urgent && !t.done ? 'urgent-task' : ''}">
+      <input type="checkbox" ${t.done ? 'checked' : ''} aria-label="Mark task complete" onchange="toggleTask('${idJs}')">
       <div class="task-body">
         <div class="task-top"><span class="task-name">${escapeForHtml(t.name)}</span>${t.type === 'fee' ? `<span class="amt ${balance ? 'owed' : 'clear'}">${balance ? inr(balance) : 'Settled'}</span>` : ''}</div>
-        ${t.linked ? `<div class="task-sub">${escapeForHtml(t.linked)}</div>` : ''}
-        ${due ? `<div class="task-sub">Due: ${due}</div>` : ''}
+        ${(t.linked || dueBadge || (t.urgent && !t.done)) ? `<div class="task-sub">
+          ${t.urgent && !t.done ? `<span class="pill-tag urgent">${ICON.flame} Urgent</span>` : ''}
+          ${dueBadge}
+          ${t.linked ? `<span>${escapeForHtml(t.linked)}</span>` : ''}
+        </div>` : ''}
         ${t.remark ? `<div class="note">${escapeForHtml(t.remark)}</div>` : ''}
         <div class="task-meta">
           ${t.type === 'fee' ? `
-            <button class="act pay" onclick="recordPayment('${escapeForHtml(t.id)}')">Record payment</button>
-            ${balance > 0 ? `<button class="act wa" onclick="sendWhatsAppReminder('${escapeForHtml(t.id)}',${balance})">Send WhatsApp reminder</button>` : ''}
-            ${(Number(t.received) || 0) > 0 ? `<button class="act" onclick="offerReceipt('${escapeForHtml(t.id)}')">Receipt</button>` : ''}
-            <button class="act" onclick="generateOrOpenInvoice('${escapeForHtml(t.id)}')">${t.invoice ? 'View Invoice' : 'Invoice'}</button>
+            <button class="act pay" onclick="recordPayment('${idJs}')">Record payment</button>
+            ${balance > 0 ? `<button class="act wa" onclick="sendWhatsAppReminder('${idJs}',${balance})">WhatsApp</button>` : ''}
+            ${balance > 0 ? `<button class="act" onclick="copyPayLink(${balance})">Copy Link</button>` : ''}
+            ${(Number(t.received) || 0) > 0 ? `<button class="act" onclick="offerReceipt('${idJs}')">Receipt</button>` : ''}
+            <button class="act" onclick="generateOrOpenInvoice('${idJs}')">${t.invoice ? 'View Invoice' : 'Invoice'}</button>
           ` : ''}
-          <button class="act" onclick="setRemark('${escapeForHtml(t.id)}')">Note</button>
-          ${isInvitationTask(t) ? '' : `<button class="act" onclick="moveToInvitation('${escapeForHtml(t.id)}')">💌 Invitation</button>`}
-          <button class="act del" onclick="deleteTask('${escapeForHtml(t.id)}')">Delete</button>
+          <button class="act" onclick="editTask('${idJs}')">Edit</button>
+          <button class="act" onclick="setRemark('${idJs}')">Note</button>
+          ${isInvitationTask(t) ? '' : `<button class="act" onclick="moveToInvitation('${idJs}')">${ICON.mail} Invite</button>`}
+          <button class="act del" onclick="deleteTask('${idJs}')">Delete</button>
         </div>
       </div>
     </article>`;
   };
 
   app.innerHTML = `
-    <div class="filters seg">
-      <button class="filter-btn ${filter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All</button>
-      <button class="filter-btn ${filter === 'invitation' ? 'active' : ''}" onclick="setFilter('invitation')">💌 Invitations</button>
-      <button class="filter-btn ${filter === 'pending' ? 'active' : ''}" onclick="setFilter('pending')">Pending</button>
-      <button class="filter-btn ${filter === 'done' ? 'active' : ''}" onclick="setFilter('done')">Completed (${completed})</button>
-      <button class="filter-btn ${filter === 'fees' ? 'active' : ''}" onclick="setFilter('fees')">Fees</button>
+    <div class="filter-toolbar">
+      <div class="filters seg">
+        <button class="filter-btn ${filter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All</button>
+        <button class="filter-btn ${filter === 'pending' ? 'active' : ''}" onclick="setFilter('pending')">Pending (${pending})</button>
+        <button class="filter-btn ${filter === 'urgent' ? 'active' : ''}" onclick="setFilter('urgent')">${ICON.flame} Urgent${urgentPending ? ' (' + urgentPending + ')' : ''}</button>
+        <button class="filter-btn ${filter === 'invitation' ? 'active' : ''}" onclick="setFilter('invitation')">${ICON.mail} Invitations</button>
+        <button class="filter-btn ${filter === 'fees' ? 'active' : ''}" onclick="setFilter('fees')">Fees</button>
+        <button class="filter-btn ${filter === 'done' ? 'active' : ''}" onclick="setFilter('done')">Completed (${completed})</button>
+      </div>
+      <select class="sort-select" onchange="setTaskSort(this.value)" title="Sort tasks">
+        <option value="default" ${taskSort === 'default' ? 'selected' : ''}>Sort: Default</option>
+        <option value="due" ${taskSort === 'due' ? 'selected' : ''}>Sort: Due Date</option>
+        <option value="urgent" ${taskSort === 'urgent' ? 'selected' : ''}>Sort: Urgent First</option>
+        <option value="amount" ${taskSort === 'amount' ? 'selected' : ''}>Sort: Highest &#8377;</option>
+      </select>
     </div>
     ${cats.size ? Array.from(cats.entries()).map(([cat, items]) => {
       const pendingItems = items.filter(t => !t.done);
       const doneItems = items.filter(t => t.done);
       const showDone = !!doneOpen[cat] || (!!q && doneItems.length > 0);
       const countText = (pendingItems.length > 0 && doneItems.length > 0)
-        ? `${pendingItems.length} pending • ${doneItems.length} done`
+        ? `${pendingItems.length} pending &bull; ${doneItems.length} done`
         : `${items.length}`;
 
       return `
-      <section class="cat-section ${uiState.collapsed[cat] ? 'collapsed' : ''}">
-        <div class="cat-heading" onclick="toggleGroup('${escapeForHtml(cat)}')">
+      <section class="cat-section ${uiState.collapsed[cat] ? 'collapsed' : ''}" data-cat="${escapeForHtml(cat)}">
+        <div class="cat-heading" onclick="toggleGroup('${escapeJsStr(cat)}')">
           ${ICON.chev}
           <span class="dot" style="background:${cat === 'FEES' ? 'var(--c-fees)' : cat === 'INVITATION' ? 'var(--c-personal)' : 'var(--accent)'}"></span>
-          <span class="title">${escapeForHtml(labels[cat] || cat.replace(/_/g, ' '))}</span>
+          <span class="title">${cat === 'INVITATION' ? ICON.mail : ''} ${escapeForHtml(labels[cat] || cat.replace(/_/g, ' '))}</span>
           <span class="count">${countText}</span>
         </div>
         ${uiState.collapsed[cat] ? '' : `<div class="task-grid">
           ${pendingItems.map(renderTaskCard).join('')}
           ${doneItems.length > 0 ? `
-            <button type="button" class="done-toggle" onclick="toggleDone('${escapeForHtml(cat)}')">
-              <span>${showDone ? '▾' : '▸'} Completed tasks (${doneItems.length})</span>
+            <button type="button" class="done-toggle" onclick="toggleDone('${escapeJsStr(cat)}')">
+              <span>${showDone ? '&#9662;' : '&#9656;'} Completed tasks (${doneItems.length})</span>
               <span style="font-size:10.5px; font-weight:700;">${showDone ? 'Fold' : 'Expand'}</span>
             </button>
             ${showDone ? doneItems.map(renderTaskCard).join('') : ''}
           ` : ''}
         </div>`}
       </section>`;
-    }).join('') : '<div class="statement-sheet"><div class="statement-body">No matching tasks found.</div></div>'}`;
+    }).join('') : '<div class="statement-sheet"><div class="statement-body" style="text-align:center; color:var(--muted);">No matching tasks found.</div></div>'}`;
 }
 
 function checkAuth() {
@@ -2997,25 +3511,52 @@ function resetData() {
   `, () => {
     [STORAGE_KEY, FIN_LEDGER_KEY, UI_KEY].forEach(k => localStorage.removeItem(k));
     tasks = [];
-    uiState = { collapsed: {} };
+    uiState = { collapsed: {}, invitationIds: {}, customCategories: [] };
     loadTasks();
     renderFinancialsPage();
+    showToast('Local cache reset', 'warn');
   }, 'Reset', 'Cancel');
+}
+
+function updateDynamicGreeting() {
+  const h = new Date().getHours();
+  const part = h < 12 ? 'Good morning' : (h < 17 ? 'Good afternoon' : 'Good evening');
+  const el = document.getElementById('greetingTitle');
+  if (el) el.textContent = `${part}, Mustannsirr!`;
 }
 
 function bootDashboard() {
   try {
-    if (sessionStorage.getItem('dashboardUnlocked') === '1') {
+    const isZiyaratPublic = new URLSearchParams(location.search).get('view') === 'ziyarat';
+    if (isZiyaratPublic) {
+      isFamilyPublicView = true;
       const gate = document.getElementById('authGate');
+      const sidebar = document.getElementById('appSidebar');
+      const shell = document.getElementById('appShell');
       if (gate) gate.style.display = 'none';
+      if (sidebar) sidebar.style.display = 'none';
+      if (shell) shell.classList.add('public-family-mode');
+    } else {
+      if (!localStorage.getItem('dashboardPassword')) {
+        const hintEl = document.getElementById('authHintNoPass');
+        if (hintEl) hintEl.style.display = 'block';
+      }
+      if (sessionStorage.getItem('dashboardUnlocked') === '1') {
+        const gate = document.getElementById('authGate');
+        if (gate) gate.style.display = 'none';
+      }
     }
+
+    updateDynamicGreeting();
+    populateCustomCategories();
     loadTasks();
     toggleFeeFields();
     renderInvoicesPage();
-    if (new URLSearchParams(location.search).get('view') === 'ziyarat') {
-      isFamilyPublicView = true;
+
+    if (isFamilyPublicView) {
       switchPage('financials');
     }
+
     syncCloudFinLedger();
     pullFromCalendar();
   } catch (err) {
@@ -3024,6 +3565,18 @@ function bootDashboard() {
     console.error(err);
   }
 }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+  const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag);
+  if (((e.key === '/' && !isTyping) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')) && activePage === 'tasks') {
+    e.preventDefault();
+    const sb = document.getElementById('searchBox');
+    if (sb) sb.focus();
+  }
+});
+
 document.addEventListener('DOMContentLoaded', bootDashboard);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
