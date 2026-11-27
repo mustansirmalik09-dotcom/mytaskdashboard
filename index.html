@@ -1961,7 +1961,23 @@ function getJournalAccountLabel(code) {
     CAPITAL: "Owner's Capital Account",
     ZIYARAT: 'Kathiyawad Ziyarat Advance'
   };
-  return map[code] || code;
+  if (map[code]) return map[code];
+
+  if (String(code).startsWith('CUSTOM_LOAN:')) {
+    const loanId = code.slice('CUSTOM_LOAN:'.length);
+    const ledger = getFinLedger();
+    const cl = (ledger.customLoans || []).find(x => String(x.id) === String(loanId));
+    if (cl) return `${cl.name} (${cl.type === 'given' ? 'Loan Given' : 'Loan Taken'})`;
+    return 'Custom Loan (Deleted)';
+  }
+
+  if (String(code).startsWith('CUSTOM_EXP:')) {
+    const catName = code.slice('CUSTOM_EXP:'.length);
+    const isDraw = /drawing|personal/i.test(catName);
+    return `${catName} (${isDraw ? 'Capital Drawings' : 'P&L Expense'})`;
+  }
+
+  return code;
 }
 
 function applyJournalEffect(ledger, code, side, amt) {
@@ -1976,21 +1992,57 @@ function applyJournalEffect(ledger, code, side, amt) {
   else if (code === 'DRAWINGS') ledger.journalDrawingsAdj = (Number(ledger.journalDrawingsAdj) || 0) + sign * amt;
   else if (code === 'ZIYARAT') ledger.journalZiyaratAdj = (Number(ledger.journalZiyaratAdj) || 0) + sign * amt;
   else if (code === 'CAPITAL') ledger.journalCapitalAdj = (Number(ledger.journalCapitalAdj) || 0) - sign * amt;
+  else if (String(code).startsWith('CUSTOM_LOAN:')) {
+    const loanId = code.slice('CUSTOM_LOAN:'.length);
+    const cl = (ledger.customLoans || []).find(x => String(x.id) === String(loanId));
+    if (cl) {
+      if (cl.type === 'given') {
+        cl.principal = (Number(cl.principal) || 0) + sign * amt;
+      } else {
+        cl.principal = (Number(cl.principal) || 0) - sign * amt;
+      }
+    }
+  } else if (String(code).startsWith('CUSTOM_EXP:')) {
+    const catName = code.slice('CUSTOM_EXP:'.length);
+    if (/drawing|personal/i.test(catName)) {
+      ledger.journalDrawingsAdj = (Number(ledger.journalDrawingsAdj) || 0) + sign * amt;
+    } else {
+      ledger.journalExpenseAdj = (Number(ledger.journalExpenseAdj) || 0) + sign * amt;
+    }
+  }
 }
 
 function openJournalEntryModal() {
+  const ledger = getFinLedger();
+  const customLoanOpts = (ledger.customLoans || []).map(cl => {
+    const label = `${cl.name} (${cl.type === 'given' ? 'Loan Given' : 'Loan Taken'})`;
+    return `<option value="CUSTOM_LOAN:${escapeForHtml(cl.id)}">${escapeForHtml(label)}</option>`;
+  }).join('');
+
+  const customExpOpts = (ledger.customExpenseCategories || []).map(cat => {
+    const isDraw = /drawing|personal/i.test(cat);
+    return `<option value="CUSTOM_EXP:${escapeForHtml(cat)}">${escapeForHtml(cat)} (${isDraw ? 'Capital Drawings' : 'P&amp;L Expense'})</option>`;
+  }).join('');
+
   const opts = `
-    <option value="CASH">Cash in Hand</option>
-    <option value="BANK_SLICE">slice SFB Bank</option>
-    <option value="LOAN_JUZER">Juzer Presswala (Loan Given)</option>
-    <option value="LOAN_MHJ">MHJ (Loan Taken)</option>
-    <option value="LOAN_HATIM">Hatim Bhai (Loan Taken)</option>
-    <option value="INCOME_FEES">Professional Fees Income (P&amp;L)</option>
-    <option value="EXPENSE_OP">Business Operating Expense (P&amp;L)</option>
-    <option value="DRAWINGS">Personal Drawings (Capital Deduction)</option>
-    <option value="CAPITAL">Owner's Capital Account</option>
-    <option value="ZIYARAT">Kathiyawad Ziyarat Advance</option>
+    <optgroup label="Core Accounts">
+      <option value="CASH">Cash in Hand</option>
+      <option value="BANK_SLICE">slice SFB Bank</option>
+      <option value="INCOME_FEES">Professional Fees Income (P&amp;L)</option>
+      <option value="EXPENSE_OP">Business Operating Expense (P&amp;L)</option>
+      <option value="DRAWINGS">Personal Drawings (Capital Deduction)</option>
+      <option value="CAPITAL">Owner's Capital Account</option>
+      <option value="ZIYARAT">Kathiyawad Ziyarat Advance</option>
+    </optgroup>
+    <optgroup label="Loans &amp; Advances">
+      <option value="LOAN_JUZER">Juzer Presswala (Loan Given)</option>
+      <option value="LOAN_MHJ">MHJ (Loan Taken)</option>
+      <option value="LOAN_HATIM">Hatim Bhai (Loan Taken)</option>
+      ${customLoanOpts}
+    </optgroup>
+    ${customExpOpts ? `<optgroup label="Custom Expense Ledgers">${customExpOpts}</optgroup>` : ''}
   `;
+
   showModal('Pass Double-Entry Journal Voucher', `
     <label>Voucher Date</label>
     <input type="date" id="jvDate" value="${new Date().toISOString().slice(0, 10)}">
@@ -2013,21 +2065,20 @@ function openJournalEntryModal() {
       return false;
     }
 
-    const ledger = getFinLedger();
-    applyJournalEffect(ledger, dr, 'dr', amount);
-    applyJournalEffect(ledger, cr, 'cr', amount);
-    ledger.journalEntries.push({
+    const freshLedger = getFinLedger();
+    applyJournalEffect(freshLedger, dr, 'dr', amount);
+    applyJournalEffect(freshLedger, cr, 'cr', amount);
+    freshLedger.journalEntries.push({
       id: 'jv_' + Date.now(),
-      voucherNo: 'JV-' + String(ledger.journalEntries.length + 1).padStart(3, '0'),
+      voucherNo: 'JV-' + String(freshLedger.journalEntries.length + 1).padStart(3, '0'),
       date, debitAccount: dr, creditAccount: cr, amount, narration
     });
-    saveFinLedger(ledger);
+    saveFinLedger(freshLedger);
     render();
     renderFinancialsPage();
     showToast('Journal voucher posted ' + CHK, 'success');
   }, 'Post Voucher', 'Cancel');
 }
-
 function deleteJournalEntry(id) {
   const ledger = getFinLedger();
   const idx = ledger.journalEntries.findIndex(x => x.id === id);
