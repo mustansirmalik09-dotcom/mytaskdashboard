@@ -1425,7 +1425,20 @@ function computeTripSettlement(ledger) {
     x.totalPaid = x.direct + potCredit;
     x.netSettlement = x.totalPaid - share;
   });
-  const mine = stats.find(x => x.isMine);
+  // Settlements: cash/bank handed between you and a family after the trip.
+  // Paid to a family -> their balance falls, yours rises. Received from a family -> the reverse.
+  const sets = Array.isArray(trip.settlements) ? trip.settlements : [];
+  const mineStat = stats.find(x => x.isMine);
+  sets.forEach(st => {
+    const amt = Number(st.amount) || 0;
+    const x = stats.find(y => y.f.name === canon(st.family));
+    if (!x || x.isMine || !mineStat) return;
+    const dir = st.direction === 'received' ? 1 : -1;
+    x.netSettlement += dir * amt;
+    mineStat.netSettlement -= dir * amt;
+    x.settled = (x.settled || 0) + dir * amt;
+  });
+  const mine = mineStat;
   return { outlay, share, potSpend, stats, mineNet: mine ? mine.netSettlement : 0 };
 }
 
@@ -1436,6 +1449,7 @@ function normalizeFinLedger(obj) {
   if (!Array.isArray(out.kathiyawadTrip.families)) out.kathiyawadTrip.families = def.kathiyawadTrip.families;
   if (!Array.isArray(out.kathiyawadTrip.payments)) out.kathiyawadTrip.payments = [];
   if (!Array.isArray(out.kathiyawadTrip.contributions)) out.kathiyawadTrip.contributions = [];
+  if (!Array.isArray(out.kathiyawadTrip.settlements)) out.kathiyawadTrip.settlements = [];
   if (!Array.isArray(out.expenses)) out.expenses = [];
   if (!Array.isArray(out.customExpenseCategories)) out.customExpenseCategories = [];
   if (!Array.isArray(out.customLoans)) out.customLoans = [];
@@ -1541,6 +1555,7 @@ function mergeFinLedgers(local, cloud) {
 
   merged.kathiyawadTrip.payments = mergeById(loc.kathiyawadTrip.payments, cld.kathiyawadTrip.payments);
   merged.kathiyawadTrip.contributions = mergeById(loc.kathiyawadTrip.contributions, cld.kathiyawadTrip.contributions);
+  merged.kathiyawadTrip.settlements = mergeById(loc.kathiyawadTrip.settlements, cld.kathiyawadTrip.settlements);
   merged.expenses = mergeById(loc.expenses, cld.expenses);
   merged.customLoans = mergeById(loc.customLoans, cld.customLoans);
   merged.journalEntries = mergeById(loc.journalEntries, cld.journalEntries);
@@ -2795,14 +2810,62 @@ function openAddTripContributionModal() {
   });
 }
 
+function openAddTripSettlementModal() {
+  const ledger = getFinLedger();
+  const calc = computeTripSettlement(ledger);
+  const others = calc.stats.filter(x => !x.isMine);
+  if (!others.length) return;
+  const first = others[0];
+  const opts = others.map(x => `<option value="${escapeForHtml(x.f.name)}">${escapeForHtml(x.f.name)} (${x.netSettlement >= 0 ? 'you owe ' : 'owes you '}${inr(Math.abs(x.netSettlement))})</option>`).join('');
+  showModal('+ Settlement Paid / Received', `
+    <div class="hint">Use this when money changes hands to clear a family's balance after the trip. It moves your cash/bank balance but is <strong>not</strong> a trip expense or contribution.</div>
+    <label>Date</label>
+    <input type="date" id="tsDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Family</label>
+    <select id="tsFamily">${opts}</select>
+    <label>Direction</label>
+    <select id="tsDir">
+      <option value="paid">I paid the family (refund / settle)</option>
+      <option value="received">I received from the family</option>
+    </select>
+    <label>Mode</label>
+    <select id="tsMode">
+      <option value="slice SFB">slice SFB Bank</option>
+      <option value="Cash">Cash in Hand</option>
+    </select>
+    <label>Amount (&#8377;)</label>
+    <input type="number" id="tsAmt" placeholder="&#8377; Amount">
+    <label>Note (optional)</label>
+    <input type="text" id="tsNote" placeholder="e.g. Refund of excess advance">
+  `, () => {
+    const date = document.getElementById('tsDate').value;
+    const family = document.getElementById('tsFamily').value;
+    const direction = document.getElementById('tsDir').value;
+    const mode = document.getElementById('tsMode').value;
+    const amount = parseFloat(document.getElementById('tsAmt').value) || 0;
+    const note = document.getElementById('tsNote').value.trim();
+    if (amount <= 0) return;
+    const led = getFinLedger();
+    const sign = direction === 'received' ? 1 : -1;
+    led.kathiyawadTrip.settlements.push({ id: 'ts_' + Date.now(), date, family, direction, mode, amount, note });
+    if (mode === 'Cash') led.cashInHand = (Number(led.cashInHand) || 0) + sign * amount;
+    else led.bankSlice = (Number(led.bankSlice) || 0) + sign * amount;
+    saveFinLedger(led);
+    render();
+    renderFinancialsPage();
+    showToast('Settlement recorded ' + CHK, 'success');
+  });
+}
+
 function deleteTripEntry(kind, id) {
   const ledger = getFinLedger();
-  const list = kind === 'payment' ? ledger.kathiyawadTrip.payments : ledger.kathiyawadTrip.contributions;
+  const list = kind === 'payment' ? ledger.kathiyawadTrip.payments : kind === 'settlement' ? ledger.kathiyawadTrip.settlements : ledger.kathiyawadTrip.contributions;
   const idx = list.findIndex(x => x.id === id);
   if (idx === -1) return;
   const item = list[idx];
   showModal('Delete Trip Entry?', `<div class="hint">Reverses ${inr(item.amount)} from ${escapeForHtml(item.mode)}.</div>`, () => {
-    const delta = kind === 'payment' ? (Number(item.amount) || 0) : -(Number(item.amount) || 0);
+    const amtN = Number(item.amount) || 0;
+    const delta = kind === 'payment' ? amtN : kind === 'settlement' ? (item.direction === 'received' ? -amtN : amtN) : -amtN;
     if (item.mode === 'Cash') ledger.cashInHand = (Number(ledger.cashInHand) || 0) + delta;
     else if (item.mode === 'slice SFB') ledger.bankSlice = (Number(ledger.bankSlice) || 0) + delta;
     list.splice(idx, 1);
@@ -3220,7 +3283,7 @@ function renderFinancialsPage() {
     // 2. Kathiyawad Ziyarat Trip
     if (isFamilyPublicView || finViewMode === 'all' || finViewMode === 'trip') {
       const openTrip = isSecOpen('trip');
-      const familyStats = tripSettle.stats.map(x => Object.assign({}, x.f, { paidDirect: x.direct, contrib: x.contrib, totalPaid: x.totalPaid, netSettlement: x.netSettlement }));
+      const familyStats = tripSettle.stats.map(x => Object.assign({}, x.f, { paidDirect: x.direct, contrib: x.contrib, totalPaid: x.totalPaid, netSettlement: x.netSettlement, settled: x.settled || 0 }));
 
       html += `
         <div class="statement-sheet">
@@ -3231,6 +3294,7 @@ function renderFinancialsPage() {
               ${!isFamilyPublicView ? `
                 <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openAddTripPaymentModal()">+ Expense</button>
                 <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openAddTripContributionModal()">+ Contribution</button>
+                <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openAddTripSettlementModal()">+ Settlement</button>
                 <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="shareZiyaratWithFamilies()">Share Link</button>
               ` : ''}
             </div>
@@ -3244,6 +3308,7 @@ function renderFinancialsPage() {
                     <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">${escapeForHtml(fs.members)}</div>
                     <div style="font-size:12px;">Paid / Contributed: <strong>${inr(fs.totalPaid)}</strong></div>
                     <div style="font-size:12px;">Equal 1/3 Share: <strong>${inr(equalFamilyShare)}</strong></div>
+                    ${fs.settled ? `<div style="font-size:12px;">Settled since: <strong>${fs.settled > 0 ? '+' : '&minus;'}${inr(Math.abs(fs.settled))}</strong></div>` : ''}
                   </div>
                   <div style="margin-top:8px; padding-top:6px; border-top:1px solid var(--rule-soft); font-weight:700; font-size:12.5px; color:${fs.netSettlement >= 0 ? 'var(--green)' : 'var(--red)'};">
                     ${fs.netSettlement >= 0 ? 'Receivable Back: ' + inr(fs.netSettlement) : 'Payable Balance: ' + inr(Math.abs(fs.netSettlement))}
@@ -3262,6 +3327,16 @@ function renderFinancialsPage() {
                     <td>${escapeForHtml(p.mode)}</td>
                     <td class="text-right stmt-mono">${inr(p.amount)}</td>
                     <td>${!isFamilyPublicView ? `<button type="button" class="act del" onclick="deleteTripEntry('payment','${escapeJsStr(p.id)}')">${ICON.x}</button>` : ''}</td>
+                  </tr>
+                `).join('')}
+                ${(Array.isArray(ledger.kathiyawadTrip?.settlements) ? ledger.kathiyawadTrip.settlements : []).map(st => `
+                  <tr style="background:var(--amber-soft, #FEF3C7);">
+                    <td>${escapeForHtml(st.date)}</td>
+                    <td><strong>${escapeForHtml(st.family)}</strong></td>
+                    <td>Settlement ${st.direction === 'received' ? 'received from family' : 'paid to family'}${st.note ? ' (' + escapeForHtml(st.note) + ')' : ''}</td>
+                    <td>${escapeForHtml(st.mode)}</td>
+                    <td class="text-right stmt-mono">${st.direction === 'received' ? '+' : '&minus;'}${inr(st.amount)}</td>
+                    <td>${!isFamilyPublicView ? `<button type="button" class="act del" onclick="deleteTripEntry('settlement','${escapeJsStr(st.id)}')">${ICON.x}</button>` : ''}</td>
                   </tr>
                 `).join('')}
                 ${tripContributions.map(c => `
