@@ -4231,11 +4231,85 @@ function resetData() {
   }, 'Reset', 'Cancel');
 }
 
+const DAILY_QUOTES = [
+  "Small steps every day add up to big results.",
+  "Verily, with hardship comes ease. (Quran 94:6)",
+  "Do the work today that your future self will thank you for.",
+  "A tidy ledger is a calm mind. Close one thing at a time.",
+  "Consistency beats intensity. Show up again today.",
+  "Honest work, done on time, builds a name that outlasts any bargain.",
+  "Start where you are. Use what you have. Do what you can.",
+  "Your clients trust you with their numbers. Keep earning it, one filing at a time.",
+  "The best time to file was yesterday. The next best time is now.",
+  "Patience and effort turn a slow day into a strong week.",
+  "Don't watch the clock. Do what it does: keep going.",
+  "Every pending task cleared is a worry lifted from someone.",
+  "Make today's work so careful that tomorrow needs no correction.",
+  "Barakah comes to the one who begins with intention and works with honesty.",
+  "Focus on the next task, not the whole mountain.",
+  "Discipline is choosing what you want most over what you want now.",
+  "Good books, good habits, good clients. Keep all three in order.",
+  "Progress, not perfection.",
+  "Plan the day, then work the plan.",
+  "Calm hands and a clear head finish more than a rushed hurry.",
+  "Today's effort is tomorrow's ease.",
+  "Trust in Allah, tie your camel. Plan well, then work hard.",
+  "What you do every day matters more than what you do once in a while.",
+  "A reminder: you have solved harder days than this one.",
+  "Quality is remembered long after the deadline is forgotten.",
+  "Begin with the hardest task while your mind is fresh.",
+  "Be the consultant people call first because you always follow through.",
+  "Gratitude turns what you have into enough.",
+  "Small savings, small habits, small wins. Together they become a practice.",
+  "If it takes less than two minutes, do it now.",
+  "Keep your word, keep your books, keep your peace.",
+  "The work you avoid today grows louder tomorrow. Handle it now.",
+  "Learn something new in your field every week and your value compounds.",
+  "Be thankful for the busy days. They mean people need you.",
+  "Slow and steady still reaches the due date.",
+  "Do your best and leave the rest to Allah.",
+  "Make one person's day easier with your work today.",
+  "Clarity first, speed second.",
+  "You don't need more time. You need a clear next step.",
+  "Respect the details. They are where trust is won.",
+  "A good day is built from a good morning. Start well.",
+  "Hard work in silence lets success make the noise.",
+  "Be steady when it is busy and kind when it is slow.",
+  "The habit of finishing is worth more than the habit of starting.",
+  "Take care of your health. It keeps every other plan alive.",
+  "Teach what you know, ask what you don't, and keep growing.",
+  "Every closed file is a promise kept.",
+  "Aim to be a little better than you were yesterday.",
+  "Success is the sum of small efforts repeated daily.",
+  "Review, correct, move on. No day needs to be perfect to be good.",
+  "The right work done with the right intention is already a success.",
+  "Be early with the important things and the rest will follow.",
+  "Keep your family close and your priorities closer.",
+  "A single honest advice can save a client years of trouble.",
+  "Don't compare your chapter one to someone else's chapter ten.",
+  "Fear of the deadline is smaller than the relief of finishing.",
+  "Make dua, make a plan, make progress.",
+  "Energy follows action. Open the first file and the rest will come.",
+  "Strong foundations, clean records, long relationships.",
+  "Rest well, work well. Both are part of the job.",
+  "Every expert was once a beginner who kept going.",
+  "Let your work speak, and let your character speak louder."
+];
+
+// A new quote every calendar day; cycles through the whole list before any repeat.
+function getDailyQuote() {
+  const d = new Date();
+  const dayNum = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+  return DAILY_QUOTES[dayNum % DAILY_QUOTES.length];
+}
+
 function updateDynamicGreeting() {
   const h = new Date().getHours();
   const part = h < 12 ? 'Good morning' : (h < 17 ? 'Good afternoon' : 'Good evening');
   const el = document.getElementById('greetingTitle');
   if (el) el.textContent = `${part}, Mustannsirr!`;
+  const sub = document.getElementById('greetingSub');
+  if (sub) sub.textContent = '\u201C' + getDailyQuote() + '\u201D';
 }
 
 function bootDashboard() {
