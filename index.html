@@ -951,6 +951,14 @@
             <span>Invoices</span>
           </span>
         </button>
+        <button type="button" id="tabTrips" class="page-nav-btn" onclick="switchPage('trips')">
+          <span class="nav-left">
+            <span class="nav-icon-box">
+              <svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3"/></svg>
+            </span>
+            <span>Trips</span>
+          </span>
+        </button>
       </nav>
     </div>
 
@@ -1070,6 +1078,7 @@
 
     <div id="financialsView"></div>
     <div id="invoicesView"></div>
+    <div id="tripsView" style="display:none;"></div>
   </main>
 </div>
 
@@ -1450,6 +1459,7 @@ function normalizeFinLedger(obj) {
   if (!Array.isArray(out.kathiyawadTrip.payments)) out.kathiyawadTrip.payments = [];
   if (!Array.isArray(out.kathiyawadTrip.contributions)) out.kathiyawadTrip.contributions = [];
   if (!Array.isArray(out.kathiyawadTrip.settlements)) out.kathiyawadTrip.settlements = [];
+  if (!Array.isArray(out.trips)) out.trips = [];
   if (!Array.isArray(out.expenses)) out.expenses = [];
   if (!Array.isArray(out.customExpenseCategories)) out.customExpenseCategories = [];
   if (!Array.isArray(out.customLoans)) out.customLoans = [];
@@ -1556,6 +1566,13 @@ function mergeFinLedgers(local, cloud) {
   merged.kathiyawadTrip.payments = mergeById(loc.kathiyawadTrip.payments, cld.kathiyawadTrip.payments);
   merged.kathiyawadTrip.contributions = mergeById(loc.kathiyawadTrip.contributions, cld.kathiyawadTrip.contributions);
   merged.kathiyawadTrip.settlements = mergeById(loc.kathiyawadTrip.settlements, cld.kathiyawadTrip.settlements);
+  const tripMap = new Map();
+  [...(loc.trips || []), ...(cld.trips || [])].forEach(t => {
+    if (!t || !t.id || delSet.has(t.id)) return;
+    const prev = tripMap.get(t.id);
+    if (!prev || (Number(t.updatedAt) || 0) >= (Number(prev.updatedAt) || 0)) tripMap.set(t.id, t);
+  });
+  merged.trips = Array.from(tripMap.values());
   merged.expenses = mergeById(loc.expenses, cld.expenses);
   merged.customLoans = mergeById(loc.customLoans, cld.customLoans);
   merged.journalEntries = mergeById(loc.journalEntries, cld.journalEntries);
@@ -1576,6 +1593,7 @@ async function syncCloudFinLedger(forceCloud) {
       localStorage.setItem(FIN_LEDGER_KEY, JSON.stringify(finalLedger));
       render();
       if (activePage === 'financials') renderFinancialsPage();
+      if (activePage === 'trips') renderTripsPage();
       setSyncState(false, 'Synced ' + CHK + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       if (forceCloud) showToast('Pulled latest ledger from Cloud ' + CHK, 'success');
     }
@@ -3013,22 +3031,386 @@ function lockWorkspace() {
   if (gate) gate.style.display = 'flex';
 }
 
+// ---- Group Trips: reusable multi-family trip splitter ----
+var activeTripId = null;
+const GT_CATS = ['Travel', 'Stay', 'Food', 'Entry / toll', 'Donation', 'Medical', 'Other'];
+const gtR2 = (x) => Math.round(x * 100) / 100;
+const gtId = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function gtParseFamilies(text, existing) {
+  const lines = String(text || '').split('\n').map(l => l.trim()).filter(Boolean);
+  return lines.map((ln, i) => {
+    const parts = ln.split(',');
+    const name = parts[0].trim() || ('Family ' + (i + 1));
+    const w = parseFloat(parts[1]);
+    const prev = existing && existing[i];
+    return { id: prev ? prev.id : gtId('f'), name, weight: (isFinite(w) && w >= 0) ? w : 1 };
+  });
+}
+
+// Every rupee is credited once. Direct payments credit the payer. Pot spending credits whoever funded the pot:
+// other families' contributions credit them, the rest is the treasurer's own money.
+// The treasurer's own contribution is a transfer into the pot, not a credit.
+function computeGroupTrip(trip) {
+  const fam = trip.families || [], T = trip.treasurer, E = trip.entries || [];
+  let outlay = 0, potSpend = 0, cashIn = 0, bankIn = 0, cashOut = 0, bankOut = 0, spCash = 0, spBank = 0;
+  const cat = {}, direct = {}, contrib = {}, net = {};
+  fam.forEach(f => { direct[f.id] = 0; contrib[f.id] = 0; });
+  E.forEach(e => {
+    const a = Number(e.amount) || 0;
+    if (e.type === 'exp') {
+      outlay += a; cat[e.cat || 'Other'] = (cat[e.cat || 'Other'] || 0) + a;
+      if (e.mode === 'direct') { if (direct[e.family] != null) direct[e.family] += a; }
+      else { potSpend += a; if (e.mode === 'cash') spCash += a; else spBank += a; }
+    } else if (e.type === 'con') {
+      if (contrib[e.family] != null) contrib[e.family] += a;
+      if (e.mode === 'cash') cashIn += a; else bankIn += a;
+    } else if (e.type === 'set') {
+      if (e.to === T) { if (e.mode === 'cash') cashIn += a; else bankIn += a; }
+      if (e.from === T) { if (e.mode === 'cash') cashOut += a; else bankOut += a; }
+    }
+  });
+  const wsum = fam.reduce((s, f) => s + (Number(f.weight) || 0), 0) || 1;
+  const others = fam.reduce((s, f) => f.id === T ? s : s + contrib[f.id], 0);
+  fam.forEach(f => {
+    const share = outlay * (Number(f.weight) || 0) / wsum;
+    const pot = f.id === T ? potSpend - others : contrib[f.id];
+    net[f.id] = { share, direct: direct[f.id], contrib: contrib[f.id], potCredit: pot, credit: direct[f.id] + pot, net: direct[f.id] + pot - share };
+  });
+  E.forEach(e => {
+    if (e.type !== 'set') return;
+    const a = Number(e.amount) || 0;
+    if (net[e.from]) net[e.from].net += a;
+    if (net[e.to]) net[e.to].net -= a;
+  });
+  return { outlay, net, cat, wsum, potCash: cashIn - cashOut - spCash, potBank: bankIn - bankOut - spBank, mineNet: net[T] ? net[T].net : 0 };
+}
+
+function gtTransfers(trip, C) {
+  const d = [], c = [];
+  (trip.families || []).forEach(f => {
+    const n = gtR2(C.net[f.id].net);
+    if (n < -0.009) d.push({ id: f.id, a: -n }); else if (n > 0.009) c.push({ id: f.id, a: n });
+  });
+  d.sort((x, y) => y.a - x.a); c.sort((x, y) => y.a - x.a);
+  const out = []; let i = 0, j = 0;
+  while (i < d.length && j < c.length) {
+    const m = gtR2(Math.min(d[i].a, c[j].a));
+    out.push({ from: d[i].id, to: c[j].id, a: m });
+    d[i].a = gtR2(d[i].a - m); c[j].a = gtR2(c[j].a - m);
+    if (d[i].a <= 0.009) i++; if (c[j].a <= 0.009) j++;
+  }
+  return out;
+}
+
+// Effect of one entry on the treasurer's physical cash / bank (only when the trip is linked to dashboard balances)
+function gtImpact(trip, e) {
+  const a = Number(e.amount) || 0, T = trip.treasurer; let cash = 0, bank = 0;
+  const add = (mode, v) => { if (mode === 'cash') cash += v; else bank += v; };
+  if (e.type === 'exp' && e.mode !== 'direct') add(e.mode, -a);
+  else if (e.type === 'con') add(e.mode, a);
+  else if (e.type === 'set') { if (e.to === T) add(e.mode, a); if (e.from === T) add(e.mode, -a); }
+  return { cash, bank };
+}
+function gtApplyBalances(ledger, trip, e, sign) {
+  if (!trip.linkBalances) return;
+  const d = gtImpact(trip, e);
+  ledger.cashInHand = (Number(ledger.cashInHand) || 0) + sign * d.cash;
+  ledger.bankSlice = (Number(ledger.bankSlice) || 0) + sign * d.bank;
+}
+
+function gtFamName(trip, id) {
+  const f = (trip.families || []).find(x => x.id === id);
+  return f ? f.name : '(removed)';
+}
+function gtGetTrip(ledger) {
+  const list = ledger.trips || [];
+  if (!list.length) return null;
+  return list.find(t => t.id === activeTripId) || list[list.length - 1];
+}
+function setActiveTrip(id) { activeTripId = id; renderTripsPage(); }
+
+function gtSaveTrip(ledger, trip) {
+  trip.updatedAt = Date.now();
+  saveFinLedger(ledger);
+  render();
+  renderTripsPage();
+}
+
+function openNewTripModal() {
+  showModal('+ New Group Trip', `
+    <label>Trip name</label>
+    <input type="text" id="gtName" placeholder="e.g. Ajmer Ziyarat 2027">
+    <label>Dates</label>
+    <input type="text" id="gtDates" placeholder="e.g. 6 to 18 Mar">
+    <label>Families (one per line: name, weight). Put your own family first.</label>
+    <textarea id="gtFams" rows="5" style="width:100%;">My Family, 4
+Family 2, 2
+Family 3, 4</textarea>
+    <div class="hint">Weight is the number of people, or any share ratio. Use 1 for each family for an equal split.</div>
+    <label style="display:flex; gap:8px; align-items:center; margin-top:10px;"><input type="checkbox" id="gtLink" checked style="width:auto;"> Pot is my own cash / bank (updates Cash in Hand and Slice SFB)</label>
+  `, () => {
+    const name = document.getElementById('gtName').value.trim() || 'New trip';
+    const fams = gtParseFamilies(document.getElementById('gtFams').value, null);
+    if (fams.length < 2) { showToast('Add at least two families', 'warn'); return false; }
+    const ledger = getFinLedger();
+    const trip = { id: gtId('trip_'), name, dates: document.getElementById('gtDates').value.trim(), treasurer: fams[0].id, linkBalances: document.getElementById('gtLink').checked, families: fams, entries: [], updatedAt: Date.now() };
+    ledger.trips.push(trip);
+    activeTripId = trip.id;
+    gtSaveTrip(ledger, trip);
+    showToast('Trip created ' + CHK, 'success');
+  });
+}
+
+function openTripSetupModal() {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  const tre = trip.families.map(f => `<option value="${escapeForHtml(f.id)}" ${f.id === trip.treasurer ? 'selected' : ''}>${escapeForHtml(f.name)}</option>`).join('');
+  showModal('Trip Setup', `
+    <label>Trip name</label><input type="text" id="gtName" value="${escapeForHtml(trip.name)}">
+    <label>Dates</label><input type="text" id="gtDates" value="${escapeForHtml(trip.dates || '')}">
+    <label>Families (name, weight per line, keep the order)</label>
+    <textarea id="gtFams" rows="5" style="width:100%;">${escapeForHtml(trip.families.map(f => f.name + ', ' + f.weight).join('\n'))}</textarea>
+    <div class="hint">Add lines at the end for new families. A family with entries cannot be removed.</div>
+    <label>Treasurer (holds the pot)</label><select id="gtTre">${tre}</select>
+  `, () => {
+    const fams = gtParseFamilies(document.getElementById('gtFams').value, trip.families);
+    const keep = new Set(fams.map(f => f.id));
+    const lost = trip.families.filter(f => !keep.has(f.id));
+    const used = lost.find(f => trip.entries.some(e => e.family === f.id || e.from === f.id || e.to === f.id));
+    if (used) { showToast(used.name + ' has entries. Delete them first.', 'warn'); return false; }
+    if (fams.length < 2) { showToast('Keep at least two families', 'warn'); return false; }
+    trip.name = document.getElementById('gtName').value.trim() || trip.name;
+    trip.dates = document.getElementById('gtDates').value.trim();
+    trip.families = fams;
+    const t = document.getElementById('gtTre').value;
+    trip.treasurer = keep.has(t) ? t : fams[0].id;
+    gtSaveTrip(ledger, trip);
+    showToast('Trip updated ' + CHK, 'success');
+  });
+}
+
+function gtFamOptions(trip, sel) {
+  return trip.families.map(f => `<option value="${escapeForHtml(f.id)}" ${f.id === sel ? 'selected' : ''}>${escapeForHtml(f.name)}</option>`).join('');
+}
+
+function openGtExpenseModal() {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  showModal('+ Trip Expense', `
+    <label>Date</label><input type="date" id="geDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Particulars</label><input type="text" id="geDesc" placeholder="e.g. Hotel, diesel, lunch">
+    <label>Category</label><select id="geCat">${GT_CATS.map(c => `<option>${c}</option>`).join('')}</select>
+    <label>Paid how</label>
+    <select id="geMode" onchange="document.getElementById('geFamWrap').style.display = this.value === 'direct' ? 'block' : 'none'">
+      <option value="direct">Directly by a family</option>
+      <option value="cash">From pot (cash)</option>
+      <option value="bank">From pot (slice SFB / bank)</option>
+    </select>
+    <div id="geFamWrap"><label>Paid by family</label><select id="geFam">${gtFamOptions(trip, null)}</select></div>
+    <label>Amount (&#8377;)</label><input type="number" id="geAmt" placeholder="&#8377; Amount">
+  `, () => {
+    const amount = parseFloat(document.getElementById('geAmt').value) || 0;
+    if (amount <= 0) return false;
+    const mode = document.getElementById('geMode').value;
+    const e = { id: gtId('ge_'), type: 'exp', date: document.getElementById('geDate').value, desc: document.getElementById('geDesc').value.trim() || 'Expense', cat: document.getElementById('geCat').value, mode, amount: gtR2(amount) };
+    if (mode === 'direct') e.family = document.getElementById('geFam').value;
+    trip.entries.push(e); gtApplyBalances(ledger, trip, e, 1);
+    gtSaveTrip(ledger, trip); showToast('Expense added ' + CHK, 'success');
+  });
+}
+
+function openGtContributionModal() {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  showModal('+ Contribution to Pot', `
+    <div class="hint">Money a family hands to the treasurer for the common pot.</div>
+    <label>Date</label><input type="date" id="gcDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>From family</label><select id="gcFam">${gtFamOptions(trip, null)}</select>
+    <label>Received in</label><select id="gcMode"><option value="cash">Cash in Hand</option><option value="bank">slice SFB Bank</option></select>
+    <label>Amount (&#8377;)</label><input type="number" id="gcAmt" placeholder="&#8377; Amount">
+  `, () => {
+    const amount = parseFloat(document.getElementById('gcAmt').value) || 0;
+    if (amount <= 0) return false;
+    const e = { id: gtId('gc_'), type: 'con', date: document.getElementById('gcDate').value, family: document.getElementById('gcFam').value, mode: document.getElementById('gcMode').value, amount: gtR2(amount) };
+    trip.entries.push(e); gtApplyBalances(ledger, trip, e, 1);
+    gtSaveTrip(ledger, trip); showToast('Contribution added ' + CHK, 'success');
+  });
+}
+
+function openGtSettlementModal(pre) {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  pre = pre || {};
+  showModal('+ Settlement', `
+    <div class="hint">Money moving after the trip to clear a balance (for example refunding extra advance). It is never a trip expense.</div>
+    <label>Date</label><input type="date" id="gsDate" value="${new Date().toISOString().slice(0, 10)}">
+    <label>Paid by</label><select id="gsFrom">${gtFamOptions(trip, pre.from)}</select>
+    <label>Paid to</label><select id="gsTo">${gtFamOptions(trip, pre.to)}</select>
+    <label>Mode</label><select id="gsMode"><option value="bank">slice SFB Bank</option><option value="cash">Cash in Hand</option></select>
+    <label>Amount (&#8377;)</label><input type="number" id="gsAmt" value="${pre.a || ''}" placeholder="&#8377; Amount">
+    <label>Note (optional)</label><input type="text" id="gsNote" placeholder="e.g. Refund of excess advance">
+  `, () => {
+    const amount = parseFloat(document.getElementById('gsAmt').value) || 0;
+    const from = document.getElementById('gsFrom').value, to = document.getElementById('gsTo').value;
+    if (amount <= 0) return false;
+    if (from === to) { showToast('Choose two different families', 'warn'); return false; }
+    const e = { id: gtId('gs_'), type: 'set', date: document.getElementById('gsDate').value, from, to, mode: document.getElementById('gsMode').value, amount: gtR2(amount), note: document.getElementById('gsNote').value.trim() };
+    trip.entries.push(e); gtApplyBalances(ledger, trip, e, 1);
+    gtSaveTrip(ledger, trip); showToast('Settlement recorded ' + CHK, 'success');
+  });
+}
+
+function deleteGtEntry(id) {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  const idx = trip.entries.findIndex(e => e.id === id); if (idx === -1) return;
+  const e = trip.entries[idx];
+  showModal('Delete Entry?', `<div class="hint">Removes ${inr(e.amount)} and reverses its effect on your cash / bank${trip.linkBalances ? '' : ' (not linked for this trip)'}.</div>`, () => {
+    gtApplyBalances(ledger, trip, e, -1);
+    trip.entries.splice(idx, 1);
+    gtSaveTrip(ledger, trip); showToast('Entry deleted', 'warn');
+  }, 'Delete', 'Cancel');
+}
+
+function deleteTripConfirm() {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  showModal('Delete Trip?', `<div class="hint">Deletes <strong>${escapeForHtml(trip.name)}</strong> and its ${trip.entries.length} entries${trip.linkBalances ? ', and reverses their effect on Cash in Hand and Slice SFB' : ''}.</div>`, () => {
+    trip.entries.forEach(e => gtApplyBalances(ledger, trip, e, -1));
+    ledger.trips = ledger.trips.filter(t => t.id !== trip.id);
+    ledger.deletedIds.push(trip.id);
+    activeTripId = null;
+    saveFinLedger(ledger); render(); renderTripsPage();
+    showToast('Trip deleted', 'warn');
+  }, 'Delete', 'Cancel');
+}
+
+function gtSummaryText(trip, C) {
+  let msg = `*${trip.name} — account*\nTotal outlay: ${inr(C.outlay)}\n\n`;
+  trip.families.forEach(f => {
+    const v = gtR2(C.net[f.id].net);
+    msg += `${f.name}: ${v > 0.009 ? 'gets back ' + inr(v) : v < -0.009 ? 'pays ' + inr(-v) : 'settled'}\n`;
+  });
+  const T = gtTransfers(trip, C);
+  if (T.length) { msg += '\nTo clear:\n'; T.forEach(t => { msg += `- ${gtFamName(trip, t.from)} pays ${gtFamName(trip, t.to)} ${inr(t.a)}\n`; }); }
+  return msg.trim();
+}
+
+function shareTripSummary() {
+  const ledger = getFinLedger(); const trip = gtGetTrip(ledger); if (!trip) return;
+  const msg = gtSummaryText(trip, computeGroupTrip(trip));
+  showModal('Share Trip Account', `<div class="receipt-preview">${escapeForHtml(msg)}</div>`, () => {
+    window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(msg), '_blank');
+  }, 'Share on WhatsApp', 'Close');
+}
+
+function renderTripsPage() {
+  const el = document.getElementById('tripsView');
+  if (!el) return;
+  try {
+    const ledger = getFinLedger();
+    const trips = ledger.trips || [];
+    const headBg = 'background:linear-gradient(120deg, #0D9488 0%, #10B981 100%);';
+    if (!trips.length) {
+      el.innerHTML = `<div class="statement-sheet"><div class="statement-header" style="${headBg}"><h3>Group Trips</h3><div><button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 10px;" onclick="openNewTripModal()">+ New Trip</button></div></div>
+        <div class="statement-body"><div style="color:var(--muted); padding:8px 0;">No trips yet. Create one to split expenses between families, track a shared pot and see who owes whom.</div></div></div>`;
+      return;
+    }
+    const trip = gtGetTrip(ledger); activeTripId = trip.id;
+    const C = computeGroupTrip(trip);
+    const T = gtTransfers(trip, C);
+    const open = trip.families.reduce((s, f) => { const n = gtR2(C.net[f.id].net); return n < 0 ? s - n : s; }, 0);
+    const sum = trip.families.reduce((s, f) => s + C.net[f.id].net, 0);
+    const kpi = (l, v) => `<div class="loan-card"><div style="font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);">${l}</div><div style="font-family:var(--mono); font-size:17px; font-weight:600; margin-top:2px;">${v}</div></div>`;
+    const cats = Object.keys(C.cat).sort((a, b) => C.cat[b] - C.cat[a]);
+    const mx = cats.length ? C.cat[cats[0]] : 1;
+    const sorted = trip.entries.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
+    el.innerHTML = `
+      <div class="statement-sheet">
+        <div class="statement-header" style="${headBg}">
+          <h3>Group Trips</h3>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <select onchange="setActiveTrip(this.value)" style="height:28px; font-size:12px; max-width:220px;">${trips.map(t => `<option value="${escapeForHtml(t.id)}" ${t.id === trip.id ? 'selected' : ''}>${escapeForHtml(t.name)}</option>`).join('')}</select>
+            <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="openNewTripModal()">+ New Trip</button>
+            <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="openTripSetupModal()">Setup</button>
+            <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="shareTripSummary()">Share</button>
+            <button type="button" class="btn btn-quiet" style="height:28px; font-size:11px; padding:0 9px;" onclick="deleteTripConfirm()">Delete</button>
+          </div>
+        </div>
+        <div class="statement-body">
+          <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">${escapeForHtml([trip.dates, trip.families.length + ' families', 'Treasurer: ' + gtFamName(trip, trip.treasurer), trip.linkBalances ? 'Linked to Cash / Slice SFB' : 'Not linked to balances'].filter(Boolean).join('  •  '))}</div>
+          <div class="loan-grid" style="margin-bottom:12px;">
+            ${kpi('Total outlay', inr(C.outlay))}${kpi('Still to settle', inr(open))}${kpi('Pot cash', inr(C.potCash))}${kpi('Pot bank', inr(C.potBank))}
+          </div>
+          <div class="loan-grid" style="margin-bottom:12px;">
+            ${trip.families.map(f => {
+              const n = C.net[f.id], v = gtR2(n.net);
+              const col = v > 0.009 ? 'var(--green)' : v < -0.009 ? 'var(--red)' : 'var(--muted)';
+              const txt = v > 0.009 ? 'Gets back: ' + inr(v) : v < -0.009 ? 'Owes: ' + inr(-v) : 'Settled';
+              const isT = f.id === trip.treasurer;
+              return `<div class="loan-card"><div>
+                <div style="font-weight:700; font-size:14px;">${escapeForHtml(f.name)}${isT ? ' <span style="font-size:10px; color:var(--muted); font-weight:600;">(Treasurer)</span>' : ''}</div>
+                <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">Weight ${Number(f.weight) || 0} of ${C.wsum}</div>
+                <div style="font-size:12px;">Paid directly: <strong>${inr(n.direct)}</strong></div>
+                <div style="font-size:12px;">${isT ? 'Funded the pot' : 'Gave to pot'}: <strong>${inr(isT ? n.potCredit : n.contrib)}</strong></div>
+                <div style="font-size:12px;">Fair share: <strong>${inr(n.share)}</strong></div>
+              </div><div style="margin-top:8px; padding-top:6px; border-top:1px solid var(--rule-soft); font-weight:700; font-size:12.5px; color:${col};">${txt}</div></div>`;
+            }).join('')}
+          </div>
+          <div style="font-weight:700; font-size:13px; margin:4px 0 6px;">Suggested payments</div>
+          ${T.length ? T.map(t => `<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:7px 0; border-top:1px solid var(--rule-soft); font-size:12.5px;">
+              <span><strong>${escapeForHtml(gtFamName(trip, t.from))}</strong> pays <strong>${escapeForHtml(gtFamName(trip, t.to))}</strong></span>
+              <span style="margin-left:auto; font-family:var(--mono); font-weight:600;">${inr(t.a)}</span>
+              <button type="button" class="btn btn-quiet" style="height:24px; font-size:11px; padding:0 8px;" onclick="openGtSettlementModal({from:'${escapeJsStr(t.from)}', to:'${escapeJsStr(t.to)}', a:${t.a}})">Record</button>
+            </div>`).join('') : '<div style="font-size:12px; color:var(--muted);">Everyone is settled.</div>'}
+          <div style="font-size:11.5px; margin-top:8px; color:${Math.abs(sum) < 0.02 ? 'var(--green)' : 'var(--red)'}; font-weight:600;">${Math.abs(sum) < 0.02 ? 'Balances net to zero.' : 'Balances are off by ' + inr(sum) + '. Check entries for a removed family.'}</div>
+          ${cats.length ? `<div style="font-weight:700; font-size:13px; margin:14px 0 6px;">Spend by category</div>` + cats.map(k => `<div style="margin-bottom:7px; font-size:12px;"><div style="display:flex; justify-content:space-between;"><span>${escapeForHtml(k)}</span><strong style="font-family:var(--mono);">${inr(C.cat[k])}</strong></div><div style="height:6px; border-radius:3px; background:var(--rule-soft); overflow:hidden; margin-top:3px;"><div style="height:100%; width:${(C.cat[k] / mx * 100).toFixed(1)}%; background:#0D9488;"></div></div></div>`).join('') : ''}
+        </div>
+      </div>
+
+      <div class="statement-sheet" style="margin-top:14px;">
+        <div class="statement-header" style="${headBg}">
+          <h3>${escapeForHtml(trip.name)} &mdash; Entries</h3>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openGtExpenseModal()">+ Expense</button>
+            <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openGtContributionModal()">+ Contribution</button>
+            <button type="button" class="btn btn-quiet" style="height:26px; font-size:11px; padding:0 8px;" onclick="openGtSettlementModal()">+ Settlement</button>
+          </div>
+        </div>
+        <div class="statement-body"><div class="table-responsive"><table class="stmt-table">
+          <thead><tr><th>Date</th><th>Family</th><th>Particulars</th><th>Mode</th><th class="text-right">Amount</th><th></th></tr></thead>
+          <tbody>${sorted.length ? sorted.map(e => {
+            let fam, part, mode, amt, style = '';
+            if (e.type === 'exp') { fam = e.mode === 'direct' ? gtFamName(trip, e.family) : 'Pot (' + gtFamName(trip, trip.treasurer) + ')'; part = escapeForHtml(e.desc || '') + ' <span style="font-size:10.5px; color:var(--muted);">' + escapeForHtml(e.cat || '') + '</span>'; mode = e.mode === 'direct' ? 'Direct' : e.mode === 'cash' ? 'Pot cash' : 'Pot bank'; amt = inr(e.amount); }
+            else if (e.type === 'con') { style = 'background:var(--green-soft);'; fam = gtFamName(trip, e.family); part = 'Contribution to pot'; mode = e.mode === 'cash' ? 'Cash' : 'Bank'; amt = '+' + inr(e.amount); }
+            else { style = 'background:var(--amber-soft);'; fam = gtFamName(trip, e.from) + ' → ' + gtFamName(trip, e.to); part = 'Settlement' + (e.note ? ' (' + escapeForHtml(e.note) + ')' : ''); mode = e.mode === 'cash' ? 'Cash' : 'Bank'; amt = inr(e.amount); }
+            return `<tr style="${style}"><td>${escapeForHtml(e.date || '')}</td><td><strong>${escapeForHtml(fam)}</strong></td><td>${part}</td><td>${mode}</td><td class="text-right stmt-mono">${amt}</td><td><button type="button" class="act del" onclick="deleteGtEntry('${escapeJsStr(e.id)}')">${ICON.x}</button></td></tr>`;
+          }).join('') : '<tr><td colspan="6" style="color:var(--muted);">No entries yet. Add the first expense.</td></tr>'}</tbody>
+        </table></div></div>
+      </div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="statement-sheet"><div class="statement-body" style="color:var(--red);">Trips render error: ${escapeForHtml(err.message)}</div></div>`;
+  }
+}
+
 // ---- Page Navigation & Views ----
 function switchPage(page) {
   activePage = page;
   document.getElementById('tasksView').style.display = page === 'tasks' ? 'block' : 'none';
   document.getElementById('financialsView').style.display = page === 'financials' ? 'block' : 'none';
   document.getElementById('invoicesView').style.display = page === 'invoices' ? 'block' : 'none';
+  document.getElementById('tripsView').style.display = page === 'trips' ? 'block' : 'none';
 
   document.getElementById('tabTasks').classList.toggle('active', page === 'tasks');
   document.getElementById('tabFinancials').classList.toggle('active', page === 'financials');
   document.getElementById('tabInvoices').classList.toggle('active', page === 'invoices');
+  document.getElementById('tabTrips').classList.toggle('active', page === 'trips');
 
   if (page === 'financials') {
     renderFinancialsPage();
     syncCloudFinLedger();
   }
   if (page === 'invoices') renderInvoicesPage();
+  if (page === 'trips') {
+    renderTripsPage();
+    syncCloudFinLedger();
+  }
 }
 
 function setFinViewMode(mode) {
@@ -3164,7 +3546,8 @@ function renderFinancialsPage() {
     const equalFamilyShare = totalTripOutlay / 3;
     const tripSettle = computeTripSettlement(ledger);
     // Net position vs the other families: positive = they owe you, negative = you owe them
-    const netTripOutflow = tripSettle.mineNet + (Number(ledger.journalZiyaratAdj) || 0);
+    const groupTripsNet = (ledger.trips || []).filter(t => t && t.linkBalances).reduce((s, t) => s + computeGroupTrip(t).mineNet, 0);
+    const netTripOutflow = tripSettle.mineNet + groupTripsNet + (Number(ledger.journalZiyaratAdj) || 0);
 
     const allExp = Array.isArray(ledger.expenses) ? ledger.expenses : [];
     const isDrawingCategory = (cat) => /drawing|personal/i.test(String(cat || ''));
@@ -3560,7 +3943,7 @@ function renderFinancialsPage() {
                     <tr><td>slice Small Finance Bank</td><td class="text-right stmt-mono">${inr(bankSlice)}</td></tr>
                     <tr><td>Sundry Debtors (Pending Fees Receivable)</td><td class="text-right stmt-mono">${inr(sundryDebtorsReceivable)}</td></tr>
                     <tr><td>Loans &amp; Advances Given (Juzer &amp; Others)</td><td class="text-right stmt-mono">${inr(totalLoansGiven)}</td></tr>
-                    <tr><td>Kathiyawad Ziyarat &mdash; ${netTripOutflow >= 0 ? 'Receivable from Families' : 'Payable to Families'}<br><small style="color:var(--muted);">Outlay ${inr(totalTripOutlay)} &bull; Your 1/3 share: ${inr(equalFamilyShare)} &bull; You funded ${inr(tripSettle.stats.find(x => x.isMine)?.totalPaid || 0)}</small></td><td class="text-right stmt-mono">${inr(netTripOutflow)}</td></tr>
+                    <tr><td>Trips (Ziyarat &amp; group tours) &mdash; ${netTripOutflow >= 0 ? 'Receivable from Families' : 'Payable to Families'}<br><small style="color:var(--muted);">Outlay ${inr(totalTripOutlay)} &bull; Your 1/3 share: ${inr(equalFamilyShare)} &bull; You funded ${inr(tripSettle.stats.find(x => x.isMine)?.totalPaid || 0)}</small></td><td class="text-right stmt-mono">${inr(netTripOutflow)}</td></tr>
                     <tr style="background:var(--green-soft); font-weight:700;"><td>Total Assets</td><td class="text-right stmt-mono">${inr(totalAssets)}</td></tr>
                   </tbody>
                 </table>
